@@ -166,6 +166,8 @@ On load, it verifies packaged asset directories and uses OpenCode’s in-memory 
 
 Optional BROS-specific model routing and permission profiles can be supplied in `bros.config.json` files. Config precedence is packaged defaults, global BROS config, repo BROS config, then OpenCode plugin input. `fallback_model` is never silently applied to restricted code, security, QA/review, or ops/release categories. Permission profiles are opt-in, repo-scoped, expiry-bound, reason-logged, and keep hard denies for secret reads, publish, destructive actions, force push, and production/cloud mutation.
 
+`bro-build` defaults to flexible local Bash for routine development and inspection, closer to OpenCode build mode. Git mutation, dependency installs, Docker mutation, deploy/publish, secret-reading, destructive, force-push, and production/cloud command classes remain ask-gated or denied.
+
 It does **not**:
 
 - write `opencode.json`, `.opencode/`, global OpenCode config files, or other live config files;

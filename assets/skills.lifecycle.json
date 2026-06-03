@@ -24,12 +24,12 @@
   "packagedDefaultStatus": "active",
   "summary": {
     "sourceCandidates": 131,
-    "packagedActive": 123,
+    "packagedActive": 87,
     "packagedDeprecated": 0,
     "packagedRedacted": 0,
     "skippedReviewRequired": 3,
     "blockedFromPackage": 3,
-    "removedAfterApprovedDeletion": 5
+    "removedAfterApprovedDeletion": 41
   },
   "releaseGate": {
     "validateScript": "npm run validate",
@@ -63,9 +63,9 @@
       "build": {
         "roles": ["bro-build"],
         "defaultRecommended": ["backend-patterns", "frontend-patterns", "error-handling", "tdd-workflow"],
-        "evidenceTriggered": ["git-master", "deployment-patterns", "database-migrations", "vite-patterns", "nextjs-turbopack", "springboot-patterns", "python-patterns", "rust-patterns", "golang-patterns"],
-        "avoidByDefault": ["stack-specific skills until repo files prove the stack", "release/deploy skills without an approved operations packet"],
-        "broadCapabilityBias": "Prefer clean-code, error-handling, and test-first skills; route stack-specific skills from repository evidence only."
+        "evidenceTriggered": ["git-master", "deployment-patterns", "database-migrations"],
+        "avoidByDefault": ["stack-specific user-added skills until repo files prove the stack", "release/deploy skills without an approved operations packet"],
+        "broadCapabilityBias": "Prefer clean-code, error-handling, and test-first skills; route stack-specific skills from the user-added skill root only when repository evidence requires them."
       },
       "qa": {
         "roles": ["bro-test"],
@@ -156,6 +156,258 @@
     },
     {
       "path": "assets/opencode/skills/security-review/cloud-infrastructure-security.md",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/vite-patterns/SKILL.md",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/springboot-verification/SKILL.md",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/springboot-verification/.openskills.json",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/springboot-tdd/SKILL.md",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/springboot-tdd/.openskills.json",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/springboot-patterns/SKILL.md",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/springboot-patterns/.openskills.json",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/rust-testing/SKILL.md",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/rust-testing/.openskills.json",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/rust-patterns/SKILL.md",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/rust-patterns/.openskills.json",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/python-patterns/SKILL.md",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/python-patterns/.openskills.json",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/python-testing/SKILL.md",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/python-testing/.openskills.json",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/redis-patterns/SKILL.md",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/postgres-patterns/SKILL.md",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/postgres-patterns/.openskills.json",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/prisma-patterns/SKILL.md",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/nextjs-turbopack/SKILL.md",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/nextjs-turbopack/.openskills.json",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/nextjs-turbopack/agents/openai.yaml",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/nestjs-patterns/SKILL.md",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/nestjs-patterns/.openskills.json",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/mysql-patterns/SKILL.md",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/jpa-patterns/SKILL.md",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/jpa-patterns/.openskills.json",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/java-coding-standards/SKILL.md",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/java-coding-standards/.openskills.json",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/golang-testing/SKILL.md",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/golang-testing/.openskills.json",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/golang-patterns/SKILL.md",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/golang-patterns/.openskills.json",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/coding-standards/SKILL.md",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/coding-standards/.openskills.json",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/coding-standards/agents/openai.yaml",
       "area": "skills",
       "importDisposition": "removed-after-approved-deletion",
       "lifecycleStatus": "not-packaged",

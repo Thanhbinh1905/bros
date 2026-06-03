@@ -2,7 +2,7 @@
   "area": "skills",
   "counts": {
     "candidates": 131,
-    "imported": 123,
+    "imported": 87,
     "skipped": 3
   },
   "entries": [
@@ -158,21 +158,6 @@
     },
     {
       "area": "skills",
-      "path": "assets/opencode/skills/coding-standards/.openskills.json",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/coding-standards/agents/openai.yaml",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/coding-standards/SKILL.md",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
       "path": "assets/opencode/skills/context-budget/.openskills.json",
       "sourceRef": "opencode-skill"
     },
@@ -303,26 +288,6 @@
     },
     {
       "area": "skills",
-      "path": "assets/opencode/skills/golang-patterns/.openskills.json",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/golang-patterns/SKILL.md",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/golang-testing/.openskills.json",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/golang-testing/SKILL.md",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
       "path": "assets/opencode/skills/grafana-dashboard-design/SKILL.md",
       "sourceRef": "opencode-skill"
     },
@@ -334,26 +299,6 @@
     {
       "area": "skills",
       "path": "assets/opencode/skills/hexagonal-architecture/SKILL.md",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/java-coding-standards/.openskills.json",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/java-coding-standards/SKILL.md",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/jpa-patterns/.openskills.json",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/jpa-patterns/SKILL.md",
       "sourceRef": "opencode-skill"
     },
     {
@@ -373,52 +318,7 @@
     },
     {
       "area": "skills",
-      "path": "assets/opencode/skills/mysql-patterns/SKILL.md",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/nestjs-patterns/.openskills.json",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/nestjs-patterns/SKILL.md",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/nextjs-turbopack/.openskills.json",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/nextjs-turbopack/agents/openai.yaml",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/nextjs-turbopack/SKILL.md",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
       "path": "assets/opencode/skills/parallel-execution-optimizer/SKILL.md",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/postgres-patterns/.openskills.json",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/postgres-patterns/SKILL.md",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/prisma-patterns/SKILL.md",
       "sourceRef": "opencode-skill"
     },
     {
@@ -448,57 +348,12 @@
     },
     {
       "area": "skills",
-      "path": "assets/opencode/skills/python-patterns/.openskills.json",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/python-patterns/SKILL.md",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/python-testing/.openskills.json",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/python-testing/SKILL.md",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/redis-patterns/SKILL.md",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
       "path": "assets/opencode/skills/requirements-clarity/README.md",
       "sourceRef": "opencode-skill"
     },
     {
       "area": "skills",
       "path": "assets/opencode/skills/requirements-clarity/SKILL.md",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/rust-patterns/.openskills.json",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/rust-patterns/SKILL.md",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/rust-testing/.openskills.json",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/rust-testing/SKILL.md",
       "sourceRef": "opencode-skill"
     },
     {
@@ -529,36 +384,6 @@
     {
       "area": "skills",
       "path": "assets/opencode/skills/security-scan/SKILL.md",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/springboot-patterns/.openskills.json",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/springboot-patterns/SKILL.md",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/springboot-tdd/.openskills.json",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/springboot-tdd/SKILL.md",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/springboot-verification/.openskills.json",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/springboot-verification/SKILL.md",
       "sourceRef": "opencode-skill"
     },
     {
@@ -609,11 +434,6 @@
     {
       "area": "skills",
       "path": "assets/opencode/skills/verification-loop/SKILL.md",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/vite-patterns/SKILL.md",
       "sourceRef": "opencode-skill"
     },
     {

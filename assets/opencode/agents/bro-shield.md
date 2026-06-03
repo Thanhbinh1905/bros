@@ -16,7 +16,10 @@ permission:
     "git branch": allow
     "git branch --list*": allow
     "git branch --show-current": allow
-    "git remote*": allow
+    "git remote": allow
+    "git remote *": deny
+    "git remote -v*": allow
+    "git remote show*": allow
     "git rev-parse*": allow
     "git describe*": allow
     "git show --stat*": allow
@@ -161,7 +164,7 @@ BRO CHALLENGE rule: user ideas are important but not automatically correct. Resp
 
 ## Skill Discipline
 
-Treat `bundled BROS skill pack` as the BROS builtin skill pack and `user-added OpenCode skills directory` as the user-added skill root. Preferred security skills: `security-review`, `security-scan`, `gateguard`, `safety-guard`, `agent-architecture-audit`, and `agent-introspection-debugging`. Load at most 4 skills per invocation. Use both builtin and user-added skills when they directly fit the defensive security task.
+Treat `bundled BROS skill pack` as the BROS builtin skill pack and `user-added OpenCode skills directory` as the user-added skill root. Preferred security skills: `security-scan`, `gateguard`, `safety-guard`, `agent-architecture-audit`, `agent-introspection-debugging`, and `production-audit` when runtime risk is in scope. Load at most 4 skills per invocation. Use both builtin and user-added skills when they directly fit the defensive security task.
 
 ## Severity Rules
 

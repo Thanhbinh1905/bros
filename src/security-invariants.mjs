@@ -60,6 +60,35 @@ const gitMutationAllowedBashPatternsRequiringAsk = [
 ];
 
 const gitMutationAllowExemptAgentNames = new Set([]);
+const broadBashAllowAgentNames = new Set(["bro-build"]);
+
+const requiredBroadBashAskPatterns = Object.freeze([
+  "git remote *",
+  "git checkout*",
+  "git switch*",
+  "git add *",
+  "git commit -m *",
+  "git push -u origin *",
+  "git restore*",
+  "git reset*",
+  "git branch -d*",
+  "npm install*",
+  "pnpm add*",
+  "yarn add*",
+  "bun add*",
+  "docker compose up*",
+  "docker run*",
+  "docker volume *",
+  "rm *",
+]);
+
+const requiredBroadBashDenyPatterns = Object.freeze([
+  "git reset --hard*",
+  "git push --force*",
+  "npm publish*",
+  "cat **/.env*",
+  "gh auth token*",
+]);
 
 function stableStringify(value) {
   if (value === undefined) return "__BROS_UNDEFINED__";
@@ -117,7 +146,29 @@ export function validateAgentAsset({ path, frontmatter, prompt }) {
   if (permission === "allow") errors.push(`${path}: top-level permission must not be broad allow`);
   if (permission?.bash === "allow") errors.push(`${path}: bash permission must not be broad allow`);
   if (permission?.bash && typeof permission.bash === "object" && permission.bash["*"] === "allow") {
-    errors.push(`${path}: bash wildcard must not be allow`);
+    const agentName = frontmatter?.name;
+    if (!broadBashAllowAgentNames.has(agentName)) {
+      errors.push(`${path}: bash wildcard must not be allow`);
+    } else {
+      const bashEntries = Object.entries(permission.bash);
+      const wildcardIndex = bashEntries.findIndex(([commandPattern]) => commandPattern === "*");
+      for (const commandPattern of requiredBroadBashAskPatterns) {
+        const index = bashEntries.findIndex(([pattern]) => pattern === commandPattern);
+        if (permission.bash[commandPattern] !== "ask") {
+          errors.push(`${path}: broad bash allow requires ask gate for ${commandPattern}`);
+        } else if (index <= wildcardIndex) {
+          errors.push(`${path}: broad bash ask gate must appear after wildcard allow: ${commandPattern}`);
+        }
+      }
+      for (const commandPattern of requiredBroadBashDenyPatterns) {
+        const index = bashEntries.findIndex(([pattern]) => pattern === commandPattern);
+        if (permission.bash[commandPattern] !== "deny") {
+          errors.push(`${path}: broad bash allow requires deny gate for ${commandPattern}`);
+        } else if (index <= wildcardIndex) {
+          errors.push(`${path}: broad bash deny gate must appear after wildcard allow: ${commandPattern}`);
+        }
+      }
+    }
   }
   if (permission?.external_directory === "allow") errors.push(`${path}: external_directory must not be broad allow`);
   if (permission?.external_directory && typeof permission.external_directory === "object" && permission.external_directory["*"] === "allow") {

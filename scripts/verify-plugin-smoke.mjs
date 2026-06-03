@@ -136,4 +136,55 @@ if (!unsafeProfileConfig.errors.some((error) => error.includes("hard_review"))
   throw new Error("Plugin smoke failed: unsafe permission profile combination was not rejected");
 }
 
+const buildBash = cfg.agent?.["bro-build"]?.permission?.bash;
+if (!buildBash || buildBash["*"] !== "allow") {
+  throw new Error("Plugin smoke failed: bro-build default did not allow routine local bash");
+}
+if (buildBash["git status*"] !== "allow" || buildBash["git grep*"] !== "allow" || buildBash["git worktree list*"] !== "allow") {
+  throw new Error("Plugin smoke failed: bro-build default did not allow harmless git inspection");
+}
+if (buildBash["npm run *"] !== "allow" || buildBash["docker compose logs*"] !== "allow" || buildBash["gh pr diff *"] !== "allow") {
+  throw new Error("Plugin smoke failed: bro-build default did not allow flexible local npm/docker/GitHub inspection");
+}
+if (buildBash["git remote *"] !== "ask" || buildBash["git checkout*"] !== "ask" || buildBash["git switch*"] !== "ask"
+  || buildBash["git add *"] !== "ask" || buildBash["git commit -m *"] !== "ask" || buildBash["git push -u origin *"] !== "ask"
+  || buildBash["git restore*"] !== "ask" || buildBash["git reset*"] !== "ask" || buildBash["git branch -d*"] !== "ask") {
+  throw new Error("Plugin smoke failed: bro-build default did not preserve ask gates for git mutation");
+}
+if (buildBash["npm install*"] !== "ask" || buildBash["pnpm add*"] !== "ask" || buildBash["yarn add*"] !== "ask" || buildBash["bun add*"] !== "ask"
+  || buildBash["docker compose up*"] !== "ask" || buildBash["docker run*"] !== "ask" || buildBash["docker volume *"] !== "ask"
+  || buildBash["rm *"] !== "ask") {
+  throw new Error("Plugin smoke failed: bro-build default did not preserve ask gates for local mutation");
+}
+if (buildBash["git reset --hard*"] !== "deny" || buildBash["git push --force*"] !== "deny" || buildBash["npm publish*"] !== "deny") {
+  throw new Error("Plugin smoke failed: bro-build default reopened destructive, force-push, or publish commands");
+}
+if (buildBash["cat **/.env*"] !== "deny" || buildBash["gh auth token*"] !== "deny" || buildBash["printenv*"] !== "deny" || buildBash["env*"] !== "deny") {
+  throw new Error("Plugin smoke failed: bro-build default reopened secret or environment inspection commands");
+}
+
+const buildOrder = Object.keys(buildBash);
+const wildcardIndex = buildOrder.indexOf("*");
+const gitAddIndex = buildOrder.indexOf("git add *");
+const hardDenyIndex = buildOrder.indexOf("git reset --hard*");
+if (!(wildcardIndex >= 0 && wildcardIndex < gitAddIndex && gitAddIndex < hardDenyIndex)) {
+  throw new Error("Plugin smoke failed: bro-build default permission order does not keep ask/deny rules after wildcard allow");
+}
+
+const testBash = cfg.agent?.["bro-test"]?.permission?.bash;
+if (!testBash || testBash["gh pr diff *"] !== "allow" || testBash["npx playwright test*"] !== "allow" || testBash["docker compose logs*"] !== "allow") {
+  throw new Error("Plugin smoke failed: bro-test did not allow expected QA inspection commands");
+}
+if (testBash["git add*"] !== "deny" || testBash["docker compose up*"] !== "ask" || testBash["npm install*"] !== "ask") {
+  throw new Error("Plugin smoke failed: bro-test reopened mutation commands");
+}
+
+const opsBash = cfg.agent?.["bro-ops"]?.permission?.bash;
+if (!opsBash || opsBash["gh run view *"] !== "allow" || opsBash["docker compose logs*"] !== "allow" || opsBash["git grep*"] !== "allow") {
+  throw new Error("Plugin smoke failed: bro-ops did not allow expected ops inspection commands");
+}
+if (opsBash["docker compose up*"] !== "ask" || opsBash["kubectl apply*"] !== "ask" || opsBash["docker system prune*"] !== "deny") {
+  throw new Error("Plugin smoke failed: bro-ops reopened operational mutation commands");
+}
+
 console.log("Plugin smoke passed: permission deny keys accepted, secret-like agent config rejected, model routing guards verified, and permission profiles fail closed.");

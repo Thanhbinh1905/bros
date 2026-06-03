@@ -436,8 +436,8 @@ production APIs: they reset on deploy, split across replicas, and fail open in
 serverless or multi-instance environments.
 
 Keep the backend layer responsible for choosing the integration point and error
-shape; use `api-design` for the HTTP contract and `security-review` for abuse
-case review.
+shape; use `hexagonal-architecture` for boundary design and `security-scan` or
+`gateguard` for abuse-case review.
 
 ## Background Jobs & Queues
 

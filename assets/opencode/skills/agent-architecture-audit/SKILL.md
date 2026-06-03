@@ -28,7 +28,7 @@ A diagnostic workflow for agent systems that hide failures behind wrapper layers
 **Do not use for:**
 - General code debugging — use `agent-introspection-debugging`
 - Code review — use language-specific reviewer agents
-- Security scanning — use `security-review` or `security-review/scan`
+- Security scanning — use `security-scan`, `gateguard`, or `safety-guard`
 - Agent performance benchmarking — use `agent-eval`
 - Writing new features — use the appropriate workflow skill
 
@@ -251,6 +251,6 @@ Audits should produce structured reports following this shape:
 
 - `agent-introspection-debugging` — Debug agent runtime failures (loops, timeouts, state errors)
 - `agent-eval` — Benchmark agent performance head-to-head
-- `security-review` — Security audit for code and configuration
+- `security-scan` — Security audit for code and configuration
 - `autonomous-agent-harness` — Set up autonomous agent operations
 - `agent-harness-construction` — Build agent harnesses from scratch

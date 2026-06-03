@@ -1,6 +1,6 @@
 {
   "name": "bros-harness",
-  "version": "0.1.8",
+  "version": "0.2.0",
   "description": "Package-first OpenCode plugin for disciplined BROS agent harness assets.",
   "license": "MIT",
   "type": "module",
