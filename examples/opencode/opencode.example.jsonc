@@ -1,6 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["bros-harness"]
+  "plugin": ["bros-harness@latest"]
 
   // Optional BROS-specific model routing is configured in bros.config.json,
   // not in provider or credential settings. See ../bros.config.example.json.

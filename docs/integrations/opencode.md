@@ -13,24 +13,36 @@ OpenCode's plugin installer makes the npm package available to OpenCode and upda
 Project scope:
 
 ```bash
-opencode plugin bros-harness
+opencode plugin bros-harness@latest
+```
+
+Project upgrade or stale-cache repair:
+
+```bash
+opencode plugin bros-harness@latest --force
 ```
 
 Global scope:
 
 ```bash
-opencode plugin bros-harness --global
+opencode plugin bros-harness@latest --global
+```
+
+Global upgrade or stale-cache repair:
+
+```bash
+opencode plugin bros-harness@latest --force --global
 ```
 
 The resulting config entry is:
 
 ```json
 {
-  "plugin": ["bros-harness"]
+  "plugin": ["bros-harness@latest"]
 }
 ```
 
-This is the preferred path for users and agents. Adding the JSON entry manually is only enough when the package is already resolvable by OpenCode. Local path examples are contributor-only.
+This is the preferred path for users and agents. Adding the JSON entry manually is only enough when the package is already resolvable by OpenCode. Updating an existing plugin install requires `--force` so OpenCode replaces the cached/resolved plugin version. `@latest` is an update-friendly selector, not a background updater; rerun the installer after releases and restart OpenCode. Avoid bare `bros-harness` in the source checkout because local package resolution can shadow the npm plugin cache. Local path examples are contributor-only.
 
 ## Packaged assets
 

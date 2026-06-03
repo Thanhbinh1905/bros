@@ -131,19 +131,26 @@ async function getPackageVersion() {
 async function printSnippet() {
   const version = await getPackageVersion();
   console.log(`Recommended OpenCode installer command:
-opencode plugin bros-harness
+opencode plugin bros-harness@latest
 
 Global OpenCode config:
-opencode plugin bros-harness --global
+opencode plugin bros-harness@latest --global
 
 Pinned current package when cache or latest resolution is suspect:
 opencode plugin bros-harness@${version} --force
+
+Repair an existing install:
+opencode plugin bros-harness@latest --force
+
+If OpenCode still serves a stale @latest cache, remove:
+~/.cache/opencode/packages/bros-harness@latest
+then rerun the repair command.
 
 Full guide:
 docs/installation.md
 
 Resulting config entry:
-${JSON.stringify({ plugin: ["bros-harness"] }, null, 2)}`);
+${JSON.stringify({ plugin: ["bros-harness@latest"] }, null, 2)}`);
 }
 
 async function readJson(path) {
@@ -261,7 +268,8 @@ async function listAssets() {
 }
 
 async function printAgentInstallPrompt() {
-  console.log(`Install BROS Harness into OpenCode by following docs/installation.md as the source of truth.\nDo not only paste JSON into opencode.jsonc; use OpenCode's plugin installer unless the guide's fallback applies.\nDo not edit providers, MCP, permissions, telemetry, secrets, npm publishing, or npm dist-tags.\nRestart OpenCode and verify BROS agents after installation.`);
+  const version = await getPackageVersion();
+  console.log(`Install BROS Harness into OpenCode by following docs/installation.md as the source of truth.\nDo not only paste JSON into opencode.jsonc; use OpenCode's plugin installer unless the guide's fallback applies.\nUse opencode plugin bros-harness@latest for first install. For an existing install, use opencode plugin bros-harness@latest --force. If @latest remains stale, clear only ~/.cache/opencode/packages/bros-harness@latest and rerun the installer.\nDo not edit providers, MCP, permissions, telemetry, secrets, npm publishing, or npm dist-tags.\nRestart OpenCode and verify BROS agents after installation.`);
 }
 
 const command = process.argv[2] ?? "help";

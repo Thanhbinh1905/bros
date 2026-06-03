@@ -362,6 +362,20 @@ function mergeConfig(base, override) {
   return next;
 }
 
+function extractPluginBrosConfig(input) {
+  if (!isObject(input)) return undefined;
+
+  if (input.bros_harness !== undefined) return input.bros_harness;
+  if (input.brosHarness !== undefined) return input.brosHarness;
+
+  const config = {};
+  for (const key of allowedTopLevelKeys) {
+    if (key in input) config[key] = input[key];
+  }
+
+  return Object.keys(config).length > 0 ? config : undefined;
+}
+
 async function readJsonIfPresent(path, label) {
   try {
     await access(path);
@@ -382,8 +396,9 @@ export async function loadBrosConfigSources({ cwd = process.cwd(), input = {}, i
     sources.push(await readJsonIfPresent(globalConfigPath, "global BROS config"));
     sources.push(await readJsonIfPresent(resolve(cwd, configFileName), "repo BROS config"));
   }
-  if (input && Object.keys(input).length > 0) {
-    sources.push({ config: input, source: "OpenCode plugin input", path: "plugin input" });
+  const pluginConfig = extractPluginBrosConfig(input);
+  if (pluginConfig !== undefined) {
+    sources.push({ config: pluginConfig, source: "OpenCode plugin input", path: "plugin input" });
   }
   return sources.filter((entry) => entry.config !== undefined);
 }

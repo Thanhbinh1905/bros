@@ -35,41 +35,55 @@ Check the published package metadata:
 npm view bros-harness dist-tags version --json
 ```
 
-The last validated published package documented here is `bros-harness@0.1.6` with expected `latest` dist-tag `0.1.6`. Repository-local documentation or metadata repairs after that package version are pending-release until a separately approved publish occurs; do not assume local unreleased fixes are available from npm.
+The current fix version documented here is `bros-harness@0.1.8`. Before installing, confirm npm `latest` has advanced to `0.1.8`; if it still reports `0.1.7`, the registry is still serving the known-broken OpenCode startup build.
 
 ## Install
 
 For the current project config, run:
 
 ```bash
-opencode plugin bros-harness
+opencode plugin bros-harness@latest
+```
+
+If BROS Harness is already installed and OpenCode is not picking up the new npm release, replace the existing plugin version explicitly:
+
+```bash
+opencode plugin bros-harness@latest --force
 ```
 
 For global OpenCode config, run this only when you want BROS Harness in every OpenCode workspace:
 
 ```bash
-opencode plugin bros-harness --global
+opencode plugin bros-harness@latest --global
+```
+
+For an existing global install, replace the global plugin version explicitly:
+
+```bash
+opencode plugin bros-harness@latest --force --global
 ```
 
 If OpenCode has a stale cached package, or if npm metadata shows a stale `latest` dist-tag, pin the validated package and replace the existing plugin entry:
 
 ```bash
-opencode plugin bros-harness@0.1.6 --force
+opencode plugin bros-harness@0.1.8 --force
 ```
 
 For global scope with the pinned package, add `--global`:
 
 ```bash
-opencode plugin bros-harness@0.1.6 --force --global
+opencode plugin bros-harness@0.1.8 --force --global
 ```
 
 The installer makes the package available to OpenCode and writes a config entry like this:
 
 ```json
 {
-  "plugin": ["bros-harness"]
+  "plugin": ["bros-harness@latest"]
 }
 ```
+
+This guide uses `bros-harness@latest` so rerunning OpenCode's installer can pick up the current npm release. If `@latest` still loads an old package after `--force`, clear only OpenCode's stale BROS cache at `~/.cache/opencode/packages/bros-harness@latest`, rerun the installer, and restart OpenCode.
 
 ## Restart
 
@@ -127,16 +141,21 @@ These commands inspect package-local metadata and packaged assets only. They do 
 If `opencode agent list` does not show `mighty-bro` or the `bro-*` agents, do not keep editing JSON. Check these causes first:
 
 - OpenCode was not restarted after the plugin install.
+- An older BROS plugin version was already installed and the installer was run without `--force`.
+- `bros-harness@0.1.7` is installed; that version rejects OpenCode runtime context during startup and does not register BROS agents.
+- The active config contains bare `bros-harness`; use `bros-harness@latest` so OpenCode uses its package installer/cache path.
 - The plugin was installed in project scope but OpenCode was started from another project.
 - The plugin was installed globally only in a different user or config home.
 - OpenCode cached a stale package version.
 - The config contains a manual plugin entry but OpenCode never installed the package.
 
-Use the pinned installer to repair stale package resolution:
+Use the installer to repair stale package resolution:
 
 ```bash
-opencode plugin bros-harness@0.1.6 --force
+opencode plugin bros-harness@latest --force
 ```
+
+If OpenCode still reports `Plugin export is not a function` for `bros-harness@latest`, inspect the cached package version. If `~/.cache/opencode/packages/bros-harness@latest/node_modules/bros-harness/package.json` is older than npm `latest`, remove only `~/.cache/opencode/packages/bros-harness@latest`, rerun the installer command above, and restart OpenCode.
 
 Then restart OpenCode and run verification again.
 
@@ -153,7 +172,7 @@ Rollback should be explicit and scoped. Do not use broad reset, deletion, or aut
 If the plugin was pinned to a bad version, prefer rolling forward to a known-good pinned version with OpenCode's plugin installer rather than deleting unrelated config. Example:
 
 ```bash
-opencode plugin bros-harness@0.1.6 --force
+opencode plugin bros-harness@0.1.8 --force
 ```
 
 For global rollback, apply the same scoped edit or pinned repair to global scope only after confirming the user intended a global change. Do not edit providers, MCP servers, permissions, telemetry, secrets, or credentials as part of rollback.
@@ -166,7 +185,7 @@ For package config, merge only the plugin entry:
 
 ```json
 {
-  "plugin": ["bros-harness"]
+  "plugin": ["bros-harness@latest"]
 }
 ```
 
@@ -189,10 +208,10 @@ Install BROS Harness into OpenCode by following docs/installation.md as the sour
 First check opencode --version, opencode plugin --help, npm --version, node --version,
 and npm view bros-harness dist-tags version --json.
 Ask whether to use project scope or global scope.
-After approval, use opencode plugin bros-harness for project scope or
-opencode plugin bros-harness --global for global scope.
-If latest resolution or cache state is suspect, use bros-harness@0.1.6 --force
-in the same approved scope.
+After approval, use opencode plugin bros-harness@latest for project scope or
+opencode plugin bros-harness@latest --global for global scope.
+If updating an existing install, use bros-harness@latest --force in the same approved scope.
+If latest resolution or cache state is suspect after 0.1.8 is published, pin bros-harness@0.1.8 --force.
 Do not run npm install, publish packages, mutate npm dist-tags, edit providers,
 MCP servers, permissions, telemetry, secrets, or credentials.
 If manual config editing is explicitly requested, merge only the plugin entry
@@ -250,4 +269,4 @@ Publishing, dependency installation, and asset import remain separate maintainer
 
 ## Release State Caveat
 
-This source checkout may contain unreleased remediation work beyond the currently published `bros-harness@0.1.6` package. Local validation and package dry-runs can prove the checkout is internally consistent, but they do not publish a new package or mutate npm dist-tags. Committing, pushing, or publishing any remediation requires a future explicit Git Approval Packet and release approval.
+This source checkout may contain unreleased remediation work beyond the currently published npm package. Local validation and package dry-runs can prove the checkout is internally consistent, but they do not publish a new package or mutate npm dist-tags. Committing, pushing, or publishing any remediation requires a future explicit Git Approval Packet and release approval.

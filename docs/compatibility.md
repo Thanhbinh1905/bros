@@ -5,7 +5,7 @@
 | Surface | Status | Notes |
 | --- | --- | --- |
 | OpenCode plugin runtime | Supported first target | Package exposes an OpenCode plugin entrypoint through `src/plugin.mjs`; assets are organized under `assets/opencode/`. |
-| OpenCode install path | Supported through OpenCode plugin installer | Use `opencode plugin bros-harness` or the pinned package form in `docs/installation.md`. Manual JSON edits are fallback only. |
+| OpenCode install path | Supported through OpenCode plugin installer | Use `opencode plugin bros-harness@latest` for first install, or `opencode plugin bros-harness@latest --force` when updating or repairing an existing install. Manual JSON edits are fallback only. |
 | OpenCode config mutation | Not supported by package runtime | Runtime uses an in-memory `config(cfg)` hook only; it does not write `opencode.json`, `.opencode/`, global config, providers, MCP, top-level permissions, telemetry, or secrets. Optional BROS permission profiles only adjust packaged BROS agent permissions after fail-closed validation. |
 | Node.js | Supported on Node `>=20` | The package `engines.node` field requires Node 20 or newer. CLI helpers use only built-in Node modules. |
 | Package managers | npm-compatible package publication | Release checks use `npm pack --dry-run`; package consumers should install through OpenCode's plugin installer rather than running repository dependency installs. |
@@ -24,4 +24,4 @@ The `bros doctor`, `bros status`, `bros snippet`, `bros list-assets`, and `bros 
 
 ## Version Guidance
 
-Use the version documented in `docs/installation.md` when cache or `latest` resolution is suspect. Restart OpenCode after installation or plugin config changes because OpenCode loads plugin configuration at startup.
+Use `@latest --force` for normal updates, or the pinned version documented in `docs/installation.md` when cache, `latest` resolution, or an existing installed plugin version is suspect. Restart OpenCode after installation, upgrade, or plugin config changes because OpenCode loads plugin configuration at startup.

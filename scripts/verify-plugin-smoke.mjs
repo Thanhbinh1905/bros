@@ -16,6 +16,31 @@ const cfg = {
 
 server.config(cfg);
 
+const openCodeRuntimeServer = await brosHarnessServer({
+  client: {},
+  project: {},
+  worktree: {},
+  directory: process.cwd(),
+  experimental_workspace: false,
+  serverUrl: "http://127.0.0.1:0",
+  $: {},
+}, { includeFiles: false });
+const openCodeRuntimeCfg = {};
+openCodeRuntimeServer.config(openCodeRuntimeCfg);
+if (!openCodeRuntimeCfg.agent?.["mighty-bro"]) {
+  throw new Error("Plugin smoke failed: OpenCode runtime input prevented BROS agent registration");
+}
+
+const namespacedInputServer = await brosHarnessServer({
+  client: {},
+  bros_harness: { fallback_model: "openai/gpt-5-mini" },
+}, { includeFiles: false });
+const namespacedInputCfg = {};
+namespacedInputServer.config(namespacedInputCfg);
+if (namespacedInputCfg.agent?.["bro-docs"]?.model !== "openai/gpt-5-mini") {
+  throw new Error("Plugin smoke failed: namespaced OpenCode plugin input was not applied");
+}
+
 const forbiddenBefore = snapshotForbiddenConfig({});
 assertNoForbiddenConfigMutation(forbiddenBefore, {
   agent: {
