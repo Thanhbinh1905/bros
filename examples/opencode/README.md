@@ -1,6 +1,20 @@
 # OpenCode Example
 
-The package-first example uses the BROS Harness plugin snippet:
+Use the complete installation guide as the source of truth: [`../../docs/installation.md`](../../docs/installation.md).
+
+Quick project install:
+
+```bash
+opencode plugin bros-harness
+```
+
+Use global scope when requested:
+
+```bash
+opencode plugin bros-harness --global
+```
+
+The installer writes a config entry like this:
 
 ```json
 {
@@ -8,4 +22,4 @@ The package-first example uses the BROS Harness plugin snippet:
 }
 ```
 
-This example does not include provider keys, private endpoints, MCP servers, permissions, telemetry, credentials, or local absolute paths. Restart OpenCode after applying an approved config change.
+This example does not include provider keys, private endpoints, MCP servers, permissions, telemetry, credentials, or local absolute paths. Restart OpenCode after installation or any approved config change.

@@ -2,9 +2,27 @@
 
 OpenCode is the primary integration target for BROS Harness.
 
-## Package snippet
+## Package Installer
 
-Use the package plugin entry:
+Use the complete installation guide as the source of truth:
+
+[`../installation.md`](../installation.md)
+
+OpenCode's plugin installer makes the npm package available to OpenCode and updates config in the selected scope.
+
+Project scope:
+
+```bash
+opencode plugin bros-harness
+```
+
+Global scope:
+
+```bash
+opencode plugin bros-harness --global
+```
+
+The resulting config entry is:
 
 ```json
 {
@@ -12,7 +30,7 @@ Use the package plugin entry:
 }
 ```
 
-This is the preferred path for users and agents. Local path examples are contributor-only.
+This is the preferred path for users and agents. Adding the JSON entry manually is only enough when the package is already resolvable by OpenCode. Local path examples are contributor-only.
 
 ## Packaged assets
 
@@ -30,7 +48,7 @@ This runtime hook changes only the merged config object OpenCode passes to the p
 
 ## Safe agent workflow
 
-For end-to-end native OpenCode detection, npm version selection, plugin installation, verification, troubleshooting, and restart guidance, see [`../native-opencode-agent-installation.md`](../native-opencode-agent-installation.md).
+For end-to-end native OpenCode detection, npm version selection, plugin installation, verification, troubleshooting, and restart guidance, see [`../installation.md`](../installation.md).
 
 Agents should use:
 
@@ -38,4 +56,4 @@ Agents should use:
 bros agent-install-prompt
 ```
 
-The prompt instructs agents to merge only `plugin: ["bros-harness"]`, avoid sensitive config surfaces, and ask before writing.
+The prompt instructs agents to follow the installation guide, run OpenCode's plugin installer after approval, restart OpenCode, and verify that BROS agents are visible.

@@ -9,10 +9,10 @@ const manifestPath = join(packageRoot, "assets", "manifest.json");
 
 const commands = [
   ["help", "Show available BROS Harness commands."],
-  ["snippet", "Print the package-first OpenCode plugin snippet."],
+  ["snippet", "Print OpenCode installer commands and resulting plugin entry."],
   ["doctor", "Validate package asset directories and manifest shape without mutation."],
   ["list-assets", "Summarize packaged OpenCode agent, command, skill, doc, and template counts."],
-  ["agent-install-prompt", "Print a safe prompt an AI agent can follow to add the plugin snippet."]
+  ["agent-install-prompt", "Print a safe prompt an AI agent can follow to install the plugin."]
 ];
 
 const requiredPaths = [
@@ -39,8 +39,27 @@ function printHelp() {
   console.log("All commands are read-only. This CLI does not edit live OpenCode config.");
 }
 
-function printSnippet() {
-  console.log(JSON.stringify({ plugin: ["bros-harness"] }, null, 2));
+async function getPackageVersion() {
+  const packageJson = await readJson(join(packageRoot, "package.json"));
+  return packageJson.version || "latest";
+}
+
+async function printSnippet() {
+  const version = await getPackageVersion();
+  console.log(`Recommended OpenCode installer command:
+opencode plugin bros-harness
+
+Global OpenCode config:
+opencode plugin bros-harness --global
+
+Pinned current package when cache or latest resolution is suspect:
+opencode plugin bros-harness@${version} --force
+
+Full guide:
+docs/installation.md
+
+Resulting config entry:
+${JSON.stringify({ plugin: ["bros-harness"] }, null, 2)}`);
 }
 
 async function readJson(path) {
@@ -85,8 +104,8 @@ async function listAssets() {
   console.log(`Templates: ${counts.templates?.imported ?? "unknown"}`);
 }
 
-function printAgentInstallPrompt() {
-  console.log(`Add BROS Harness to OpenCode using the package plugin snippet only.\n\nConstraints:\n- Do not install dependencies unless the human explicitly approves it.\n- Do not publish packages.\n- Do not edit provider, MCP, permission, telemetry, secret, or credential settings.\n- Do not overwrite existing config. Merge only the plugin entry if OpenCode config exists.\n- If unsure, show the diff and ask.\n\nSnippet to add:\n{\n  "plugin": ["bros-harness"]\n}\n\nAfter editing OpenCode config, tell the human to restart OpenCode because config is loaded at startup.`);
+async function printAgentInstallPrompt() {
+  console.log(`Install BROS Harness into OpenCode by following docs/installation.md as the source of truth.\nDo not only paste JSON into opencode.jsonc; use OpenCode's plugin installer unless the guide's fallback applies.\nDo not edit providers, MCP, permissions, telemetry, secrets, npm publishing, or npm dist-tags.\nRestart OpenCode and verify BROS agents after installation.`);
 }
 
 const command = process.argv[2] ?? "help";
@@ -99,7 +118,7 @@ try {
       printHelp();
       break;
     case "snippet":
-      printSnippet();
+      await printSnippet();
       break;
     case "doctor":
       await doctor();
@@ -108,7 +127,7 @@ try {
       await listAssets();
       break;
     case "agent-install-prompt":
-      printAgentInstallPrompt();
+      await printAgentInstallPrompt();
       break;
     default:
       console.error(`Unknown command: ${command}`);

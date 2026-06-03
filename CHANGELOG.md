@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.6 - 2026-06-03
+
+- Corrected OpenCode installation guidance to use `opencode plugin bros-harness` as the primary package installer flow before manual config snippets.
+
 ## 0.1.5 - 2026-06-03
 
 - Added flexible feature-branch Git permission patterns for BROS executor agents with explicit approval-packet requirements.

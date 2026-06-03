@@ -1,10 +1,55 @@
-# Installation
+# Installation Guide
 
-BROS Harness is structured as a package-first OpenCode plugin. The primary configuration path is the package snippet, not copying local development folders.
+This is the source of truth for installing BROS Harness into OpenCode.
 
-## For humans
+BROS Harness is a package-first OpenCode plugin. The primary installation path is OpenCode's own plugin installer. Do not rely on only pasting `{"plugin":["bros-harness"]}` into `opencode.jsonc`: that config entry does not guarantee OpenCode has installed or cached the npm package it must load.
 
-Add the plugin package to OpenCode config:
+## Prerequisites
+
+Confirm the local tools are available:
+
+```bash
+opencode --version
+opencode plugin --help
+npm --version
+node --version
+```
+
+Check the published package metadata:
+
+```bash
+npm view bros-harness dist-tags version --json
+```
+
+As of this release, the validated published package is `bros-harness@0.1.6` and the expected `latest` dist-tag is `0.1.6`.
+
+## Install
+
+For the current project config, run:
+
+```bash
+opencode plugin bros-harness
+```
+
+For global OpenCode config, run this only when you want BROS Harness in every OpenCode workspace:
+
+```bash
+opencode plugin bros-harness --global
+```
+
+If OpenCode has a stale cached package, or if npm metadata shows a stale `latest` dist-tag, pin the validated package and replace the existing plugin entry:
+
+```bash
+opencode plugin bros-harness@0.1.6 --force
+```
+
+For global scope with the pinned package, add `--global`:
+
+```bash
+opencode plugin bros-harness@0.1.6 --force --global
+```
+
+The installer makes the package available to OpenCode and writes a config entry like this:
 
 ```json
 {
@@ -12,50 +57,112 @@ Add the plugin package to OpenCode config:
 }
 ```
 
-Restart OpenCode after editing config. The running session keeps the config it loaded at startup.
+## Restart
 
-Optional read-only checks after the package is available:
+Fully quit and restart OpenCode after installing or changing plugin config. OpenCode loads plugins at startup, so an already-running session can keep using stale config.
+
+## Verify
+
+After restart, verify that BROS agents are visible:
 
 ```bash
-bros snippet
-bros doctor
-bros list-assets
+opencode agent list
 ```
 
-## For AI agents
+Expected BROS agents include:
 
-For a complete native OpenCode setup flow, use the self-contained agent guide: [`native-opencode-agent-installation.md`](native-opencode-agent-installation.md).
+- `mighty-bro`
+- `bro-build`
+- `bro-test`
+- `bro-shield`
+- `bro-docs`
+- `bro-ops`
+- `bro-design`
+- `bro-ui`
+- `bro-explore`
 
-Use a bounded instruction:
+Run a minimal smoke test:
+
+```bash
+opencode run --agent mighty-bro "hello"
+```
+
+If BROS commands are available in the active session, `/bros-status` can also be used after restart.
+
+## Troubleshooting
+
+If `opencode agent list` does not show `mighty-bro` or the `bro-*` agents, do not keep editing JSON. Check these causes first:
+
+- OpenCode was not restarted after the plugin install.
+- The plugin was installed in project scope but OpenCode was started from another project.
+- The plugin was installed globally only in a different user or config home.
+- OpenCode cached a stale package version.
+- The config contains a manual plugin entry but OpenCode never installed the package.
+
+Use the pinned installer to repair stale package resolution:
+
+```bash
+opencode plugin bros-harness@0.1.6 --force
+```
+
+Then restart OpenCode and run verification again.
+
+## Manual Config Fallback
+
+Manual config editing is a fallback, not the recommended installation path. Use it only when the package is already resolvable by OpenCode or when using a local development path.
+
+For package config, merge only the plugin entry:
+
+```json
+{
+  "plugin": ["bros-harness"]
+}
+```
+
+For local repository smoke tests, use an absolute file URL:
+
+```json
+{
+  "plugin": ["file:///absolute/path/to/bros/src/plugin.mjs"]
+}
+```
+
+After any manual config edit, fully restart OpenCode and verify with `opencode agent list`.
+
+## AI Agent Prompt
+
+Use this prompt when asking an AI coding agent to install BROS Harness:
 
 ```text
-Configure BROS Harness with { "plugin": ["bros-harness"] }. Do not install dependencies, publish, mutate provider/MCP/permission/telemetry/secret settings, or overwrite existing config files. Merge only the plugin entry if approved, show the proposed diff, and remind the human to restart OpenCode.
+Install BROS Harness into OpenCode by following docs/installation.md as the source of truth.
+First check opencode --version, opencode plugin --help, npm --version, node --version,
+and npm view bros-harness dist-tags version --json.
+Ask whether to use project scope or global scope.
+After approval, use opencode plugin bros-harness for project scope or
+opencode plugin bros-harness --global for global scope.
+If latest resolution or cache state is suspect, use bros-harness@0.1.6 --force
+in the same approved scope.
+Do not run npm install, publish packages, mutate npm dist-tags, edit providers,
+MCP servers, permissions, telemetry, secrets, or credentials.
+If manual config editing is explicitly requested, merge only the plugin entry
+and show the diff before writing.
+Tell the human to fully restart OpenCode, then verify with opencode agent list
+and opencode run --agent mighty-bro "hello".
 ```
 
-The package helper can print this prompt:
+The package helper prints a short reference prompt:
 
 ```bash
 bros agent-install-prompt
 ```
 
-## What the plugin changes
+## Runtime Behavior
 
-- Uses OpenCode's in-memory `config(cfg)` hook at startup.
-- Adds package-relative BROS skills to `skills.paths` only when the existing field shape is schema-compatible.
-- Adds packaged BROS command prompt entries to `command` without replacing existing command keys.
+On startup, the plugin uses OpenCode's in-memory `config(cfg)` hook only. It adds package-relative BROS skills, packaged BROS agents, and packaged BROS commands without replacing existing keys.
 
-## What the plugin does not change
+The runtime plugin does not write user config files, install dependencies, publish packages, register providers, add MCP servers, change permissions, configure telemetry, or read, validate, or write secrets.
 
-- No providers.
-- No MCP servers.
-- No permission changes.
-- No telemetry.
-- No secrets or credential validation.
-- No provider, MCP, permission, telemetry, or secret registration.
-- No filesystem writes.
-- No live user config file mutation; `opencode.json`, `.opencode/`, and global config files are not written by the package plugin.
-
-## Local contributor checks
+## Contributor Checks
 
 For repository development only:
 
@@ -64,5 +171,4 @@ npm run validate
 node bin/bros.mjs doctor
 ```
 
-Publishing and dependency installation remain separate gated actions.
-Asset import is maintainer-only source maintenance for repository asset refreshes, not part of package installation. Package users should rely on the plugin snippet and read-only CLI helpers above; import tooling is not exposed as an installed package command.
+Publishing, dependency installation, and asset import remain separate maintainer-gated actions. Package users should rely on OpenCode's plugin installer and the read-only CLI helpers above.

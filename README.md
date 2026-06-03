@@ -79,17 +79,22 @@ The point is not ceremony for ceremony’s sake. The point is to keep useful pre
 
 ## Installation
 
-BROS Harness is OpenCode-first. The primary install path is the package plugin snippet:
+BROS Harness is OpenCode-first. Use the full installation guide:
 
-For LLM: Install BROS Harness into OpenCode using the self-contained native agent guide at [`docs/native-opencode-agent-installation.md`](docs/native-opencode-agent-installation.md); detect OpenCode first, check npm dist-tags before `bros-harness@latest`, prefer pinned `bros-harness@0.1.4` when latest is stale, avoid secrets/provider/MCP/global mutations, verify agents, and remind the user to restart OpenCode.
+[`docs/installation.md`](docs/installation.md)
 
-```json
-{
-  "plugin": ["bros-harness"]
-}
+Quick project install:
+
+```bash
+opencode plugin bros-harness
 ```
 
-After adding the plugin entry through your normal OpenCode configuration workflow, restart OpenCode so startup configuration is reloaded.
+Restart OpenCode, then verify:
+
+```bash
+opencode agent list
+opencode run --agent mighty-bro "hello"
+```
 
 Optional read-only CLI checks:
 
@@ -102,7 +107,10 @@ bros list-assets
 For AI-assisted setup, use a narrow prompt:
 
 ```text
-Add BROS Harness to OpenCode using only the package plugin snippet { "plugin": ["bros-harness"] }. Do not install dependencies, publish packages, edit provider settings, add MCP servers, change permissions, configure telemetry, validate secrets, or overwrite existing config. If a config already exists, merge only the plugin entry, show the diff, and ask before writing. Tell the human to restart OpenCode after the approved edit.
+Install BROS Harness into OpenCode by following docs/installation.md as the source of truth.
+Do not only paste JSON into opencode.jsonc; use OpenCode's plugin installer unless the guide's fallback applies.
+Do not edit providers, MCP, permissions, telemetry, secrets, npm publishing, or npm dist-tags.
+Restart OpenCode and verify BROS agents after installation.
 ```
 
 The CLI can print similar guidance:
@@ -173,7 +181,6 @@ Before proposing changes, check:
 Useful references:
 
 - [`docs/installation.md`](docs/installation.md)
-- [`docs/native-opencode-agent-installation.md`](docs/native-opencode-agent-installation.md)
 - [`docs/integrations/opencode.md`](docs/integrations/opencode.md)
 - [`docs/security.md`](docs/security.md)
 - [`CONTRIBUTING.md`](CONTRIBUTING.md)
