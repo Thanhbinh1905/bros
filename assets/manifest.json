@@ -1,0 +1,799 @@
+{
+  "name": "bros-harness",
+  "generatedAt": "2026-06-03T02:01:23Z",
+  "importPolicy": "Sanitized import from approved OpenCode asset directories only; raw opencode.jsonc and secret-like/cache/log artifacts excluded.",
+  "counts": {
+    "agents": {
+      "candidates": 9,
+      "imported": 9,
+      "skipped": 0
+    },
+    "commands": {
+      "candidates": 5,
+      "imported": 5,
+      "skipped": 0
+    },
+    "skills": {
+      "candidates": 131,
+      "imported": 128,
+      "skipped": 3
+    },
+    "docs": {
+      "candidates": 2,
+      "imported": 2,
+      "skipped": 0
+    },
+    "templates": {
+      "candidates": 9,
+      "imported": 9,
+      "skipped": 0
+    }
+  },
+  "entries": [
+    {
+      "area": "agents",
+      "path": "assets/opencode/agents/bro-build.md",
+      "sourceRef": "opencode-agent"
+    },
+    {
+      "area": "agents",
+      "path": "assets/opencode/agents/bro-design.md",
+      "sourceRef": "opencode-agent"
+    },
+    {
+      "area": "agents",
+      "path": "assets/opencode/agents/bro-docs.md",
+      "sourceRef": "opencode-agent"
+    },
+    {
+      "area": "agents",
+      "path": "assets/opencode/agents/bro-explore.md",
+      "sourceRef": "opencode-agent"
+    },
+    {
+      "area": "agents",
+      "path": "assets/opencode/agents/bro-ops.md",
+      "sourceRef": "opencode-agent"
+    },
+    {
+      "area": "agents",
+      "path": "assets/opencode/agents/bro-shield.md",
+      "sourceRef": "opencode-agent"
+    },
+    {
+      "area": "agents",
+      "path": "assets/opencode/agents/bro-test.md",
+      "sourceRef": "opencode-agent"
+    },
+    {
+      "area": "agents",
+      "path": "assets/opencode/agents/bro-ui.md",
+      "sourceRef": "opencode-agent"
+    },
+    {
+      "area": "agents",
+      "path": "assets/opencode/agents/mighty-bro.md",
+      "sourceRef": "opencode-agent"
+    },
+    {
+      "area": "commands",
+      "path": "assets/opencode/commands/bros-assemble.md",
+      "sourceRef": "opencode-command"
+    },
+    {
+      "area": "commands",
+      "path": "assets/opencode/commands/bros-build.md",
+      "sourceRef": "opencode-command"
+    },
+    {
+      "area": "commands",
+      "path": "assets/opencode/commands/bros-plan.md",
+      "sourceRef": "opencode-command"
+    },
+    {
+      "area": "commands",
+      "path": "assets/opencode/commands/bros-review.md",
+      "sourceRef": "opencode-command"
+    },
+    {
+      "area": "commands",
+      "path": "assets/opencode/commands/bros-status.md",
+      "sourceRef": "opencode-command"
+    },
+    {
+      "area": "docs",
+      "path": "assets/opencode/docs/bros-builtin-skills.md",
+      "sourceRef": "opencode-doc"
+    },
+    {
+      "area": "docs",
+      "path": "assets/opencode/docs/bros-harness.md",
+      "sourceRef": "opencode-doc"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/agent-architecture-audit/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/agent-harness-construction/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/agent-harness-construction/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/agent-introspection-debugging/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/agent-introspection-debugging/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/api-design/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/api-design/agents/openai.yaml",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/architecture-decision-records/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/architecture-decision-records/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/article-writing/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/article-writing/agents/openai.yaml",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/article-writing/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/automation-audit-ops/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/automation-audit-ops/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/backend-patterns/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/backend-patterns/agents/openai.yaml",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/backend-patterns/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/benchmark/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/benchmark/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/bros-orchestrate/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/browser-qa/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/browser-qa/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/canary-watch/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/canary-watch/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/code-review-expert/agents/agent.yaml",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/code-review-expert/references/code-quality-checklist.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/code-review-expert/references/removal-plan.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/code-review-expert/references/security-checklist.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/code-review-expert/references/solid-checklist.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/code-review-expert/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/code-tour/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/code-tour/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/coding-standards/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/coding-standards/agents/openai.yaml",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/coding-standards/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/context-budget/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/context-budget/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/database-migrations/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/database-migrations/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/deployment-patterns/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/deployment-patterns/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/design-system/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/design-system/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/docker-patterns/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/docker-patterns/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/documentation-lookup/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/documentation-lookup/agents/openai.yaml",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/documentation-lookup/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/e2e-testing/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/e2e-testing/agents/openai.yaml",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/e2e-testing/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/error-handling/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/frontend-design-direction/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/frontend-design/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/frontend-design/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/frontend-patterns/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/frontend-patterns/agents/openai.yaml",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/frontend-patterns/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/gateguard/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/gateguard/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/git-master/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/golang-patterns/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/golang-patterns/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/golang-testing/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/golang-testing/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/grafana-dashboard-design/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/hexagonal-architecture/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/hexagonal-architecture/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/java-coding-standards/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/java-coding-standards/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/jpa-patterns/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/jpa-patterns/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/knowledge-ops/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/knowledge-ops/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/make-interfaces-feel-better/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/mysql-patterns/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/nestjs-patterns/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/nestjs-patterns/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/nextjs-turbopack/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/nextjs-turbopack/agents/openai.yaml",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/nextjs-turbopack/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/parallel-execution-optimizer/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/postgres-patterns/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/postgres-patterns/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/prisma-patterns/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/product-capability/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/product-capability/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/product-lens/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/product-lens/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/production-audit/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/python-patterns/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/python-patterns/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/python-testing/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/python-testing/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/redis-patterns/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/requirements-clarity/README.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/requirements-clarity/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/rust-patterns/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/rust-patterns/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/rust-testing/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/rust-testing/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/safety-guard/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/safety-guard/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/search-first/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/search-first/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/security-review/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/security-review/agents/openai.yaml",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/security-review/cloud-infrastructure-security.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/security-scan/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/security-scan/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/springboot-patterns/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/springboot-patterns/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/springboot-tdd/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/springboot-tdd/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/springboot-verification/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/springboot-verification/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/strategic-compact/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/strategic-compact/agents/openai.yaml",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/strategic-compact/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/strategic-compact/suggest-compact.sh",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/tdd-workflow/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/tdd-workflow/agents/openai.yaml",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/tdd-workflow/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/verification-loop/.openskills.json",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/verification-loop/agents/openai.yaml",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/verification-loop/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/vite-patterns/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "skills",
+      "path": "assets/opencode/skills/web-doc-search/SKILL.md",
+      "sourceRef": "opencode-skill"
+    },
+    {
+      "area": "templates",
+      "path": "assets/opencode/templates/bros/adr.md",
+      "sourceRef": "opencode-template"
+    },
+    {
+      "area": "templates",
+      "path": "assets/opencode/templates/bros/delivery-report.md",
+      "sourceRef": "opencode-template"
+    },
+    {
+      "area": "templates",
+      "path": "assets/opencode/templates/bros/explorer-evidence-packet.md",
+      "sourceRef": "opencode-template"
+    },
+    {
+      "area": "templates",
+      "path": "assets/opencode/templates/bros/prd.md",
+      "sourceRef": "opencode-template"
+    },
+    {
+      "area": "templates",
+      "path": "assets/opencode/templates/bros/security-review.md",
+      "sourceRef": "opencode-template"
+    },
+    {
+      "area": "templates",
+      "path": "assets/opencode/templates/bros/status-board.md",
+      "sourceRef": "opencode-template"
+    },
+    {
+      "area": "templates",
+      "path": "assets/opencode/templates/bros/task-packet.md",
+      "sourceRef": "opencode-template"
+    },
+    {
+      "area": "templates",
+      "path": "assets/opencode/templates/bros/test-strategy.md",
+      "sourceRef": "opencode-template"
+    },
+    {
+      "area": "templates",
+      "path": "assets/opencode/templates/bros/ui-implementation-packet.md",
+      "sourceRef": "opencode-template"
+    }
+  ]
+}

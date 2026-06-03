@@ -1,0 +1,43 @@
+{
+  "name": "bros-harness",
+  "version": "0.1.0",
+  "description": "Package-first OpenCode plugin for disciplined BROS agent harness assets.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/plugin.mjs",
+  "exports": {
+    ".": "./src/plugin.mjs",
+    "./plugin": "./src/plugin.mjs",
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "bros": "./bin/bros.mjs"
+  },
+  "files": [
+    "assets/",
+    "bin/",
+    "docs/",
+    "examples/",
+    "scripts/validate-assets.mjs",
+    "scripts/verify-no-secrets.mjs",
+    "src/",
+    "README.md",
+    "LICENSE",
+    "SECURITY.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "validate": "node scripts/validate-assets.mjs && node scripts/verify-no-secrets.mjs",
+    "validate:assets": "node scripts/validate-assets.mjs",
+    "verify:no-secrets": "node scripts/verify-no-secrets.mjs"
+  },
+  "keywords": [
+    "opencode",
+    "agents",
+    "harness",
+    "cli"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

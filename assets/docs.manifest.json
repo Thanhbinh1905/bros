@@ -1,0 +1,20 @@
+{
+  "area": "docs",
+  "counts": {
+    "candidates": 2,
+    "imported": 2,
+    "skipped": 0
+  },
+  "entries": [
+    {
+      "area": "docs",
+      "path": "assets/opencode/docs/bros-builtin-skills.md",
+      "sourceRef": "opencode-doc"
+    },
+    {
+      "area": "docs",
+      "path": "assets/opencode/docs/bros-harness.md",
+      "sourceRef": "opencode-doc"
+    }
+  ]
+}

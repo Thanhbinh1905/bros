@@ -1,0 +1,55 @@
+{
+  "area": "templates",
+  "counts": {
+    "candidates": 9,
+    "imported": 9,
+    "skipped": 0
+  },
+  "entries": [
+    {
+      "area": "templates",
+      "path": "assets/opencode/templates/bros/adr.md",
+      "sourceRef": "opencode-template"
+    },
+    {
+      "area": "templates",
+      "path": "assets/opencode/templates/bros/delivery-report.md",
+      "sourceRef": "opencode-template"
+    },
+    {
+      "area": "templates",
+      "path": "assets/opencode/templates/bros/explorer-evidence-packet.md",
+      "sourceRef": "opencode-template"
+    },
+    {
+      "area": "templates",
+      "path": "assets/opencode/templates/bros/prd.md",
+      "sourceRef": "opencode-template"
+    },
+    {
+      "area": "templates",
+      "path": "assets/opencode/templates/bros/security-review.md",
+      "sourceRef": "opencode-template"
+    },
+    {
+      "area": "templates",
+      "path": "assets/opencode/templates/bros/status-board.md",
+      "sourceRef": "opencode-template"
+    },
+    {
+      "area": "templates",
+      "path": "assets/opencode/templates/bros/task-packet.md",
+      "sourceRef": "opencode-template"
+    },
+    {
+      "area": "templates",
+      "path": "assets/opencode/templates/bros/test-strategy.md",
+      "sourceRef": "opencode-template"
+    },
+    {
+      "area": "templates",
+      "path": "assets/opencode/templates/bros/ui-implementation-packet.md",
+      "sourceRef": "opencode-template"
+    }
+  ]
+}

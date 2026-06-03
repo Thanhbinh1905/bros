@@ -1,0 +1,35 @@
+{
+  "area": "commands",
+  "counts": {
+    "candidates": 5,
+    "imported": 5,
+    "skipped": 0
+  },
+  "entries": [
+    {
+      "area": "commands",
+      "path": "assets/opencode/commands/bros-assemble.md",
+      "sourceRef": "opencode-command"
+    },
+    {
+      "area": "commands",
+      "path": "assets/opencode/commands/bros-build.md",
+      "sourceRef": "opencode-command"
+    },
+    {
+      "area": "commands",
+      "path": "assets/opencode/commands/bros-plan.md",
+      "sourceRef": "opencode-command"
+    },
+    {
+      "area": "commands",
+      "path": "assets/opencode/commands/bros-review.md",
+      "sourceRef": "opencode-command"
+    },
+    {
+      "area": "commands",
+      "path": "assets/opencode/commands/bros-status.md",
+      "sourceRef": "opencode-command"
+    }
+  ]
+}

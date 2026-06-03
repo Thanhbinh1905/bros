@@ -1,0 +1,13 @@
+.bros/
+.github/
+.git/
+.env
+.env.*
+*.log
+node_modules/
+packages/
+opencode.json
+opencode.jsonc
+.opencode/opencode.json
+.opencode/opencode.jsonc
+scripts/import-assets.mjs

@@ -1,0 +1,55 @@
+{
+  "area": "agents",
+  "counts": {
+    "candidates": 9,
+    "imported": 9,
+    "skipped": 0
+  },
+  "entries": [
+    {
+      "area": "agents",
+      "path": "assets/opencode/agents/bro-build.md",
+      "sourceRef": "opencode-agent"
+    },
+    {
+      "area": "agents",
+      "path": "assets/opencode/agents/bro-design.md",
+      "sourceRef": "opencode-agent"
+    },
+    {
+      "area": "agents",
+      "path": "assets/opencode/agents/bro-docs.md",
+      "sourceRef": "opencode-agent"
+    },
+    {
+      "area": "agents",
+      "path": "assets/opencode/agents/bro-explore.md",
+      "sourceRef": "opencode-agent"
+    },
+    {
+      "area": "agents",
+      "path": "assets/opencode/agents/bro-ops.md",
+      "sourceRef": "opencode-agent"
+    },
+    {
+      "area": "agents",
+      "path": "assets/opencode/agents/bro-shield.md",
+      "sourceRef": "opencode-agent"
+    },
+    {
+      "area": "agents",
+      "path": "assets/opencode/agents/bro-test.md",
+      "sourceRef": "opencode-agent"
+    },
+    {
+      "area": "agents",
+      "path": "assets/opencode/agents/bro-ui.md",
+      "sourceRef": "opencode-agent"
+    },
+    {
+      "area": "agents",
+      "path": "assets/opencode/agents/mighty-bro.md",
+      "sourceRef": "opencode-agent"
+    }
+  ]
+}
