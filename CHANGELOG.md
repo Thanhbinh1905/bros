@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.5 - 2026-06-03
+
+- Added flexible feature-branch Git permission patterns for BROS executor agents with explicit approval-packet requirements.
+- Hardened dangerous Git, GitHub, and npm release command denials for packaged OpenCode agent assets.
+- Documented packaged OpenCode plugin installation and native agent installation guidance.
+
 ## 0.1.4 - 2026-06-03
 
 - Fixed packaged command config to use OpenCode's `template` field.
