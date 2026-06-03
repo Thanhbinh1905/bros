@@ -1,6 +1,10 @@
 # Changelog
 
-## 0.1.0 - Unreleased
+## 0.1.1 - 2026-06-03
+
+- Fixed npm CLI bin packaging posture for `bros` by ensuring the packaged `bin/bros.mjs` entry is executable with a valid Node shebang.
+
+## 0.1.0 - 2026-06-03
 
 - Initial sanitized repository scaffold.
 - Added curated OpenCode asset tree placeholders and validation scripts.
