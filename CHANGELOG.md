@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.7 - 2026-06-04
 
 - Reconciled local import/lifecycle accounting for three skipped raw skills and five skill-associated artifacts removed after approved cleanup.
 - Clarified that current repository documentation and metadata repairs are local pending-release changes and do not imply a new published npm package beyond `bros-harness@0.1.6`.
