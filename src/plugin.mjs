@@ -32,14 +32,14 @@ export async function verifyBrosHarnessAssets() {
 function parseCommandMarkdown(markdown) {
   const match = markdown.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
   if (!match) {
-    return { description: "BROS Harness command.", prompt: markdown.trim() };
+    return { description: "BROS Harness command.", template: markdown.trim() };
   }
 
   const descriptionMatch = match[1].match(/^description:\s*(.+)$/m);
   const description = descriptionMatch?.[1]?.replace(/^['\"]|['\"]$/g, "").trim();
   return {
     description: description || "BROS Harness command.",
-    prompt: match[2].trim()
+    template: match[2].trim()
   };
 }
 
@@ -54,6 +54,22 @@ function parseYamlScalar(value) {
   return trimmed;
 }
 
+function parseYamlKeyValue(line) {
+  let quote = "";
+  for (let index = 0; index < line.length; index += 1) {
+    const char = line[index];
+    if ((char === '"' || char === "'") && line[index - 1] !== "\\") {
+      quote = quote === char ? "" : quote || char;
+      continue;
+    }
+
+    if (char === ":" && !quote) {
+      return [line.slice(0, index), line.slice(index + 1)];
+    }
+  }
+  return null;
+}
+
 function parseSimpleYamlObject(yaml) {
   const root = {};
   const stack = [{ indent: -1, value: root }];
@@ -63,11 +79,11 @@ function parseSimpleYamlObject(yaml) {
 
     const indent = rawLine.match(/^ */)?.[0].length ?? 0;
     const line = rawLine.trim();
-    const match = line.match(/^(.+?):(?:\s*(.*))?$/);
-    if (!match) continue;
+    const parsedLine = parseYamlKeyValue(line);
+    if (!parsedLine) continue;
 
-    const key = match[1].trim().replace(/^['"]|['"]$/g, "");
-    const rawValue = match[2] ?? "";
+    const key = parsedLine[0].trim().replace(/^['"]|['"]$/g, "");
+    const rawValue = parsedLine[1]?.trimStart() ?? "";
 
     while (stack.length > 1 && indent <= stack[stack.length - 1].indent) {
       stack.pop();
@@ -170,7 +186,7 @@ function mergeAgents(cfg, agents) {
   }
 }
 
-export default async function brosHarnessPlugin(_input = {}, _options = {}) {
+export async function brosHarnessServer(_input = {}, _options = {}) {
   await verifyBrosHarnessAssets();
   const agents = await loadPackagedAgents();
   const commands = await loadPackagedCommands();
@@ -183,3 +199,8 @@ export default async function brosHarnessPlugin(_input = {}, _options = {}) {
     }
   };
 }
+
+export default {
+  id: "bros-harness",
+  server: brosHarnessServer
+};

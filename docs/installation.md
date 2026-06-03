@@ -24,6 +24,8 @@ bros list-assets
 
 ## For AI agents
 
+For a complete native OpenCode setup flow, use the self-contained agent guide: [`native-opencode-agent-installation.md`](native-opencode-agent-installation.md).
+
 Use a bounded instruction:
 
 ```text

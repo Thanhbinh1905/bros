@@ -81,6 +81,8 @@ The point is not ceremony for ceremony’s sake. The point is to keep useful pre
 
 BROS Harness is OpenCode-first. The primary install path is the package plugin snippet:
 
+For LLM: Install BROS Harness into OpenCode using the self-contained native agent guide at [`docs/native-opencode-agent-installation.md`](docs/native-opencode-agent-installation.md); detect OpenCode first, check npm dist-tags before `bros-harness@latest`, prefer pinned `bros-harness@0.1.4` when latest is stale, avoid secrets/provider/MCP/global mutations, verify agents, and remind the user to restart OpenCode.
+
 ```json
 {
   "plugin": ["bros-harness"]
@@ -116,6 +118,7 @@ The package plugin is intentionally narrow.
 On load, it verifies packaged asset directories and uses OpenCode’s in-memory `config(cfg)` hook to add only:
 
 - the package-relative BROS skills directory to `skills.paths`, when the existing field has the expected safe shape; and
+- packaged BROS agent entries to `agent`, without overwriting existing agent keys; and
 - packaged command prompt entries to `command`, without overwriting existing command keys.
 
 It does **not**:
@@ -125,11 +128,11 @@ It does **not**:
 - publish packages;
 - register providers;
 - add MCP servers;
-- change permissions;
+- change top-level permissions;
 - configure telemetry;
 - read, validate, or write secrets.
 
-Packaged agent files are included as reviewed assets, but they are not auto-registered by the default plugin hook because permission-bearing agent registration should remain an explicit, reviewed configuration decision.
+Packaged agent files are registered from reviewed assets so a package-only OpenCode install can expose BROS agents without copying local files.
 
 Three skipped raw skills remain excluded pending separate sanitized review. They are not imported by this package.
 
@@ -170,6 +173,7 @@ Before proposing changes, check:
 Useful references:
 
 - [`docs/installation.md`](docs/installation.md)
+- [`docs/native-opencode-agent-installation.md`](docs/native-opencode-agent-installation.md)
 - [`docs/integrations/opencode.md`](docs/integrations/opencode.md)
 - [`docs/security.md`](docs/security.md)
 - [`CONTRIBUTING.md`](CONTRIBUTING.md)

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.4 - 2026-06-03
+
+- Fixed packaged command config to use OpenCode's `template` field.
+- Fixed frontmatter parsing for quoted permission keys containing `:`.
+
+## 0.1.3 - 2026-06-03
+
+- Fixed OpenCode 1.15 plugin loading by exporting the V1 plugin module shape with `id` and `server`.
+
 ## 0.1.2 - 2026-06-03
 
 - Added package plugin agent registration so raw OpenCode installs can load BROS agents from `plugin: ["bros-harness"]`.

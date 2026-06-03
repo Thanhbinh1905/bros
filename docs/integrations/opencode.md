@@ -24,11 +24,13 @@ This is the preferred path for users and agents. Local path examples are contrib
 
 ## Runtime behavior
 
-The package plugin resolves assets relative to its own package root. It validates key asset directories, then uses OpenCode's in-memory `config(cfg)` hook only to add the package-relative skills directory to `skills.paths` when safe and add packaged command prompt entries without overwriting existing commands.
+The package plugin resolves assets relative to its own package root. It validates key asset directories, then uses OpenCode's in-memory `config(cfg)` hook to add the package-relative skills directory to `skills.paths` when safe, register packaged agent entries without overwriting existing agents, and add packaged command prompt entries without overwriting existing commands.
 
-This runtime hook changes only the merged config object OpenCode passes to the plugin at startup. It is distinct from live user config file mutation: the plugin does not write `opencode.json`, `.opencode/`, global config files, or other filesystem config. The plugin does not register providers, MCP servers, permissions, telemetry, or secrets. Agent files are packaged as reviewed assets, but permission-bearing agent registration is intentionally not performed by the default plugin hook.
+This runtime hook changes only the merged config object OpenCode passes to the plugin at startup. It is distinct from live user config file mutation: the plugin does not write `opencode.json`, `.opencode/`, global OpenCode config files, or other filesystem config. The plugin does not register providers, MCP servers, top-level permissions, telemetry, or secrets.
 
 ## Safe agent workflow
+
+For end-to-end native OpenCode detection, npm version selection, plugin installation, verification, troubleshooting, and restart guidance, see [`../native-opencode-agent-installation.md`](../native-opencode-agent-installation.md).
 
 Agents should use:
 
