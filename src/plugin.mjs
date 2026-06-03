@@ -43,6 +43,80 @@ function parseCommandMarkdown(markdown) {
   };
 }
 
+function parseYamlScalar(value) {
+  const trimmed = value.trim();
+  if (trimmed === "") return "";
+  if (trimmed === "true") return true;
+  if (trimmed === "false") return false;
+  if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+    return trimmed.slice(1, -1);
+  }
+  return trimmed;
+}
+
+function parseSimpleYamlObject(yaml) {
+  const root = {};
+  const stack = [{ indent: -1, value: root }];
+
+  for (const rawLine of yaml.split("\n")) {
+    if (!rawLine.trim() || rawLine.trim().startsWith("#")) continue;
+
+    const indent = rawLine.match(/^ */)?.[0].length ?? 0;
+    const line = rawLine.trim();
+    const match = line.match(/^(.+?):(?:\s*(.*))?$/);
+    if (!match) continue;
+
+    const key = match[1].trim().replace(/^['"]|['"]$/g, "");
+    const rawValue = match[2] ?? "";
+
+    while (stack.length > 1 && indent <= stack[stack.length - 1].indent) {
+      stack.pop();
+    }
+
+    const parent = stack[stack.length - 1].value;
+    if (rawValue === "") {
+      parent[key] = {};
+      stack.push({ indent, value: parent[key] });
+    } else {
+      parent[key] = parseYamlScalar(rawValue);
+    }
+  }
+
+  return root;
+}
+
+function parseAgentMarkdown(markdown) {
+  const match = markdown.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+  if (!match) return null;
+
+  const frontmatter = parseSimpleYamlObject(match[1]);
+  const { name, ...agent } = frontmatter;
+  if (!name) return null;
+
+  return {
+    name,
+    agent: {
+      ...agent,
+      prompt: match[2].trim()
+    }
+  };
+}
+
+async function loadPackagedAgents() {
+  const files = (await readdir(brosHarness.agentsDir))
+    .filter((file) => file.endsWith(".md"))
+    .filter((file) => file !== "README.md")
+    .sort();
+
+  const agents = {};
+  for (const file of files) {
+    const markdown = await readFile(join(brosHarness.agentsDir, file), "utf8");
+    const parsed = parseAgentMarkdown(markdown);
+    if (parsed) agents[parsed.name] = parsed.agent;
+  }
+  return agents;
+}
+
 async function loadPackagedCommands() {
   const files = (await readdir(brosHarness.commandsDir))
     .filter((file) => file.endsWith(".md"))
@@ -85,13 +159,26 @@ function mergeCommands(cfg, commands) {
   }
 }
 
+function mergeAgents(cfg, agents) {
+  if (cfg.agent !== undefined && (cfg.agent === null || typeof cfg.agent !== "object" || Array.isArray(cfg.agent))) {
+    return;
+  }
+
+  cfg.agent ??= {};
+  for (const [name, agent] of Object.entries(agents)) {
+    cfg.agent[name] ??= agent;
+  }
+}
+
 export default async function brosHarnessPlugin(_input = {}, _options = {}) {
   await verifyBrosHarnessAssets();
+  const agents = await loadPackagedAgents();
   const commands = await loadPackagedCommands();
 
   return {
     config(cfg) {
       mergeSkillsPath(cfg);
+      mergeAgents(cfg, agents);
       mergeCommands(cfg, commands);
     }
   };

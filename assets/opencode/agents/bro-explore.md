@@ -19,6 +19,22 @@ permission:
     "git status*": allow
     "git diff*": allow
     "git log*": allow
+    "git branch": allow
+    "git branch --list*": allow
+    "git branch --show-current": allow
+    "git remote*": allow
+    "git rev-parse*": allow
+    "git describe*": allow
+    "git show --stat*": allow
+    "git ls-files*": allow
+    "git blame*": allow
+    "node --version": allow
+    "npm --version": allow
+    "npm view *": allow
+    "npm info *": allow
+    "npm outdated": allow
+    "npm audit": allow
+    "npm audit --audit-level=*": allow
     "cat *": allow
     "sed -n*": allow
     "head*": allow
@@ -28,6 +44,56 @@ permission:
     "cat ~/.aws*": deny
     "cat **/.env*": deny
     "grep * .env*": deny
+    "git add*": deny
+    "git commit*": deny
+    "git tag*": deny
+    "git push*": deny
+    "git pull*": deny
+    "git fetch*": deny
+    "git merge*": deny
+    "git rebase*": deny
+    "git stash*": deny
+    "git cherry-pick*": deny
+    "git revert*": deny
+    "git checkout*": deny
+    "git switch*": deny
+    "git restore*": deny
+    "git reset --hard*": deny
+    "git clean*": deny
+    "git push --force*": deny
+    "git push --force-with-lease*": deny
+    "git branch -D*": deny
+    "git tag -d*": deny
+    "git update-ref*": deny
+    "git filter-branch*": deny
+    "git filter-repo*": deny
+    "git config --global credential*": deny
+    "git config --system credential*": deny
+    "npm install*": deny
+    "npm ci*": deny
+    "npm update*": deny
+    "npm dedupe*": deny
+    "npm prune*": deny
+    "npm rebuild*": deny
+    "npm audit fix*": deny
+    "npm exec *": deny
+    "npx *": deny
+    "npm run *": deny
+    "npm version *": deny
+    "npm pack*": deny
+    "npm publish*": deny
+    "npm unpublish *": deny
+    "npm login": deny
+    "npm adduser": deny
+    "npm token *": deny
+    "npm profile *": deny
+    "npm owner *": deny
+    "npm access *": deny
+    "npm config set //*": deny
+    "npm config set *_auth*": deny
+    "npm config set token*": deny
+    "npm config set registry http://*": deny
+    "npm config set strict-ssl false": deny
     "*~/.ssh*": deny
     "*~/.aws*": deny
     "*.env*": deny

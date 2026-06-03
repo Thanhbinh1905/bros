@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2 - 2026-06-03
+
+- Added package plugin agent registration so raw OpenCode installs can load BROS agents from `plugin: ["bros-harness"]`.
+
 ## 0.1.1 - 2026-06-03
 
 - Fixed npm CLI bin packaging posture for `bros` by ensuring the packaged `bin/bros.mjs` entry is executable with a valid Node shebang.
