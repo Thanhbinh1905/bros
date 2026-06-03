@@ -223,11 +223,11 @@ Role routing defaults:
 |---|---|
 | Orchestrator | `bros-orchestrate`, `requirements-clarity`, `strategic-compact`, `context-budget`, `parallel-execution-optimizer`, `agent-harness-construction` |
 | Explorer | `search-first`, `documentation-lookup`, `web-doc-search`, `code-tour`, `knowledge-ops`, `agent-architecture-audit` |
-| Architecture | `architecture-decision-records`, `api-design`, `hexagonal-architecture`, `backend-patterns` |
-| UI Design | `frontend-design`, `frontend-design-direction`, `design-system`, `frontend-a11y`, `make-interfaces-feel-better`, `frontend-patterns`, `browser-qa`; optional `grafana-dashboard-design` support for dashboard visual hierarchy |
-| Code Execution | `backend-patterns`, `frontend-patterns`, `error-handling`, `tdd-workflow`, `git-master`, language/framework/database/build skills by project evidence |
+| Architecture | `architecture-decision-records`, `hexagonal-architecture`, `backend-patterns`, `database-migrations` |
+| UI Design | `frontend-design`, `frontend-design-direction`, `design-system`, `make-interfaces-feel-better`, `frontend-patterns`, `browser-qa`; optional `grafana-dashboard-design` support for dashboard visual hierarchy |
+| Code Execution | `backend-patterns`, `frontend-patterns`, `error-handling`, `tdd-workflow`, `git-master`, `database-migrations`; stack-specific skills from the user-added skill root by project evidence |
 | QA | `tdd-workflow`, `verification-loop`, `e2e-testing`, `browser-qa`, `benchmark` |
-| Security | `security-review`, `security-scan`, `gateguard`, `safety-guard`, `agent-architecture-audit`, `agent-introspection-debugging` |
+| Security | `security-scan`, `gateguard`, `safety-guard`, `agent-architecture-audit`, `agent-introspection-debugging`, `production-audit` |
 | DevOps/SRE | `deployment-patterns`, `docker-patterns`, `production-audit`, `canary-watch`, `automation-audit-ops`, `git-master`, `grafana-dashboard-design` |
 | Docs | `article-writing`, `knowledge-ops`, `code-tour`, `documentation-lookup`, `web-doc-search` |
 

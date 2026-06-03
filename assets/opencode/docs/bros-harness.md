@@ -111,7 +111,7 @@ BROS agents can read, glob, grep, and use configured builtin or user-added skill
 
 ## Local Command Permission Model
 
-OpenCode BROS agents use pattern-based Bash permissions, not broad `bash: allow`. Public OSS defaults keep dependency installation, arbitrary package scripts, Docker runtime/mutation, destructive operations, cloud/production mutation, and secret-reading approval-gated.
+OpenCode BROS agents use pattern-based Bash permissions. `bro-build` defaults to flexible local Bash for implementation work, closer to OpenCode build mode, while explicit ask/deny gates remain for risky command classes. Review, security, exploration, and orchestration agents remain narrower by default.
 
 Optional BROS permission profiles can be enabled in `bros.config.json` to reduce repeated prompts for approved local repository work without changing top-level OpenCode permissions. Profiles are opt-in, repo-scoped, expiry-bound, and reason-logged at plugin startup. Supported profiles are:
 
@@ -119,7 +119,7 @@ Optional BROS permission profiles can be enabled in `bros.config.json` to reduce
 |---|---|---|
 | `readonly` | Read-only repo inspection for `bro-explore` (`read`, `glob`, `grep`, `rg`, read-only git). | Edits, installs, git mutation, secrets, publish, destructive, production/cloud commands remain denied. |
 | `review_safe` | QA/review validation for `bro-test` (`npm run validate`, tests, lint/typecheck/build, package dry-run, repo validation scripts). | Edits and dangerous command classes remain denied or ask-gated. |
-| `build_limited` | Approved local implementation validation for `bro-build` (`npm run validate/test/build/check`, repo Node validation scripts, localhost curl, npm pack dry-run). | File edits remain ask-gated by task packet; installs, publish, destructive, secret, deploy/cloud, and force push stay denied. |
+| `build_limited` | Additional local implementation validation allowlist for installations that override `bro-build` to stricter base permissions. | File edits remain ask-gated by task packet; installs, publish, destructive, secret, deploy/cloud, and force push stay denied. |
 | `trusted_ops` | Read-mostly operations evidence for `bro-ops` (git read-only, Docker Compose config/ps/logs, local validation, npm pack dry-run). | Requires `hard_review: true`; Docker mutation, production/cloud mutation, publish, secrets, destructive commands, and force push stay denied. |
 
 Example:
@@ -136,11 +136,11 @@ Example:
 }
 ```
 
-Validation fails closed for unknown profiles, duplicate profiles, non-repo scope, missing/expired `expires_at`, missing reason, secret-like reason text, `trusted_ops` without `hard_review: true`, and combining `readonly` with `trusted_ops` in one profile set. Profile merges append hard deny rules after allow rules so broad shell, secret reads, npm publish, destructive reset/clean/delete, production/cloud mutation, and force push cannot be accidentally reopened.
+Validation fails closed for unknown profiles, duplicate profiles, non-repo scope, missing/expired `expires_at`, missing reason, secret-like reason text, `trusted_ops` without `hard_review: true`, and combining `readonly` with `trusted_ops` in one profile set. Profile merges append hard deny rules after allow rules so secret reads, npm publish, destructive reset/clean/delete, production/cloud mutation, and force push cannot be accidentally reopened.
 
-- `bro-build`: may run local project inspection, git read-only inspection, dependency-free test/build/lint/typecheck commands, and localhost curl checks; edits, installs, arbitrary package scripts, Docker runtime/mutation, and high-risk operations remain approval-gated by task packet scope.
+- `bro-build`: may run routine local Bash, project inspection, git read-only inspection, package scripts, local test/build/lint/typecheck commands, Docker inspection, GitHub PR/run inspection, and localhost curl checks; edits, git mutation, dependency installs, Docker runtime/mutation, deploy/publish, and high-risk operations remain approval-gated or denied by task packet scope.
 - `bro-test`: edit remains denied; local inspection, git read-only inspection, dependency-free test/lint/typecheck/build checks, Playwright tests, and localhost curl commands are allowlisted for QA evidence; installs and Docker runtime/mutation require approval.
-- `bro-ops`: may run local inspection, git read-only inspection, dependency-free verification commands, Playwright tests, and localhost curl; Docker runtime/mutation and edits to OpenCode config remain approval-gated or denied according to role policy.
+- `bro-ops`: may run local inspection, git read-only inspection, GitHub PR/run inspection, Docker inspection/logs, dependency-free verification commands, Playwright tests, and localhost curl; Docker runtime/mutation and edits to OpenCode config remain approval-gated or denied according to role policy.
 - `bro-explore`: may run read-only inspection Bash only (`pwd`, `ls*`, `find*`, `tree*`, `rg*`, `grep*`, read-only git status/diff/log, `cat *`, `sed -n*`, `head*`, `tail*`, `wc*`) with edits, installs, Docker runtime, writes, and destructive commands denied.
 - `mighty-bro`: bash and edit remain denied. The Orchestrator can include scoped, pre-approved non-sensitive local command classes in task packets for owner agents, but does not execute them.
 

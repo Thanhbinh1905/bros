@@ -31,12 +31,19 @@ permission:
     "git branch": allow
     "git branch --list*": allow
     "git branch --show-current": allow
-    "git remote*": allow
+    "git remote": allow
+    "git remote *": ask
+    "git remote -v*": allow
+    "git remote show*": allow
     "git rev-parse*": allow
     "git describe*": allow
     "git show --stat*": allow
     "git ls-files*": allow
     "git blame*": allow
+    "git grep*": allow
+    "git worktree list*": allow
+    "git config --get*": allow
+    "git ls-remote*": allow
     "git checkout -b *": ask
     "git checkout -b feature/*": ask
     "git checkout -b fix/*": ask
@@ -66,6 +73,7 @@ permission:
     "git push origin *": ask
     "git pull*": ask
     "git fetch*": ask
+    "git fetch --dry-run*": allow
     "git merge*": ask
     "git rebase*": ask
     "git stash*": ask
@@ -73,9 +81,13 @@ permission:
     "git revert*": ask
     "git show*": allow
     "gh pr create*": ask
+    "gh pr list*": allow
     "gh pr view *": allow
     "gh pr status*": allow
     "gh pr checks *": allow
+    "gh pr diff *": allow
+    "gh run list*": allow
+    "gh run view *": allow
     "go version": allow
     "go env*": allow
     "go test*": allow
@@ -179,9 +191,13 @@ permission:
     "curl http://127.0.0.1*": allow
     "curl http://localhost*": allow
     "curl http://[::1]*": allow
-    "docker compose config*": ask
-    "docker compose ps*": ask
-    "docker compose logs*": ask
+    "docker version*": allow
+    "docker info*": allow
+    "docker ps*": allow
+    "docker images*": allow
+    "docker compose config*": allow
+    "docker compose ps*": allow
+    "docker compose logs*": allow
     "docker compose up*": ask
     "docker compose down": ask
     "docker compose build*": ask

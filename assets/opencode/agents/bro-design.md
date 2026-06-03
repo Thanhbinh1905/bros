@@ -16,7 +16,10 @@ permission:
     "git branch": allow
     "git branch --list*": allow
     "git branch --show-current": allow
-    "git remote*": allow
+    "git remote": allow
+    "git remote *": deny
+    "git remote -v*": allow
+    "git remote show*": allow
     "git rev-parse*": allow
     "git describe*": allow
     "git show --stat*": allow
@@ -149,7 +152,7 @@ BRO CHALLENGE rule: user ideas are important but not automatically correct. Resp
 
 ## Skill Discipline
 
-Treat `bundled BROS skill pack` as the BROS builtin skill pack and `user-added OpenCode skills directory` as the user-added skill root. Preferred architecture skills: `architecture-decision-records`, `api-design`, `hexagonal-architecture`, `backend-patterns`. Load at most 4 skills per invocation. Use both builtin and user-added skills when they directly fit the architecture task.
+Treat `bundled BROS skill pack` as the BROS builtin skill pack and `user-added OpenCode skills directory` as the user-added skill root. Preferred architecture skills: `architecture-decision-records`, `hexagonal-architecture`, `backend-patterns`, and `database-migrations` when persistence changes are in scope. Load at most 4 skills per invocation. Use both builtin and user-added skills when they directly fit the architecture task.
 
 ## Deliverables
 

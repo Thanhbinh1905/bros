@@ -11,7 +11,7 @@ permission:
   edit:
     "*": ask
   bash:
-    "*": ask
+    "*": allow
     "pwd": allow
     "ls*": allow
     "find*": allow
@@ -30,17 +30,31 @@ permission:
     "git branch": allow
     "git branch --list*": allow
     "git branch --show-current": allow
-    "git remote*": allow
+    "git remote": allow
+    "git remote *": ask
+    "git remote -v*": allow
+    "git remote show*": allow
     "git rev-parse*": allow
     "git describe*": allow
     "git show --stat*": allow
     "git ls-files*": allow
     "git blame*": allow
+    "git config *": ask
+    "git grep*": allow
+    "git config --get*": allow
+    "git config --list*": allow
+    "git ls-remote*": allow
+    "git worktree add*": ask
+    "git worktree remove*": ask
+    "git worktree prune*": ask
+    "git worktree list*": allow
+    "git checkout*": ask
     "git checkout -b *": ask
     "git checkout -b feature/*": ask
     "git checkout -b fix/*": ask
     "git checkout -b chore/*": ask
     "git checkout --track -b *": ask
+    "git switch*": ask
     "git switch -c *": ask
     "git switch -c feature/*": ask
     "git switch -c fix/*": ask
@@ -65,16 +79,24 @@ permission:
     "git push origin *": ask
     "git pull*": ask
     "git fetch*": ask
+    "git fetch --dry-run*": allow
     "git merge*": ask
     "git rebase*": ask
     "git stash*": ask
     "git cherry-pick*": ask
     "git revert*": ask
+    "git restore*": ask
+    "git reset*": ask
+    "git branch -d*": ask
     "git show*": allow
     "gh pr create*": ask
+    "gh pr list*": allow
     "gh pr view *": allow
     "gh pr status*": allow
     "gh pr checks *": allow
+    "gh pr diff *": allow
+    "gh run list*": allow
+    "gh run view *": allow
     "go version": allow
     "go env*": allow
     "go mod tidy": allow
@@ -85,13 +107,14 @@ permission:
     "gofmt*": allow
     "node --version": allow
     "npm --version": allow
-    "npm run *": ask
+    "npm run *": allow
     "npm install*": ask
     "npm ci": ask
     "npm update*": ask
     "npm dedupe*": ask
     "npm prune*": ask
     "npm rebuild*": ask
+    "npm cache clean*": ask
     "npm audit fix*": ask
     "npm exec *": ask
     "npx *": ask
@@ -121,20 +144,23 @@ permission:
     "npm install --package-lock-only --dry-run": allow
     "npx playwright test*": ask
     "pnpm install": ask
+    "pnpm add*": ask
     "pnpm --version": allow
     "pnpm test*": allow
-    "pnpm run *": ask
+    "pnpm run *": allow
     "yarn install": ask
+    "yarn add*": ask
     "yarn --version": allow
     "yarn test*": allow
-    "yarn run *": ask
+    "yarn run *": allow
     "yarn lint*": allow
     "yarn typecheck*": allow
     "yarn build*": allow
     "bun install": ask
+    "bun add*": ask
     "bun --version": allow
     "bun test*": allow
-    "bun run *": ask
+    "bun run *": allow
     "python --version": allow
     "python3 --version": allow
     "pytest*": allow
@@ -183,19 +209,63 @@ permission:
     "curl http://127.0.0.1*": allow
     "curl http://localhost*": allow
     "curl http://[::1]*": allow
-    "docker compose config*": ask
-    "docker compose ps*": ask
-    "docker compose logs*": ask
+    "docker version*": allow
+    "docker info*": allow
+    "docker ps*": allow
+    "docker images*": allow
+    "docker compose config*": allow
+    "docker compose ps*": allow
+    "docker compose logs*": allow
     "docker compose up*": ask
-    "docker compose down": ask
+    "docker compose down*": ask
     "docker compose build*": ask
+    "docker compose run*": ask
+    "docker compose exec*": ask
+    "docker compose restart*": ask
+    "docker compose rm*": ask
+    "docker compose pull*": ask
+    "docker build*": ask
+    "docker run*": ask
+    "docker exec*": ask
+    "docker stop*": ask
+    "docker kill*": ask
+    "docker rm*": ask
+    "docker rmi*": ask
+    "docker cp*": ask
+    "docker volume *": ask
+    "docker network *": ask
     "mkdir*": ask
     "touch*": ask
+    "rm *": ask
+    "cp *": ask
+    "mv *": ask
+    "chmod *": ask
+    "chown *": ask
     "docker compose down --volumes*": ask
+    "make test*": allow
+    "make build*": allow
+    "make check*": allow
+    "make lint*": allow
+    "just --list*": allow
+    "task --list*": allow
     "npm run deploy*": ask
     "pnpm run deploy*": ask
     "yarn run deploy*": ask
     "bun run deploy*": ask
+    "terraform *": ask
+    "terraform version*": allow
+    "terraform validate*": allow
+    "terraform plan*": ask
+    "kubectl *": ask
+    "kubectl version*": allow
+    "kubectl get*": allow
+    "kubectl describe*": allow
+    "kubectl logs*": allow
+    "helm *": ask
+    "helm version*": allow
+    "helm list*": allow
+    "helm status*": allow
+    "helm template*": allow
     "sudo*": deny
     "su*": deny
     "rm -rf*": deny
@@ -277,8 +347,8 @@ permission:
     "cat ~/.npmrc": deny
     "cat ~/.git-credentials": deny
     "cat ~/.docker/config.json": deny
-    "printenv": deny
-    "env": deny
+    "printenv*": deny
+    "env*": deny
     "git credential*": deny
     "gh auth*": deny
     "gh auth token*": deny
@@ -415,7 +485,7 @@ Forbidden in the trace: raw secrets, env values, credentials, full raw diffs, un
 
 ## Skill Discipline
 
-Treat `bundled BROS skill pack` as the BROS builtin skill pack and `user-added OpenCode skills directory` as the user-added skill root. Preferred implementation skills: `backend-patterns`, `frontend-patterns`, `error-handling`, `tdd-workflow`, `git-master` when approved task packets involve Git workflow, plus language/framework/database/build skills by project evidence. Load at most 4 skills per invocation.
+Treat `bundled BROS skill pack` as the BROS builtin skill pack and `user-added OpenCode skills directory` as the user-added skill root. Preferred implementation skills: `backend-patterns`, `frontend-patterns`, `error-handling`, `tdd-workflow`, `database-migrations` when persistence changes are in scope, and `git-master` when approved task packets involve Git workflow. Load at most 4 skills per invocation. Use stack-specific language/framework skills from the user-added skill root only when repository evidence requires them.
 
 ## Output Schema
 

@@ -1,9 +1,11 @@
 # Changelog
 
-## 0.1.8 - Pending release
+## 0.2.0 - Pending release
 
 - Fixed OpenCode plugin startup by ignoring OpenCode runtime context fields when resolving optional BROS config input.
 - Updated OpenCode install and repair guidance to prefer `bros-harness@latest`, including explicit `--force` upgrade commands for existing plugin installs and source-checkout shadowing notes.
+- Relaxed default `bro-build` Bash permissions for routine local development commands while preserving ask/deny gates for git mutation, dependency installs, Docker mutation, publish, secret reads, destructive commands, force push, and production/cloud operations.
+- Pruned stack-specific bundled skills from the public builtin pack so BROS ships only core orchestration, planning, implementation, QA, security, ops, docs, and UI skills; stack-specific skills should live in the user-added skill root when project evidence requires them.
 
 ## 0.1.7 - 2026-06-04
 

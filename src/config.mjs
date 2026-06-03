@@ -183,7 +183,6 @@ const permissionProfileRules = Object.freeze({
       skill: "allow",
       edit: { "*": "ask" },
       bash: {
-        "*": "ask",
         "node scripts/validate-assets.mjs": "allow",
         "node scripts/validate-workflow-regressions.mjs": "allow",
         "node scripts/verify-plugin-smoke.mjs": "allow",

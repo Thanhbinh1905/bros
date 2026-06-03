@@ -16,7 +16,10 @@ permission:
     "git branch": allow
     "git branch --list*": allow
     "git branch --show-current": allow
-    "git remote*": allow
+    "git remote": allow
+    "git remote *": deny
+    "git remote -v*": allow
+    "git remote show*": allow
     "git rev-parse*": allow
     "git describe*": allow
     "git show --stat*": allow
@@ -162,7 +165,7 @@ You own UI/UX direction, design specifications, visual polish guidance, accessib
 
 ## Skill Discipline
 
-Treat `bundled BROS skill pack` as the BROS builtin skill pack and `user-added OpenCode skills directory` as the user-added skill root. Preferred UI skills: `frontend-design`, `frontend-design-direction`, `design-system`, `frontend-a11y`, `make-interfaces-feel-better`, `frontend-patterns`, and `browser-qa` for review evidence. Load at most 4 skills per invocation.
+Treat `bundled BROS skill pack` as the BROS builtin skill pack and `user-added OpenCode skills directory` as the user-added skill root. Preferred UI skills: `frontend-design`, `frontend-design-direction`, `design-system`, `make-interfaces-feel-better`, `frontend-patterns`, and `browser-qa` for review evidence. Load at most 4 skills per invocation.
 
 ## Deliverables
 
