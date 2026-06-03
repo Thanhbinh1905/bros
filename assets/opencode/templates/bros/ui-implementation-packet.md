@@ -25,6 +25,13 @@ Formal owner labels are authoritative for this generated artifact; preserve tech
 
 - [What the user is trying to accomplish and design rationale]
 
+### Concept Directions and Evaluation
+
+- Concept lanes: [3+ distinct directions when design ambiguity exists, or scoped rationale for using one constrained direction]
+- Rubric: [novelty, usability, accessibility, brand-fit, feasibility, risk]
+- Selected direction: [chosen lane and rationale]
+- Rejected/blocked directions: [accessibility failures, generic repetition, protected-style-copying risk, feasibility limits]
+
 ### Layout, Visual Hierarchy, and Responsive Behavior
 
 - [Structure, spacing, typography, priority, breakpoints, reflow behavior]
@@ -41,11 +48,19 @@ Formal owner labels are authoritative for this generated artifact; preserve tech
 
 ### Accessibility Requirements
 
+Accessibility is mandatory and accessibility failures are blocking.
+
 - Semantic structure: [landmarks/headings/controls]
 - Keyboard behavior: [tab order, shortcuts, activation]
 - Focus management: [initial/restored/visible focus]
 - ARIA and labels: [only where needed]
 - Contrast: [minimum expectations]
+- Blocking criteria: [accessibility failures that must prevent handoff or require revision]
+
+### Creativity Safety Checks
+
+- Anti-generic/repetition check: [confirm concept is not a repeated generic hero/card/grid pattern or cosmetic variant]
+- Protected-style-copying check: [confirm no living artist, named designer, specific brand, proprietary product UI, or copyrighted/trademarked style is copied]
 
 ### Implementation Guidance
 

@@ -1,0 +1,21 @@
+{
+  "$schema": "./bros.config.schema.json",
+  "fallback_model": "openai/gpt-5.5",
+  "model_routing": {
+    "planner": "openai/gpt-5.5",
+    "explorer_search": "openai/gpt-5.5",
+    "coder_build": "openai/gpt-5.5",
+    "security": "openai/gpt-5.5",
+    "qa_review": "openai/gpt-5.5",
+    "docs": "openai/gpt-5.5",
+    "design": "openai/gpt-5.5",
+    "ops": "openai/gpt-5.5"
+  },
+  "permission_profiles": {
+    "enabled": ["review_safe", "build_limited"],
+    "scope": "repo",
+    "expires_at": "2099-01-01T00:00:00.000Z",
+    "reason": "approved local repo validation only",
+    "hard_review": false
+  }
+}

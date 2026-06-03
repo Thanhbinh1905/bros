@@ -8,6 +8,10 @@ BROS is not an AI swarm that floods a codebase with unsupervised workers. It is 
 
 The tone has bro spirit. The operating model is professional engineering.
 
+## 30-second intro
+
+**BE THE BRO** means bringing useful pressure to AI-assisted delivery: ask what is approved, pick the lightest safe lane, build only inside the packet, verify the result, and report the remaining risk. BROS keeps the fun names visible, but the gates stay in charge. No auto-merge, no auto-publish, no hidden production moves—just clearer plans, tighter builds, stronger reviews, and handoffs a team can trust.
+
 ## Why BROS?
 
 AI coding can feel fast while quietly creating rework: vague plans, hidden scope expansion, optimistic reviews, skipped security checks, and changes nobody can explain later.
@@ -46,6 +50,8 @@ The “Bro” names are display aliases, not authority overrides. Technical IDs,
 
 The spirit is collaborative. The rules are strict.
 
+Chat sessions may use distinctive Bro tone and short signatures like **BE THE BRO**, but persona is style-only. It must not obscure findings, severity, gates, technical IDs, permissions, security/QA outcomes, or cited facts. Persisted project docs, reports, packets, templates, and session records should remain formal and professional unless they are explicitly documenting BROS control-plane behavior.
+
 ## Workflow
 
 ```text
@@ -68,6 +74,20 @@ Handoff with changes, verification, and remaining risks
 
 The point is not ceremony for ceremony’s sake. The point is to keep useful pressure on the work: What is approved? What evidence supports it? What changed? What still needs review?
 
+## Workflow modes
+
+Use the lightest lane that preserves the required gates:
+
+| Mode | Dùng khi nào / when to use | Cách dùng / how to use | Gate reminder |
+| --- | --- | --- | --- |
+| **Normal prompt** | Quick questions, small clarifications, status checks, or narrow handoffs. | Ask `mighty-bro` directly. It will answer inline, route to a quick Explorer/specialist path, or recommend a heavier lane. | If scope is unclear or touches secrets, security, production, publish, destructive work, or broad mutation, quick mode stops. |
+| **`/bros-plan`** | You need a real plan before anyone builds. | Run `/bros-plan` with the objective, constraints, evidence, and acceptance criteria. It covers Phases 0-4 only and produces task packets. | Planning does not auto-build. Continue with `/bros-build` only after the plan and packets are approved. |
+| **`/bros-build`** | You have an approved task packet and want local implementation. | Run `/bros-build` with the approved packet reference and any required waivers/evidence. Builders implement the smallest correct scoped change, then route verification and handoff. | Missing packet, missing acceptance criteria, failed checks, or hard-gate gaps block the build. |
+| **`/bros-review`** | You want an independent audit of a plan, PR, delivery claim, or local result. | Run `/bros-review` with the artifacts to inspect. It challenges gate, quality, security, packet, and role-boundary issues. | Review does not patch by default. Remediation needs separate approval. |
+| **`/bros-assemble`** | You want one-prompt convenience for safe-scope work without skipping discipline. | Run `/bros-assemble` with a bounded objective. It coordinates classify → plan → build → QA/security/ops → docs/final report when each gate is satisfied. | Not a shortcut: no auto-publish, no auto-merge, no deploy, no dependency install, no credential handling, no destructive action, and no git mutation without approval. |
+
+`/bros-assemble` is intended for “one prompt, one enter” convenience inside approved safe scope. It can continue through safe local planning, implementation, verification, review routing, and final reporting, but it is not a shortcut around security, QA, architecture, production, publish, dependency-install, credential, git mutation, or destructive-operation approvals. Blocked tail work is reported as manual next actions rather than silently performed.
+
 ## Principles
 
 1. **No rubber stamps.** Risky or unclear requests should be challenged respectfully.
@@ -82,6 +102,8 @@ The point is not ceremony for ceremony’s sake. The point is to keep useful pre
 BROS Harness is OpenCode-first. Use the full installation guide:
 
 [`docs/installation.md`](docs/installation.md)
+
+Published npm installs use the package version available from the registry. Repository-local remediation documented under `Unreleased` in the changelog is pending-release until a separately approved publish occurs.
 
 Quick project install:
 
@@ -101,8 +123,12 @@ Optional read-only CLI checks:
 ```bash
 bros snippet
 bros doctor
+bros status
+bros config-status
 bros list-assets
 ```
+
+These helpers are read-only. Most inspect package-local metadata and assets only. `bros config-status` additionally validates only BROS-specific config at `~/.config/bros-harness/bros.config.json` and `./bros.config.json`; it does not read `.opencode/`, environment variables, providers, MCP servers, telemetry settings, or credential values.
 
 For AI-assisted setup, use a narrow prompt:
 
@@ -129,6 +155,8 @@ On load, it verifies packaged asset directories and uses OpenCode’s in-memory 
 - packaged BROS agent entries to `agent`, without overwriting existing agent keys; and
 - packaged command prompt entries to `command`, without overwriting existing command keys.
 
+Optional BROS-specific model routing and permission profiles can be supplied in `bros.config.json` files. Config precedence is packaged defaults, global BROS config, repo BROS config, then OpenCode plugin input. `fallback_model` is never silently applied to restricted code, security, QA/review, or ops/release categories. Permission profiles are opt-in, repo-scoped, expiry-bound, reason-logged, and keep hard denies for secret reads, publish, destructive actions, force push, and production/cloud mutation.
+
 It does **not**:
 
 - write `opencode.json`, `.opencode/`, global OpenCode config files, or other live config files;
@@ -147,8 +175,11 @@ Three skipped raw skills remain excluded pending separate sanitized review. They
 ## What is included
 
 - `assets/opencode/` — packaged agents, commands, skills, templates, and docs.
+- `assets/manifest.json` — package asset manifest. `sourceRef` is the canonical sanitized source field; the deprecated `source` alias is rejected by validation.
+- `assets/skills.lifecycle.json` — skill lifecycle metadata for active, deprecated, skipped, redacted, and blocked states; `npm run validate` checks it against the manifest and skipped import report.
 - `src/plugin.mjs` — the OpenCode plugin entrypoint exposed by `main` and `exports`.
 - `bin/bros.mjs` — a read-only helper CLI for snippets, package checks, asset summaries, and safe setup prompts.
+- `examples/bros.config.example.json` and `examples/bros.config.schema.json` — optional BROS config template and schema for model routing and scoped permission profiles.
 - `scripts/validate-assets.mjs` and `scripts/verify-no-secrets.mjs` — dependency-free validation scripts retained in the package surface.
 
 Maintainer-only asset import tooling remains repository-local, environment-gated, and excluded from the published package surface. It is not a user installation command.
@@ -160,6 +191,8 @@ For repository maintainers working from source:
 ```bash
 npm run validate
 node bin/bros.mjs doctor
+node bin/bros.mjs status
+node bin/bros.mjs config-status
 node bin/bros.mjs snippet
 npm pack --dry-run
 ```

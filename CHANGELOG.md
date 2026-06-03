@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Reconciled local import/lifecycle accounting for three skipped raw skills and five skill-associated artifacts removed after approved cleanup.
+- Clarified that current repository documentation and metadata repairs are local pending-release changes and do not imply a new published npm package beyond `bros-harness@0.1.6`.
+- Added release handoff caveats for private `.bros/` session traces and future Git Approval Packet requirements before committing or publishing remediation work.
+
 ## 0.1.6 - 2026-06-03
 
 - Corrected OpenCode installation guidance to use `opencode plugin bros-harness` as the primary package installer flow before manual config snippets.

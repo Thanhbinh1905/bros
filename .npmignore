@@ -1,4 +1,5 @@
 .bros/
+.opencode/
 .github/
 .git/
 .env
@@ -11,3 +12,11 @@ opencode.jsonc
 .opencode/opencode.json
 .opencode/opencode.jsonc
 scripts/import-assets.mjs
+assets/import-report.md
+.npmrc
+.netrc
+id_rsa
+id_ed25519
+*secret*
+*credential*
+*provider-key*

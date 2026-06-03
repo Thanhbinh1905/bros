@@ -6,6 +6,8 @@ description: Execute an approved OpenCode BROS plan through canonical `/bros-bui
 
 Execute an approved OpenCode BROS plan with focused, professional BROS command spirit: $ARGUMENTS
 
+`/bros-build` is the canonical approved implementation lane. It requires an approved Phase 0-4 plan or task packet and does not plan from scratch; missing planning, approval evidence, scope boundaries, or required upstream packet decisions are blockers, not invitations to improvise.
+
 ## Instructions
 
 1. Activate and apply skill `bros-orchestrate`.
@@ -18,6 +20,7 @@ Execute an approved OpenCode BROS plan with focused, professional BROS command s
 5. If approval evidence, scope boundary, or risk classification is missing, stop and ask for approval/clarification instead of implementing.
 6. Before dispatch, verify every implementation task includes Required Upstream Packets, Packet References, Gate Status, and Waiver Rationale.
 7. Block Phase 5 dispatch if a required **UI Implementation Packet** or **Explorer Evidence Packet** is missing, incomplete, stale, inconsistent with trusted gates, or waived without explicit scoped rationale.
+7a. Required Explorer Evidence Packets must include `Produced at`, `Trace ID`, `Freshness`, `Freshness basis`, `Overall confidence`, claim-level confidence, limitations, and redaction/trace hygiene status. Historical `.bros` claims, cached notes, missing session IDs, or unverified prior artifacts must be labeled `historical/non-authoritative` or `stale/unverified` and cannot be used as current source truth without fresh cited inspection.
 8. Do not falsely block non-UI work solely for lacking a UI packet when the trigger matrix marks UI as not required.
 9. Emit a routing record before dispatch: classification, selected agents, skipped agents with rationale, gates, packet requirements, waivers, and stop conditions.
 10. Dispatch Phase 5 implementation tasks only to the owning role agents:
@@ -33,8 +36,11 @@ Execute an approved OpenCode BROS plan with focused, professional BROS command s
 15. For approved non-sensitive local project paths, include scoped command classes that owner agents may run without repeated escalation: local shell inspection, local git read-only inspection, test/lint/typecheck/build/run commands, dependency install commands when accepted by the plan, Docker Compose config/ps/logs/up/down/build, Playwright local test commands, and `curl` to `localhost`, `127.0.0.1`, or `[::1]`. Explorer dispatch remains read-only inspection only; Orchestrator authorizes classes but does not execute them.
 16. Stop on any unresolved CRITICAL security finding, failing required test, destructive operation request, missing destructive-operation approval, missing required packet without valid waiver, unclear production risk, or scope drift.
 17. Use the secondary brain for non-trivial builds: `.bros/sessions/YYYY-MM-DD-<slug>/` under the target repository root, with `intake.md`, `plan-context.md`, `build-context.md`, `audit-log.md`, `decisions.md`, `handoff.md`, `packets/`, and `reviews/`. The target repository root is the active project/repository root for the user task, never filesystem `/`; ask or stop if the target root is ambiguous. Persist summaries/decisions/context/provenance/trust labels only; never raw secrets, tokens, env values, provider keys, credentials, or unredacted sensitive logs. If sensitive material is encountered, record only file path, line, and classification.
+17a. Treat `.bros/` session traces as private working records excluded from packages unless a sanitized copy is intentionally moved to an approved public docs path. Sanitized copies must redact sensitive paths/logs/config fragments, label historical claims as non-authoritative, and avoid raw secret values, provider keys, credentials, env values, auth headers, or unredacted sensitive logs.
 18. Control-plane/reference docs may describe governance block names and BROS labels when documenting the harness itself. Persisted/generated project docs, `.bros/` session records, reports, handoffs, delivery docs, generated task artifacts, and templates must use formal neutral headings and must not include Bro persona, salutations, catchphrases, or governance block names such as `BROS SIG`, `BRO CHALLENGE`, or `MIGHTY BRO CHECK`, unless explicitly documenting the BROS harness/control plane itself. Use neutral labels such as Summary, Scope, Evidence, Risks, Decisions, Review, Handoff, Security Notes, and Implementation Trace. Agent chat responses may still use the required governance output contract.
 19. When `bro-build` makes code or config changes, require a sanitized Main Session Change Trace for Mighty Bro to surface in the main session. Include `changes_made`, `files_changed`, `change_type` (`code`, `config`, `docs`, `tests`, `generated`, or `prompt/harness`), `reason`, `verification`, and `risks/follow-ups`. Do not include raw secrets, env values, credentials, full raw diffs, unredacted logs, or large generated/vendor dumps; include patch excerpts only when explicitly requested and redacted.
+20. QA/current-build protocol: Phase 6 `bro-test` is report-only and must report findings to Mighty Bro; QA must not edit files, apply old code, rollback, rebuild, restore, or directly repair production code/tests/prompts/config. Mighty Bro audits the current build trace before stale evidence, labels stale evidence `historical/non-authoritative` or `stale/unverified`, and asks the user before any rebuild, rollback, revert, restore, or remediation dispatch.
+21. If QA fails after implementation, do not automatically rebuild, roll back, or re-dispatch repairs. Present user options and consequences from Mighty Bro: fix-forward, rebuild from the current approved packet, rollback/revert to a named known-good state, or defer. User confirmation is product input and scoped authorization only; it cannot override hard QA evidence, security findings, or trusted gates.
 
 ## Security and Destructive Gates
 
@@ -54,5 +60,6 @@ Execute an approved OpenCode BROS plan with focused, professional BROS command s
 - Documentation artifacts.
 - Final delivery report.
 - Main Session Change Trace when code/config changes were made.
+- QA failure disposition when applicable: report-only QA finding, current-build trace reviewed, stale evidence labels, user ask outcome, and any approved re-dispatch packet.
 
 Use the standard output contract from `bros-orchestrate`.

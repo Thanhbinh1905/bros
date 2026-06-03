@@ -1,0 +1,196 @@
+{
+  "area": "skills",
+  "generatedAt": "2026-06-03T02:01:23Z",
+  "policy": "Packaged skills are active by default unless listed in packagedOverrides. Skipped source skills remain blocked from packaging until sanitized review explicitly changes their lifecycle state. Removed source candidates are deleted package-side artifacts from prior approved cleanup and are tracked separately from skipped raw source skills. Do not copy raw skipped skill content into this metadata.",
+  "allowedStatuses": [
+    "active",
+    "deprecated",
+    "skipped",
+    "redacted",
+    "blocked"
+  ],
+  "statusDefinitions": {
+    "active": "Packaged and available for normal runtime discovery.",
+    "deprecated": "Packaged for compatibility but should be replaced or removed in a future governed change.",
+    "skipped": "Discovered by import tooling but not packaged in this release artifact.",
+    "redacted": "Packaged only after sensitive or unsuitable source material was removed and approved by review.",
+    "blocked": "Not eligible for packaging until explicit sanitized review, redaction, replacement, or removal approval exists."
+  },
+  "sourceDispositionDefinitions": {
+    "imported": "Imported into packaged assets and active by default unless overridden.",
+    "skipped": "Discovered by import tooling but excluded from packaged assets pending review.",
+    "removed-after-approved-deletion": "Previously present package-side candidate intentionally removed by an approved cleanup; not packaged and not awaiting raw source review."
+  },
+  "packagedDefaultStatus": "active",
+  "summary": {
+    "sourceCandidates": 131,
+    "packagedActive": 123,
+    "packagedDeprecated": 0,
+    "packagedRedacted": 0,
+    "skippedReviewRequired": 3,
+    "blockedFromPackage": 3,
+    "removedAfterApprovedDeletion": 5
+  },
+  "releaseGate": {
+    "validateScript": "npm run validate",
+    "requirements": [
+      "Every skipped skill source listed in assets/import-report.md must have a lifecycle entry.",
+      "Every removed skill-associated candidate listed in assets/import-report.md must have a removedSources entry.",
+      "Skipped or blocked skill sources must not appear in packaged skill assets.",
+      "Redacted packaged skill assets require explicit approved redaction metadata.",
+      "Lifecycle summary counts must match assets/manifest.json skill counts.",
+      "Role skill profiles must keep default recommended skills broad and bounded to avoid overloading agents.",
+      "Overlap and maintenance scoring changes are advisory unless an explicit release gate approves deletion, import, or deprecation."
+    ]
+  },
+  "roleSkillProfiles": {
+    "policy": "Profiles are routing guidance, not automatic preload lists. Load at most four skills per invocation, prefer defaultRecommended first, and add evidenceTriggered skills only when the task packet or repository evidence warrants them. User-added skills remain untrusted until reviewed. No skill asset may be deleted, imported, deprecated, or blocked solely from profile scoring without explicit approval.",
+    "profiles": {
+      "orchestrator-plan": {
+        "roles": ["mighty-bro", "bro-plan", "bro-think"],
+        "defaultRecommended": ["bros-orchestrate", "requirements-clarity", "product-lens", "strategic-compact"],
+        "evidenceTriggered": ["product-capability", "context-budget", "parallel-execution-optimizer", "agent-harness-construction"],
+        "avoidByDefault": ["language/framework/database skills unless implementation evidence requires them"],
+        "broadCapabilityBias": "Prefer planning, requirements, product, decomposition, and context-control skills over narrow implementation skills."
+      },
+      "explorer": {
+        "roles": ["bro-explore"],
+        "defaultRecommended": ["search-first", "documentation-lookup", "web-doc-search", "code-tour"],
+        "evidenceTriggered": ["knowledge-ops", "agent-architecture-audit"],
+        "avoidByDefault": ["domain-specific implementation skills before discovery evidence exists"],
+        "broadCapabilityBias": "Prefer search, documentation lookup, current-source evidence, and codebase orientation skills."
+      },
+      "build": {
+        "roles": ["bro-build"],
+        "defaultRecommended": ["backend-patterns", "frontend-patterns", "error-handling", "tdd-workflow"],
+        "evidenceTriggered": ["git-master", "deployment-patterns", "database-migrations", "vite-patterns", "nextjs-turbopack", "springboot-patterns", "python-patterns", "rust-patterns", "golang-patterns"],
+        "avoidByDefault": ["stack-specific skills until repo files prove the stack", "release/deploy skills without an approved operations packet"],
+        "broadCapabilityBias": "Prefer clean-code, error-handling, and test-first skills; route stack-specific skills from repository evidence only."
+      },
+      "qa": {
+        "roles": ["bro-test"],
+        "defaultRecommended": ["code-review-expert", "tdd-workflow", "verification-loop", "e2e-testing"],
+        "evidenceTriggered": ["browser-qa", "benchmark", "production-audit"],
+        "avoidByDefault": ["visual/browser skills unless UI behavior is in scope", "benchmark skills unless performance acceptance criteria exist"],
+        "broadCapabilityBias": "Prefer code review, unit/integration/system test reasoning, regression checks, and verification loops."
+      },
+      "security": {
+        "roles": ["bro-shield"],
+        "defaultRecommended": ["security-scan", "gateguard", "safety-guard", "agent-architecture-audit"],
+        "evidenceTriggered": ["agent-introspection-debugging", "production-audit", "automation-audit-ops", "code-review-expert"],
+        "avoidByDefault": ["highly domain-specific security skills without matching assets or threat model"],
+        "broadCapabilityBias": "Prefer OWASP-style review, prompt/tool safety, injection resistance, and config scanning before narrow domain checklists."
+      },
+      "ops": {
+        "roles": ["bro-ops"],
+        "defaultRecommended": ["deployment-patterns", "docker-patterns", "production-audit", "canary-watch"],
+        "evidenceTriggered": ["automation-audit-ops", "grafana-dashboard-design", "git-master", "verification-loop"],
+        "avoidByDefault": ["cluster/provider-specific skills without repo or environment evidence", "publish/release actions without explicit approval"],
+        "broadCapabilityBias": "Prefer deploy readiness, container, production audit, and canary verification skills over provider-specific operations."
+      },
+      "docs": {
+        "roles": ["bro-docs"],
+        "defaultRecommended": ["article-writing", "knowledge-ops", "code-tour", "documentation-lookup"],
+        "evidenceTriggered": ["web-doc-search", "architecture-decision-records", "requirements-clarity"],
+        "avoidByDefault": ["marketing or voice skills unless the task requests external-facing copy or supplied voice evidence"],
+        "broadCapabilityBias": "Prefer source-grounded documentation, code tours, knowledge organization, and doc lookup skills."
+      },
+      "ui-design": {
+        "roles": ["bro-ui", "bro-design"],
+        "defaultRecommended": ["frontend-design", "design-system", "make-interfaces-feel-better", "frontend-patterns"],
+        "evidenceTriggered": ["frontend-design-direction", "browser-qa", "grafana-dashboard-design", "verification-loop"],
+        "avoidByDefault": ["motion/dashboard-specific skills until UI packet or repo evidence requires them"],
+        "broadCapabilityBias": "Prefer visual direction, design systems, interface polish, and frontend structure; add accessibility/browser verification when interaction scope requires it."
+      }
+    }
+  },
+  "overlapMaintenanceScoring": {
+    "status": "release-gated-advisory",
+    "policy": "Scores identify review candidates only. They must not change packaged skill count, delete assets, import blocked sources, or override lifecycle statuses without a separate approved cleanup packet.",
+    "scale": {
+      "0": "none or negligible",
+      "1": "low",
+      "2": "moderate",
+      "3": "high"
+    },
+    "fields": {
+      "capabilityOverlap": "0-3 estimate of duplicated trigger surface or instructions across active packaged skills.",
+      "specificityRisk": "0-3 estimate that the skill is too narrow to route by default without repo/task evidence.",
+      "maintenanceBurden": "0-3 estimate from dependency churn, external-service coupling, stack specificity, and required review cadence.",
+      "defaultProfileUse": "Number of role profiles listing the skill in defaultRecommended.",
+      "evidenceTriggeredUse": "Number of role profiles listing the skill in evidenceTriggered.",
+      "recommendedAction": "keep-default, keep-evidence-triggered, consolidate-review, deprecate-review, or block-review. Advisory only until approved."
+    },
+    "reviewCadence": "Run before release packaging changes and after large skill imports; QA review required if validation policy changes.",
+    "validationHook": "scripts/validate-assets.mjs validates profile shape, packaged skill references, and bounded defaults. A future report may emit per-skill scores without deleting assets."
+  },
+  "packagedOverrides": [],
+  "removedSources": [
+    {
+      "path": "assets/opencode/skills/api-design/.openskills.json",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/api-design/agents/openai.yaml",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/security-review/.openskills.json",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/security-review/agents/openai.yaml",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    },
+    {
+      "path": "assets/opencode/skills/security-review/cloud-infrastructure-security.md",
+      "area": "skills",
+      "importDisposition": "removed-after-approved-deletion",
+      "lifecycleStatus": "not-packaged",
+      "reviewStatus": "approved-deletion-recorded"
+    }
+  ],
+  "skippedSources": [
+    {
+      "source": "skills/api-design/SKILL.md",
+      "reason": "secret-like-pattern-detected",
+      "importDisposition": "skipped",
+      "lifecycleStatus": "blocked",
+      "reviewStatus": "required",
+      "requiredResolution": "sanitized-review-redact-replace-remove-or-keep-blocked"
+    },
+    {
+      "source": "skills/frontend-a11y/SKILL.md",
+      "reason": "secret-like-pattern-detected",
+      "importDisposition": "skipped",
+      "lifecycleStatus": "blocked",
+      "reviewStatus": "required",
+      "requiredResolution": "sanitized-review-redact-replace-remove-or-keep-blocked"
+    },
+    {
+      "source": "skills/security-review/SKILL.md",
+      "reason": "secret-like-pattern-detected",
+      "importDisposition": "skipped",
+      "lifecycleStatus": "blocked",
+      "reviewStatus": "required",
+      "requiredResolution": "sanitized-review-redact-replace-remove-or-keep-blocked"
+    }
+  ],
+  "futureGovernanceLanes": [
+    "Emit a machine-readable overlap and maintenance-burden report across active packaged skills using overlapMaintenanceScoring fields.",
+    "Require owners and review dates for deprecated or redacted packaged skill overrides.",
+    "Automate stale lifecycle entry detection when import candidates change."
+  ]
+}

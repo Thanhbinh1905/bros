@@ -12,4 +12,4 @@ packages/opencode-plugin/ OpenCode plugin skeleton
 scripts/                Dependency-free validation scripts
 ```
 
-Session records are stored under `.bros/` and are not included in the npm package allowlist.
+Session records are stored under `.bros/` as private working records and are not included in the npm package allowlist. If a session-derived artifact must become public, create a sanitized copy in an approved docs path, redact sensitive material, and label historical claims as non-authoritative unless fresh cited inspection confirms them.

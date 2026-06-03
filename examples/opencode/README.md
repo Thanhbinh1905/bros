@@ -23,3 +23,5 @@ The installer writes a config entry like this:
 ```
 
 This example does not include provider keys, private endpoints, MCP servers, permissions, telemetry, credentials, or local absolute paths. Restart OpenCode after installation or any approved config change.
+
+Optional BROS model routing belongs in `bros.config.json`; see `../bros.config.example.json` and validate with `bros config-status`.

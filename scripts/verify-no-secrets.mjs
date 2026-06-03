@@ -3,7 +3,14 @@ import { readdir, readFile } from "node:fs/promises";
 import { join, relative } from "node:path";
 
 const root = process.cwd();
-const ignored = new Set([".git", "node_modules", "dist", "coverage"]);
+const ignoredDirectories = new Set([".git", ".bros", ".opencode", "node_modules", "dist", "coverage"]);
+const ignoredFileNames = new Set([".npmrc", ".netrc"]);
+const ignoredPathPatterns = [
+  /(?:^|\/)(?:\.env|\.env\..*)$/,
+  /(?:^|\/)(?:id_rsa|id_ed25519)$/,
+  /(?:^|\/).*\.(?:pem|key|p12|pfx)$/i,
+  /(?:^|\/).*(?:credential|provider-key|private-key|secret|token).*$/i,
+];
 const secretPatterns = [
   /api[_-]?key\s*[:=]\s*['\"][^'\"]{8,}/i,
   /authorization\s*[:=]\s*['\"]?bearer\s+[a-z0-9._-]{8,}/i,
@@ -13,8 +20,11 @@ const secretPatterns = [
 
 async function* walk(dir) {
   for (const entry of await readdir(dir, { withFileTypes: true })) {
-    if (ignored.has(entry.name)) continue;
     const path = join(dir, entry.name);
+    const rel = relative(root, path);
+    if (entry.isDirectory() && ignoredDirectories.has(entry.name)) continue;
+    if (!entry.isDirectory() && ignoredFileNames.has(entry.name)) continue;
+    if (ignoredPathPatterns.some((pattern) => pattern.test(rel))) continue;
     if (entry.isDirectory()) yield* walk(path);
     else yield path;
   }

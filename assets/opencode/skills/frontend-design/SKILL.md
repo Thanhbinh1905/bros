@@ -49,6 +49,19 @@ Possible directions:
 
 Do not mix directions casually. Choose one and execute it cleanly.
 
+When the brief is open-ended, generate at least 3 distinct concept lanes before choosing. The lanes must differ in composition, information density, visual language, interaction emphasis, and emotional tone. Do not count palette swaps, font swaps, or the same card layout with different decorations as distinct directions.
+
+Evaluate each lane with this rubric:
+
+- novelty: does the direction have a product-specific point of view rather than generic AI UI?
+- usability: can users still scan, understand, and complete the primary workflow?
+- accessibility: does it preserve semantics, keyboard operation, focus visibility, contrast, readable text, and motion safety?
+- brand-fit: does it match the product domain, audience, and existing design system?
+- feasibility: can it be implemented within the approved scope, framework, and performance budget?
+- risk: what can fail visually, technically, legally, or operationally?
+
+Accessibility is a blocking criterion. Reject or revise any lane that relies on low contrast, hidden focus, pointer-only controls, unreadable type, unsafe motion, ambiguous labels, broken semantics, or screen-reader-hostile structure.
+
 ### 2. Build the visual system
 
 Define:
@@ -121,11 +134,18 @@ Flat empty backgrounds are rarely the best answer for a product-facing page.
 
 Never default to:
 
+Anti-generic/repetition checks should reject:
+
 - interchangeable SaaS hero sections
 - generic card piles with no hierarchy
 - random accent colors without a system
 - placeholder-feeling typography
 - motion that exists only because animation was easy to add
+- concept sets where every option is the same centered hero/card grid with cosmetic changes
+- repeated decorative blobs, glass panels, gradients, or stock-like media that do not support the product workflow
+- hiding the actual tool or object behind generic marketing sections when the user needs a usable app surface
+
+Do not copy protected styles. Avoid prompts or implementation guidance that imitates a living artist, named designer, specific brand, proprietary product UI, or copyrighted/trademarked visual system. Translate inspiration into abstract, product-owned attributes such as editorial hierarchy, industrial materials, calm clinical spacing, playful geometry, or dense operator-console scanning.
 
 ## Execution Rules
 
@@ -142,4 +162,8 @@ Before delivering:
 - typography and spacing feel intentional
 - color and motion support the product instead of decorating it randomly
 - the result does not read like generic AI UI
+- open-ended briefs considered 3+ distinct concept lanes or documented why a single constrained direction was appropriate
+- novelty, usability, accessibility, brand-fit, feasibility, and risk were checked
+- accessibility failures block delivery rather than becoming optional follow-up
+- protected-style copying was avoided
 - the implementation is production-grade, not just visually interesting
