@@ -103,13 +103,21 @@ BROS Harness is OpenCode-first. Use the full installation guide:
 
 [`docs/installation.md`](docs/installation.md)
 
-Published npm installs use the package version available from the registry. Repository-local remediation documented under `Unreleased` in the changelog is pending-release until a separately approved publish occurs.
+Published npm installs use the package version available from the registry. If BROS Harness is already installed and OpenCode does not pick up a newly published version, reinstall `@latest` with `--force` in the same scope.
 
 Quick project install:
 
 ```bash
-opencode plugin bros-harness
+opencode plugin bros-harness@latest
 ```
+
+Upgrade or repair an existing project install:
+
+```bash
+opencode plugin bros-harness@latest --force
+```
+
+If `@latest` still loads an old package, clear only `~/.cache/opencode/packages/bros-harness@latest`, rerun the repair command, and restart OpenCode.
 
 Restart OpenCode, then verify:
 
@@ -135,6 +143,7 @@ For AI-assisted setup, use a narrow prompt:
 ```text
 Install BROS Harness into OpenCode by following docs/installation.md as the source of truth.
 Do not only paste JSON into opencode.jsonc; use OpenCode's plugin installer unless the guide's fallback applies.
+Use opencode plugin bros-harness@latest for first install. For existing installs, use opencode plugin bros-harness@latest --force and restart OpenCode. If latest remains stale, clear only ~/.cache/opencode/packages/bros-harness@latest and rerun the installer.
 Do not edit providers, MCP, permissions, telemetry, secrets, npm publishing, or npm dist-tags.
 Restart OpenCode and verify BROS agents after installation.
 ```

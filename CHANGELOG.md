@@ -1,9 +1,14 @@
 # Changelog
 
+## 0.1.8 - Pending release
+
+- Fixed OpenCode plugin startup by ignoring OpenCode runtime context fields when resolving optional BROS config input.
+- Updated OpenCode install and repair guidance to prefer `bros-harness@latest`, including explicit `--force` upgrade commands for existing plugin installs and source-checkout shadowing notes.
+
 ## 0.1.7 - 2026-06-04
 
 - Reconciled local import/lifecycle accounting for three skipped raw skills and five skill-associated artifacts removed after approved cleanup.
-- Clarified that current repository documentation and metadata repairs are local pending-release changes and do not imply a new published npm package beyond `bros-harness@0.1.6`.
+- Clarified release-state caveats around local remediation versus published npm package contents.
 - Added release handoff caveats for private `.bros/` session traces and future Git Approval Packet requirements before committing or publishing remediation work.
 
 ## 0.1.6 - 2026-06-03
