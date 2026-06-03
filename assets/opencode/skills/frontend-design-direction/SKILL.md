@@ -43,6 +43,15 @@ dense, quiet, and scannable. A portfolio, launch page, game, or editorial piece
 can be more expressive. Do not force a landing-page composition onto a tool that
 needs repeated daily use.
 
+When the request is ambiguous or design-led, first propose at least 3 distinct
+concept lanes. Distinct means different composition, hierarchy, density,
+interaction posture, and product tone; minor color, type, or decoration changes
+do not count. Converge only after evaluating each lane for novelty, usability, accessibility, brand-fit, feasibility, and risk.
+
+Accessibility is mandatory. Any direction that reduces contrast, obscures focus,
+depends on pointer-only interaction, breaks semantics, creates unsafe motion,
+overflows text, or weakens labels must be blocked or revised before handoff.
+
 ## Implementation Guidance
 
 - Build the actual usable experience as the first screen unless the user
@@ -76,9 +85,18 @@ needs repeated daily use.
   itself.
 - Do not describe the UI's features inside the UI when the controls can speak
   for themselves.
+- Do not present repeated concepts as alternatives when they share the same
+  hero/card/grid structure and only change color, font, or decoration.
+- Do not imitate protected styles from living artists, named designers, specific
+  brands, proprietary product UIs, or copyrighted/trademarked visual systems.
+  Use abstract descriptors and product-owned direction instead.
 
 ## Review Checklist
 
+- Ambiguous briefs include 3+ distinct concept lanes, or a scoped rationale for
+  using one constrained direction.
+- The chosen direction is evaluated for novelty, usability, accessibility,
+  brand-fit, feasibility, and risk.
 - The first viewport immediately communicates the product, workflow, or object.
 - The visual hierarchy supports scanning and repeated use.
 - Typography fits the container and does not overlap adjacent content.
@@ -90,3 +108,5 @@ needs repeated daily use.
 - Motion improves orientation and does not mask sluggishness.
 - The result matches the repo's existing frontend conventions unless there is a
   clear reason to depart.
+- Accessibility failures are blocking, not optional polish.
+- The direction avoids generic/repeated AI UI tropes and protected-style copying.

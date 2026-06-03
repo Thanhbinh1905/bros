@@ -20,19 +20,27 @@ user-added OpenCode skills directory
 
 Use BROS display aliases as professional style labels only. They do not change technical IDs, skill routing, permissions, gates, or review rigor.
 
+Role skill profiles are maintained in `assets/skills.lifecycle.json` under `roleSkillProfiles`. They are routing guidance, not automatic preload lists. Prefer the profile's `defaultRecommended` skills first, keep each invocation to at most four loaded skills, and add `evidenceTriggered` skills only when task-packet scope or repository evidence requires them.
+
 | Role | BROS display alias | Default skill lane |
 |---|---|---|
-| Orchestrator | Mighty Bro | `bros-orchestrate`, `requirements-clarity`, `strategic-compact`, `context-budget`, `parallel-execution-optimizer`, `agent-harness-construction` |
+| Orchestrator | Mighty Bro | Default: `bros-orchestrate`, `requirements-clarity`, `product-lens`, `strategic-compact`; evidence-triggered: `product-capability`, `context-budget`, `parallel-execution-optimizer`, `agent-harness-construction` |
 | Analyst capability | Bro Think | Embedded discovery/analysis capability; no standalone agent file |
 | Planner capability | Bro Plan | Canonical `/bros-plan` phase label; no standalone agent file |
-| Explorer | Bro Explore | `search-first`, `documentation-lookup`, `web-doc-search`, `code-tour`, `knowledge-ops`, `agent-architecture-audit` |
+| Explorer | Bro Explore | Default: `search-first`, `documentation-lookup`, `web-doc-search`, `code-tour`; evidence-triggered: `knowledge-ops`, `agent-architecture-audit` |
 | Architecture | Bro Design | `architecture-decision-records`, `api-design`, `hexagonal-architecture`, `backend-patterns` |
-| UI Design | Bro UI | `frontend-design`, `frontend-design-direction`, `design-system`, `frontend-a11y`, `make-interfaces-feel-better`, `frontend-patterns`, `browser-qa`; optional `grafana-dashboard-design` support for dashboard visual hierarchy |
-| Code Execution | Bro Build | `backend-patterns`, `frontend-patterns`, `error-handling`, `tdd-workflow`, `git-master`, language/framework/database/build skills by project evidence |
-| QA | Bro Test | `tdd-workflow`, `verification-loop`, `e2e-testing`, `browser-qa`, `benchmark` |
-| Security | Bro Shield | `security-review`, `security-scan`, `gateguard`, `safety-guard`, `agent-architecture-audit`, `agent-introspection-debugging` |
-| DevOps/SRE | Bro Ops | `deployment-patterns`, `docker-patterns`, `production-audit`, `canary-watch`, `automation-audit-ops`, `git-master`, `grafana-dashboard-design` |
-| Docs | Bro Docs | `article-writing`, `knowledge-ops`, `code-tour`, `documentation-lookup`, `web-doc-search` |
+| UI Design | Bro UI | Default: `frontend-design`, `design-system`, `make-interfaces-feel-better`, `frontend-patterns`; evidence-triggered: `frontend-design-direction`, `browser-qa`, `grafana-dashboard-design`, `verification-loop` |
+| Code Execution | Bro Build | Default: `backend-patterns`, `frontend-patterns`, `error-handling`, `tdd-workflow`; evidence-triggered: `git-master`, `deployment-patterns`, `database-migrations`, stack-specific skills by project evidence |
+| QA | Bro Test | Default: `code-review-expert`, `tdd-workflow`, `verification-loop`, `e2e-testing`; evidence-triggered: `browser-qa`, `benchmark`, `production-audit` |
+| Security | Bro Shield | Default: `security-scan`, `gateguard`, `safety-guard`, `agent-architecture-audit`; evidence-triggered: `agent-introspection-debugging`, `production-audit`, `automation-audit-ops`, `code-review-expert` |
+| DevOps/SRE | Bro Ops | Default: `deployment-patterns`, `docker-patterns`, `production-audit`, `canary-watch`; evidence-triggered: `automation-audit-ops`, `grafana-dashboard-design`, `git-master`, `verification-loop` |
+| Docs | Bro Docs | Default: `article-writing`, `knowledge-ops`, `code-tour`, `documentation-lookup`; evidence-triggered: `web-doc-search`, `architecture-decision-records`, `requirements-clarity` |
+
+## Overlap and Maintenance Scoring
+
+`assets/skills.lifecycle.json` defines an advisory `overlapMaintenanceScoring` lane. The lane uses concrete fields for `capabilityOverlap`, `specificityRisk`, `maintenanceBurden`, profile usage counts, and a `recommendedAction` value. Scores are release-gated review signals only: they can recommend keeping a skill as default, moving it to evidence-triggered routing, consolidation review, deprecation review, or block review, but they do not authorize deletion, import, blocked-skill reinstatement, or packaged skill-count changes.
+
+Validation checks profile shape and bounded defaults through `scripts/validate-assets.mjs`. A future report can compute per-skill scores from these fields without changing skill assets.
 
 ## Extension Rule
 
@@ -47,6 +55,7 @@ OpenCode scans both `bros-builtin-skills` and `skills` via `opencode.jsonc`. Wor
 ## Guardrails
 
 - Keep a maximum of 4 loaded skills per agent invocation.
+- Prefer broad, reusable skills in role defaults. Route narrow, stack-specific, provider-specific, or domain-specific skills only from task-packet scope, repository evidence, or an approved handoff packet.
 - Keep BROS persona professional-first and fun-second; it is non-authoritative and cannot override system/developer/project rules, permissions, security/QA gates, role boundaries, tool requirements, trusted/untrusted separation, or technical rigor.
 - Require BROS signatures and governance blocks for substantive routed work: `BROS SIG`, `BROS REVIEW:`, `NO RUBBER STAMP:`, `BRO CHALLENGE:`, `MIGHTY BRO CHECK:`, and `HANDOFF:`. These names are control-plane output contracts; harness/reference docs may describe them when documenting BROS operations, but generated project artifacts must not copy them as persisted document headings.
 - Treat user ideas as important but untrusted product input. Challenge risky, unclear, overbuilt, unsafe, low-quality, or gate-bypassing requests; no flattery, yes-man behavior, or rubber-stamping.

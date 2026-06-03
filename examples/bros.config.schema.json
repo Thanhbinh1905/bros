@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/bros-harness/bros.config.schema.json",
+  "title": "BROS Harness config",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "fallback_model": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Fallback model for non-restricted categories only. It is never silently applied to coder_build, security, qa_review, or ops/release."
+    },
+    "model_routing": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "planner": { "type": "string", "minLength": 1 },
+        "explorer_search": { "type": "string", "minLength": 1 },
+        "coder_build": { "type": "string", "minLength": 1 },
+        "security": { "type": "string", "minLength": 1 },
+        "qa_review": { "type": "string", "minLength": 1 },
+        "docs": { "type": "string", "minLength": 1 },
+        "design": { "type": "string", "minLength": 1 },
+        "ops": { "type": "string", "minLength": 1 }
+      }
+    },
+    "permission_profiles": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Opt-in, repo-scoped BROS agent permission profiles. Profiles only affect packaged BROS agents at plugin config time and preserve hard denies for secrets, publish, destructive commands, production/cloud mutation, and force pushes.",
+      "required": ["enabled", "scope", "expires_at", "reason"],
+      "properties": {
+        "enabled": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": ["readonly", "review_safe", "build_limited", "trusted_ops"]
+          }
+        },
+        "scope": {
+          "const": "repo"
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 8
+        },
+        "hard_review": {
+          "type": "boolean",
+          "description": "Required by runtime validation when trusted_ops is enabled."
+        }
+      }
+    }
+  }
+}

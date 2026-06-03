@@ -31,6 +31,28 @@ BROS display aliases are style-only and non-authoritative: professional-first, f
 | `bro-ops` | Bro Ops | subagent | CI/CD, Docker, observability, runbooks |
 | `bro-docs` | Bro Docs | subagent | Documentation, release notes, delivery reports |
 
+## Chat Persona Boundaries
+
+BROS chat style is intentionally visible in live control-plane responses, but it is not authority. Technical IDs, OpenCode configuration, permissions, trusted policy/gates, role boundaries, security/QA findings, and cited facts remain authoritative.
+
+Persona may add memorable tone in chat only when it improves readability and does not hide verdicts, severity, evidence, uncertainty, blockers, or handoff instructions. The phrase **BE THE BRO** means applying useful pressure to the workflow: challenge weak assumptions, preserve gates, keep scope small, verify claims, and hand off risk clearly.
+
+| Bro | Chat tone | Allowed chat signature flavor | Boundary |
+|---|---|---|---|
+| `mighty-bro` / Mighty Bro | Decisive, protective orchestration lead | `BE THE BRO`, `gates before glory`, `pressure checked` | Does not implement, approve security, or override gates. |
+| Analyst capability / Bro Think | Curious intake analyst | `slow the ask`, `find the why`, `assumptions visible` | Does not turn discovery into product approval. |
+| Planner capability / Bro Plan | Structured planning facilitator | `packet before patch`, `scope made explicit`, `plan the lane` | Does not auto-build or approve its own plan. |
+| `bro-explore` / Bro Explore | Evidence-first scout | `map first`, `trail marked`, `evidence over vibes` | Does not decide, approve, implement, or speculate beyond evidence. |
+| `bro-design` / Bro Design | Systems architect with tradeoff clarity | `shape the system`, `tradeoffs on the table`, `blueprint, not bravado` | Does not make product decisions or present proposals as approved decisions. |
+| `bro-ui` / Bro UI | Design coach with accessibility discipline | `polish with purpose`, `make it feel right`, `users first, vibes second` | Does not skip accessibility or replace specs with taste claims. |
+| `bro-build` / Bro Build | Focused, scope-tight implementer | `smallest correct change`, `packet in, patch out`, `ship the scoped thing` | Does not widen scope, skip packets, or downplay failed checks. |
+| `bro-test` / Bro Test | Skeptical QA partner | `prove it`, `green means evidenced`, `trust the run` | Does not rubber-stamp weak evidence or repair implementation. |
+| `bro-shield` / Bro Shield | Steady security sentinel | `shield up`, `risk named`, `block unsafe shortcuts` | Does not disclose sensitive data, dramatize, or grant approval beyond authority. |
+| `bro-ops` / Bro Ops | Calm operator/SRE | `steady hands`, `runbook ready`, `no surprise prod moves` | Does not imply deployment approval or normalize destructive commands. |
+| `bro-docs` / Bro Docs | Precise documentation/reporting partner | `receipt written`, `facts before flourish`, `handoff clean` | Does not put persona into persisted project docs unless documenting the harness control plane. |
+
+Persisted/generated project docs under `.bros/`, `docs/`, reports, handoffs, delivery artifacts, session records, and templates must remain formal and professional. Use neutral labels such as Summary, Scope, Evidence, Risks, Decisions, Review, Handoff, Security Notes, and Implementation Trace. Do not copy chat persona, salutations, catchphrases, or governance block headings into project artifacts unless the artifact is explicitly documenting BROS harness control-plane behavior.
+
 ## Installed Commands
 
 - `/bros-plan`: Run Phases 0 through 4 and stop before implementation.
@@ -90,6 +112,31 @@ BROS agents can read, glob, grep, and use configured builtin or user-added skill
 ## Local Command Permission Model
 
 OpenCode BROS agents use pattern-based Bash permissions, not broad `bash: allow`. Public OSS defaults keep dependency installation, arbitrary package scripts, Docker runtime/mutation, destructive operations, cloud/production mutation, and secret-reading approval-gated.
+
+Optional BROS permission profiles can be enabled in `bros.config.json` to reduce repeated prompts for approved local repository work without changing top-level OpenCode permissions. Profiles are opt-in, repo-scoped, expiry-bound, and reason-logged at plugin startup. Supported profiles are:
+
+| Profile | Intended use | Safety boundary |
+|---|---|---|
+| `readonly` | Read-only repo inspection for `bro-explore` (`read`, `glob`, `grep`, `rg`, read-only git). | Edits, installs, git mutation, secrets, publish, destructive, production/cloud commands remain denied. |
+| `review_safe` | QA/review validation for `bro-test` (`npm run validate`, tests, lint/typecheck/build, package dry-run, repo validation scripts). | Edits and dangerous command classes remain denied or ask-gated. |
+| `build_limited` | Approved local implementation validation for `bro-build` (`npm run validate/test/build/check`, repo Node validation scripts, localhost curl, npm pack dry-run). | File edits remain ask-gated by task packet; installs, publish, destructive, secret, deploy/cloud, and force push stay denied. |
+| `trusted_ops` | Read-mostly operations evidence for `bro-ops` (git read-only, Docker Compose config/ps/logs, local validation, npm pack dry-run). | Requires `hard_review: true`; Docker mutation, production/cloud mutation, publish, secrets, destructive commands, and force push stay denied. |
+
+Example:
+
+```json
+{
+  "permission_profiles": {
+    "enabled": ["review_safe", "build_limited"],
+    "scope": "repo",
+    "expires_at": "2099-01-01T00:00:00.000Z",
+    "reason": "approved local repo validation only",
+    "hard_review": false
+  }
+}
+```
+
+Validation fails closed for unknown profiles, duplicate profiles, non-repo scope, missing/expired `expires_at`, missing reason, secret-like reason text, `trusted_ops` without `hard_review: true`, and combining `readonly` with `trusted_ops` in one profile set. Profile merges append hard deny rules after allow rules so broad shell, secret reads, npm publish, destructive reset/clean/delete, production/cloud mutation, and force push cannot be accidentally reopened.
 
 - `bro-build`: may run local project inspection, git read-only inspection, dependency-free test/build/lint/typecheck commands, and localhost curl checks; edits, installs, arbitrary package scripts, Docker runtime/mutation, and high-risk operations remain approval-gated by task packet scope.
 - `bro-test`: edit remains denied; local inspection, git read-only inspection, dependency-free test/lint/typecheck/build checks, Playwright tests, and localhost curl commands are allowlisted for QA evidence; installs and Docker runtime/mutation require approval.

@@ -14,11 +14,22 @@
     "bros": "bin/bros.mjs"
   },
   "files": [
-    "assets/",
+    "assets/opencode/",
+    "assets/agents.manifest.json",
+    "assets/commands.manifest.json",
+    "assets/docs.manifest.json",
+    "assets/manifest.json",
+    "assets/skills.lifecycle.json",
+    "assets/skills.manifest.json",
+    "assets/templates.manifest.json",
     "bin/",
     "docs/",
     "examples/",
     "scripts/validate-assets.mjs",
+    "scripts/validate-workflow-regressions.mjs",
+    "scripts/fixtures/workflow-regression-scenarios.json",
+    "scripts/verify-plugin-smoke.mjs",
+    "scripts/verify-package-contents.mjs",
     "scripts/verify-no-secrets.mjs",
     "src/",
     "README.md",
@@ -27,9 +38,12 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "validate": "node scripts/validate-assets.mjs && node scripts/verify-no-secrets.mjs",
+    "validate": "node scripts/validate-assets.mjs && node scripts/validate-workflow-regressions.mjs && node scripts/verify-plugin-smoke.mjs && node scripts/verify-no-secrets.mjs && node scripts/verify-package-contents.mjs",
     "validate:assets": "node scripts/validate-assets.mjs",
-    "verify:no-secrets": "node scripts/verify-no-secrets.mjs"
+    "validate:workflows": "node scripts/validate-workflow-regressions.mjs",
+    "verify:plugin-smoke": "node scripts/verify-plugin-smoke.mjs",
+    "verify:no-secrets": "node scripts/verify-no-secrets.mjs",
+    "verify:package": "node scripts/verify-package-contents.mjs"
   },
   "keywords": [
     "opencode",

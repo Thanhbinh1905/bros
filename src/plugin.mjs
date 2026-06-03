@@ -1,6 +1,18 @@
 import { access, readdir, readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  assertNoForbiddenConfigMutation,
+  assertNoPackagedAssetInvariantErrors,
+  snapshotForbiddenConfig,
+  validateAgentAsset,
+  validateCommandAsset,
+} from "./security-invariants.mjs";
+import {
+  applyModelRoutingToAgents,
+  applyPermissionProfilesToAgents,
+  loadResolvedBrosConfig,
+} from "./config.mjs";
 
 const packageRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const assetRoot = join(packageRoot, "assets", "opencode");
@@ -128,7 +140,14 @@ async function loadPackagedAgents() {
   for (const file of files) {
     const markdown = await readFile(join(brosHarness.agentsDir, file), "utf8");
     const parsed = parseAgentMarkdown(markdown);
-    if (parsed) agents[parsed.name] = parsed.agent;
+    if (parsed) {
+      assertNoPackagedAssetInvariantErrors(validateAgentAsset({
+        path: `assets/opencode/agents/${file}`,
+        frontmatter: { name: parsed.name, ...parsed.agent, prompt: undefined },
+        prompt: parsed.agent.prompt,
+      }));
+      agents[parsed.name] = parsed.agent;
+    }
   }
   return agents;
 }
@@ -143,6 +162,7 @@ async function loadPackagedCommands() {
   for (const file of files) {
     const name = file.replace(/\.md$/, "");
     const markdown = await readFile(join(brosHarness.commandsDir, file), "utf8");
+    assertNoPackagedAssetInvariantErrors(validateCommandAsset({ path: `assets/opencode/commands/${file}`, markdown }));
     commands[name] = parseCommandMarkdown(markdown);
   }
   return commands;
@@ -186,16 +206,37 @@ function mergeAgents(cfg, agents) {
   }
 }
 
-export async function brosHarnessServer(_input = {}, _options = {}) {
+export async function brosHarnessServer(input = {}, options = {}) {
   await verifyBrosHarnessAssets();
-  const agents = await loadPackagedAgents();
+  const baseAgents = await loadPackagedAgents();
   const commands = await loadPackagedCommands();
+  const resolvedConfig = await loadResolvedBrosConfig({
+    cwd: options.cwd ?? process.cwd(),
+    input,
+    includeFiles: options.includeFiles ?? true,
+  });
+  if (resolvedConfig.errors.length > 0) {
+    throw new Error(`Invalid BROS Harness config:\n- ${resolvedConfig.errors.join("\n- ")}`);
+  }
+  const routed = applyModelRoutingToAgents(baseAgents, resolvedConfig);
+  const profiled = applyPermissionProfilesToAgents(routed.agents, resolvedConfig);
+  const agents = profiled.agents;
+  const routingMessages = [
+    ...resolvedConfig.warnings,
+    ...routed.events.map((event) => `model routing applied: ${event.agent} (${event.category}) uses ${event.source}`),
+    ...profiled.events.map((event) => `permission profile applied: ${event.agent} uses ${event.profile} within ${event.scope} scope until ${event.expires_at}; reason: ${event.reason}`),
+  ];
 
   return {
     config(cfg) {
+      const forbiddenConfigBefore = snapshotForbiddenConfig(cfg);
+      for (const message of routingMessages) {
+        console.warn(`BROS Harness config: ${message}`);
+      }
       mergeSkillsPath(cfg);
       mergeAgents(cfg, agents);
       mergeCommands(cfg, commands);
+      assertNoForbiddenConfigMutation(forbiddenConfigBefore, cfg);
     }
   };
 }

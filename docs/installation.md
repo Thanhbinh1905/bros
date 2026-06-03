@@ -4,6 +4,20 @@ This is the source of truth for installing BROS Harness into OpenCode.
 
 BROS Harness is a package-first OpenCode plugin. The primary installation path is OpenCode's own plugin installer. Do not rely on only pasting `{"plugin":["bros-harness"]}` into `opencode.jsonc`: that config entry does not guarantee OpenCode has installed or cached the npm package it must load.
 
+## 30-second orientation
+
+**BE THE BRO** is the memory hook: use AI help with discipline. BROS gives OpenCode a gated delivery crew for planning, building, reviewing, and documenting work, but the display tone never overrides technical rules. Start with the lightest safe mode, require approved packets for implementation, verify before handoff, and treat publish, merge, deploy, credential, dependency-install, destructive, and production actions as separate gates.
+
+After installation, the common modes are:
+
+| Mode | Dùng khi nào / when to use | Cách dùng / how to use |
+| --- | --- | --- |
+| **Normal prompt** | Quick questions, status, small clarifications, or narrow handoffs. | Ask `mighty-bro` directly; it will answer, route, or recommend `/bros-plan` or `/bros-assemble`. |
+| **`/bros-plan`** | You need an approved plan and task packets before implementation. | Provide the objective, constraints, evidence, and acceptance criteria; it stops before build. |
+| **`/bros-build`** | You have an approved packet for local implementation. | Provide the packet reference and required evidence; it builds only inside approved scope. |
+| **`/bros-review`** | You need an independent audit of a plan, change, or delivery claim. | Provide artifacts to inspect; it reports issues and does not remediate unless separately approved. |
+| **`/bros-assemble`** | You want one-prompt convenience for bounded safe-scope work. | Provide a bounded objective; it preserves gates and stops rather than auto-publishing, merging, deploying, installing dependencies, handling credentials, or doing destructive work. |
+
 ## Prerequisites
 
 Confirm the local tools are available:
@@ -21,7 +35,7 @@ Check the published package metadata:
 npm view bros-harness dist-tags version --json
 ```
 
-As of this release, the validated published package is `bros-harness@0.1.6` and the expected `latest` dist-tag is `0.1.6`.
+The last validated published package documented here is `bros-harness@0.1.6` with expected `latest` dist-tag `0.1.6`. Repository-local documentation or metadata repairs after that package version are pending-release until a separately approved publish occurs; do not assume local unreleased fixes are available from npm.
 
 ## Install
 
@@ -89,6 +103,25 @@ opencode run --agent mighty-bro "hello"
 
 If BROS commands are available in the active session, `/bros-status` can also be used after restart.
 
+Useful command lanes after verification:
+
+| Command or mode | Use |
+| --- | --- |
+| Normal prompt to `mighty-bro` | Quick classification: inline answer, quick Explorer, direct specialist, suggest `/bros-plan`, or suggest `/bros-assemble`. |
+| `/bros-plan` | Planning-only Phases 0-4; no auto-build. |
+| `/bros-build` | Approved implementation from complete task packets. |
+| `/bros-review` | Audit plan or delivery artifacts without automatic remediation. |
+| `/bros-assemble` | One-prompt safe-scope classify → plan → build → QA/security/ops → docs/final report; stops on security, destructive, production, publish, secret, dependency-install, git mutation, QA, architecture, or missing-packet gates. |
+
+The package CLI also provides read-only diagnostics for local package inspection:
+
+```bash
+bros doctor
+bros status
+```
+
+These commands inspect package-local metadata and packaged assets only. They do not read user config files, `.opencode/`, environment variables, providers, MCP servers, telemetry settings, or credential values.
+
 ## Troubleshooting
 
 If `opencode agent list` does not show `mighty-bro` or the `bro-*` agents, do not keep editing JSON. Check these causes first:
@@ -106,6 +139,24 @@ opencode plugin bros-harness@0.1.6 --force
 ```
 
 Then restart OpenCode and run verification again.
+
+## Rollback
+
+Rollback should be explicit and scoped. Do not use broad reset, deletion, or automatic config-rewrite commands.
+
+1. Identify where the plugin was installed: project scope or global scope.
+2. Open the relevant OpenCode config file in an editor.
+3. Remove only the `bros-harness` entry from the `plugin` array, preserving unrelated plugins and config keys.
+4. Save the file and fully restart OpenCode.
+5. Verify that the BROS agents are no longer listed with `opencode agent list`.
+
+If the plugin was pinned to a bad version, prefer rolling forward to a known-good pinned version with OpenCode's plugin installer rather than deleting unrelated config. Example:
+
+```bash
+opencode plugin bros-harness@0.1.6 --force
+```
+
+For global rollback, apply the same scoped edit or pinned repair to global scope only after confirming the user intended a global change. Do not edit providers, MCP servers, permissions, telemetry, secrets, or credentials as part of rollback.
 
 ## Manual Config Fallback
 
@@ -160,7 +211,28 @@ bros agent-install-prompt
 
 On startup, the plugin uses OpenCode's in-memory `config(cfg)` hook only. It adds package-relative BROS skills, packaged BROS agents, and packaged BROS commands without replacing existing keys.
 
-The runtime plugin does not write user config files, install dependencies, publish packages, register providers, add MCP servers, change permissions, configure telemetry, or read, validate, or write secrets.
+The runtime plugin does not write user config files, install dependencies, publish packages, register providers, add MCP servers, change top-level OpenCode permissions, configure telemetry, or read, validate, or write secrets. Optional BROS permission profiles only tune packaged BROS agent permissions in memory after fail-closed validation.
+
+## BROS Harness Config
+
+BROS Harness supports optional package-specific JSON config for model routing and scoped permission profiles. Precedence is:
+
+1. packaged defaults;
+2. global BROS config at `~/.config/bros-harness/bros.config.json`;
+3. repo BROS config at `./bros.config.json` from the OpenCode working directory;
+4. OpenCode plugin input, when supplied by OpenCode.
+
+Only BROS-specific keys are accepted: `fallback_model`, `model_routing`, and `permission_profiles`. Unknown keys fail closed with an actionable error. The plugin never mutates OpenCode provider, credential, MCP, telemetry, or top-level permission settings.
+
+Supported `model_routing` categories are `planner`, `explorer_search`, `coder_build`, `security`, `qa_review`, `docs`, `design`, and `ops`. `fallback_model` applies only to non-restricted categories. It is not silently applied to `coder_build`, `security`, `qa_review`, or `ops`/release-sensitive work; set those routes explicitly if they must change.
+
+Supported `permission_profiles` are `readonly`, `review_safe`, `build_limited`, and `trusted_ops`. Profiles are opt-in and must include `enabled`, `scope: "repo"`, a future `expires_at`, and a non-secret reason. `trusted_ops` requires `hard_review: true`. Profiles do not use broad `bash: allow`; publish, destructive, force-push, secret-read, provider-credential, and production/cloud command classes remain denied.
+
+Start from the template and schema in `examples/bros.config.example.json` and `examples/bros.config.schema.json`. Validate local routing visibility with:
+
+```bash
+bros config-status
+```
 
 ## Contributor Checks
 
@@ -169,6 +241,13 @@ For repository development only:
 ```bash
 npm run validate
 node bin/bros.mjs doctor
+node bin/bros.mjs status
+node bin/bros.mjs config-status
+npm pack --dry-run
 ```
 
 Publishing, dependency installation, and asset import remain separate maintainer-gated actions. Package users should rely on OpenCode's plugin installer and the read-only CLI helpers above.
+
+## Release State Caveat
+
+This source checkout may contain unreleased remediation work beyond the currently published `bros-harness@0.1.6` package. Local validation and package dry-runs can prove the checkout is internally consistent, but they do not publish a new package or mutate npm dist-tags. Committing, pushing, or publishing any remediation requires a future explicit Git Approval Packet and release approval.

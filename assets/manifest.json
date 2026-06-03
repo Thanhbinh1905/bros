@@ -15,7 +15,7 @@
     },
     "skills": {
       "candidates": 131,
-      "imported": 128,
+      "imported": 123,
       "skipped": 3
     },
     "docs": {
@@ -133,16 +133,6 @@
     {
       "area": "skills",
       "path": "assets/opencode/skills/agent-introspection-debugging/SKILL.md",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/api-design/.openskills.json",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/api-design/agents/openai.yaml",
       "sourceRef": "opencode-skill"
     },
     {
@@ -633,21 +623,6 @@
     {
       "area": "skills",
       "path": "assets/opencode/skills/search-first/SKILL.md",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/security-review/.openskills.json",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/security-review/agents/openai.yaml",
-      "sourceRef": "opencode-skill"
-    },
-    {
-      "area": "skills",
-      "path": "assets/opencode/skills/security-review/cloud-infrastructure-security.md",
       "sourceRef": "opencode-skill"
     },
     {
