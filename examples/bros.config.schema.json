@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.invalid/bros-harness/bros.config.schema.json",
   "title": "BROS Harness config",
-  "description": "BROS model routing config. Restricted categories reject fallback_models at runtime: coder_build, security, qa_review, and ops/release.",
+  "description": "BROS category and agent model routing config. Restricted categories reject fallback_models at runtime: coder_build, security, qa_review, and ops/release.",
   "type": "object",
   "additionalProperties": false,
   "$defs": {
@@ -36,38 +36,42 @@
           }
         }
       ]
+    },
+    "fallbackListEntry": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["model"],
+          "properties": {
+            "model": {
+              "type": "string",
+              "minLength": 1
+            },
+            "variant": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      ]
     }
   },
   "properties": {
     "$schema": {
       "type": "string"
     },
-    "fallback_model": {
-      "$ref": "#/$defs/modelEntry",
-      "description": "Fallback model for non-restricted categories only. It is never silently applied to coder_build, security, qa_review, or ops/release. Rich form is accepted for consistency, though global fallback is typically a string."
-    },
-    "model_routing": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "explorer": { "$ref": "#/$defs/modelEntry" },
-        "coder_build": { "$ref": "#/$defs/modelEntry" },
-        "designer": { "$ref": "#/$defs/modelEntry" },
-        "reviewer": { "$ref": "#/$defs/modelEntry" },
-        "qa_review": { "$ref": "#/$defs/modelEntry" },
-        "security": { "$ref": "#/$defs/modelEntry" },
-        "docs": { "$ref": "#/$defs/modelEntry" },
-        "ops": { "$ref": "#/$defs/modelEntry" },
-        "explorer/search": { "$ref": "#/$defs/modelEntry" },
-        "search": { "$ref": "#/$defs/modelEntry" },
-        "coder": { "$ref": "#/$defs/modelEntry" },
-        "build": { "$ref": "#/$defs/modelEntry" },
-        "coder/build": { "$ref": "#/$defs/modelEntry" },
-        "qa": { "$ref": "#/$defs/modelEntry" },
-        "review": { "$ref": "#/$defs/modelEntry" },
-        "qa/review": { "$ref": "#/$defs/modelEntry" },
-        "release": { "$ref": "#/$defs/modelEntry" }
-      }
+    "fallback_models": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/fallbackListEntry"
+      },
+      "description": "Ordered fallback model list. Entries may be model id strings or rich objects with model and optional variant."
     },
     "categories": {
       "type": "object",
@@ -77,8 +81,8 @@
         "explorer_search": { "$ref": "#/$defs/modelEntry" },
         "explorer": { "$ref": "#/$defs/modelEntry" },
         "coder_build": { "$ref": "#/$defs/modelEntry" },
-        "design": { "$ref": "#/$defs/modelEntry" },
-        "designer": { "$ref": "#/$defs/modelEntry" },
+        "architecture": { "$ref": "#/$defs/modelEntry" },
+        "ui": { "$ref": "#/$defs/modelEntry" },
         "reviewer": { "$ref": "#/$defs/modelEntry" },
         "qa_review": { "$ref": "#/$defs/modelEntry" },
         "security": { "$ref": "#/$defs/modelEntry" },

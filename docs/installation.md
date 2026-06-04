@@ -259,7 +259,7 @@ The runtime plugin does not write user config files, install dependencies, publi
 
 ## BROS Harness Config
 
-BROS Harness supports optional package-specific JSON config for rich model routing and scoped permission profiles. The supported config file locations are:
+BROS Harness supports optional package-specific JSON config for rich category/agent model routing and scoped permission profiles. The supported config file locations are:
 
 - repo config at `./bros.config.json` from the OpenCode working directory;
 - global config at `~/.config/opencode/bros.config.json`.
@@ -269,19 +269,35 @@ For repo-local authoring, use the published raw schema URL so editors and agents
 ```json
 {
   "$schema": "https://raw.githubusercontent.com/Thanhbinh1905/bros/main/examples/bros.config.schema.json",
-  "fallback_model": "anthropic/claude-sonnet-4-5",
-  "model_routing": {
-    "docs": "anthropic/claude-sonnet-4-5"
-  },
+  "fallback_models": [
+    { "model": "openai/gpt-5.4", "variant": "medium" },
+    "openai/gpt-5.4-mini-fast"
+  ],
   "categories": {
-    "explorer_search": {
-      "model": "anthropic/claude-sonnet-4-5",
-      "fallback_models": ["openai/gpt-5.5"]
-    }
+    "planner": { "model": "openai/gpt-5.5", "variant": "medium" },
+    "explorer_search": "openai/gpt-5.4-mini-fast",
+    "architecture": { "model": "openai/gpt-5.5", "variant": "high" },
+    "ui": { "model": "openai/gpt-5.4", "variant": "high" },
+    "docs": "openai/gpt-5.4-mini-fast",
+    "coder_build": "openai/gpt-5.5",
+    "qa_review": "openai/gpt-5.5",
+    "security": "openai/gpt-5.5",
+    "ops": "openai/gpt-5.5"
   },
   "agents": {
-    "bro-docs": {
-      "model": "anthropic/claude-sonnet-4-5",
+    "mighty-bro": {
+      "model": "openai/gpt-5.5",
+      "variant": "medium"
+    },
+    "bro-explore": {
+      "model": "openai/gpt-5.4-mini-fast"
+    },
+    "bro-design": {
+      "model": "openai/gpt-5.5",
+      "variant": "high"
+    },
+    "bro-ui": {
+      "model": "openai/gpt-5.4",
       "variant": "high"
     }
   },
@@ -295,19 +311,19 @@ For repo-local authoring, use the published raw schema URL so editors and agents
 }
 ```
 
-Agents can fetch the schema directly from `https://raw.githubusercontent.com/Thanhbinh1905/bros/main/examples/bros.config.schema.json` for validation context. The accepted top-level keys are `$schema`, `fallback_model`, `model_routing`, `categories`, `agents`, and `permission_profiles`. Unknown keys fail closed with an actionable error. The plugin never mutates OpenCode provider, credential, MCP, telemetry, or top-level permission settings.
+Agents can fetch the schema directly from `https://raw.githubusercontent.com/Thanhbinh1905/bros/main/examples/bros.config.schema.json` for validation context. The accepted top-level keys are `$schema`, `fallback_models`, `categories`, `agents`, and `permission_profiles`. Unknown keys fail closed with an actionable error. The removed top-level `fallback_model` and `model_routing` keys are rejected. The plugin never mutates OpenCode provider, credential, MCP, telemetry, or top-level permission settings.
 
 Model entries can be either a string model identifier or a rich object:
 
 ```json
-"anthropic/claude-sonnet-4-5"
+"openai/gpt-5.5"
 ```
 
 ```json
 {
-  "model": "anthropic/claude-sonnet-4-5",
+  "model": "openai/gpt-5.5",
   "variant": "high",
-  "fallback_models": ["openai/gpt-5.5"]
+  "fallback_models": ["openai/gpt-5.4"]
 }
 ```
 
@@ -315,9 +331,8 @@ Routing precedence within the resolved config is:
 
 1. `agents`;
 2. `categories`;
-3. `model_routing`;
-4. `fallback_model`;
-5. packaged/default model routing.
+3. `fallback_models`;
+4. packaged/default model routing.
 
 Config source precedence is:
 
@@ -326,7 +341,7 @@ Config source precedence is:
 3. repo BROS config at `./bros.config.json` from the OpenCode working directory;
 4. OpenCode plugin input, when supplied by OpenCode.
 
-Supported routing categories include `planner`, `explorer_search`, `coder_build`, `security`, `qa_review`, `docs`, `design`, and `ops`. The restricted categories `coder_build`, `security`, `qa_review`, and `ops` reject `fallback_models` at runtime. `fallback_model` applies only where runtime restrictions allow it; set restricted routes explicitly if they must change.
+Supported routing categories include `planner`, `explorer_search`, `coder_build`, `security`, `qa_review`, `docs`, `architecture`, `ui`, and `ops`. `bro-design` maps to `architecture`; `bro-ui` maps to `ui`. Legacy `design` and `designer` category names are rejected. The restricted categories `coder_build`, `security`, `qa_review`, and `ops` reject per-entry `fallback_models` and ignore top-level `fallback_models`; set restricted routes explicitly if they must change. The removed top-level `fallback_model` key is rejected.
 
 Supported `permission_profiles` are `readonly`, `review_safe`, `build_limited`, and `trusted_ops`. Profiles are opt-in and must include `enabled`, `scope: "repo"`, a future `expires_at`, and a non-secret reason. `trusted_ops` requires `hard_review: true`. Profiles do not introduce top-level OpenCode permissions; publish, destructive, force-push, secret-read, provider-credential, and production/cloud command classes remain denied.
 

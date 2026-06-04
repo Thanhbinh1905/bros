@@ -87,4 +87,5 @@ npm pack --dry-run
 
 - Keep persistent repository documentation formal and maintainable.
 - Do not add chat-only governance headings or persona catchphrases to project docs unless documenting the BROS harness control plane itself.
+- Generated command examples and transcripts must not start text or code lines with shell prompt markers such as dollar signs. Use `Command:` labels or fenced snippets containing raw commands without prompt markers.
 - Include changed files, validation performed, residual risks, and next gates in handoff reports.

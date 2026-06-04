@@ -6,6 +6,7 @@ import { join } from "node:path";
 import {
   applyModelRoutingToAgents,
   brosConfigDefaults,
+  loadResolvedBrosConfig,
   resolveBrosConfig,
   validateBrosConfig,
 } from "../src/config.mjs";
@@ -35,31 +36,47 @@ describe("validateBrosConfig", () => {
     assert.deepStrictEqual(validateBrosConfig({}), []);
   });
 
-  it("unknown top-level key produces error listing 6 allowed keys", () => {
+  it("unknown top-level key produces error listing 5 allowed keys", () => {
     const errors = validateBrosConfig({ unexpected: true });
 
     assert.equal(errors.length, 1);
-    assertHasError(errors, "allowed keys are $schema, fallback_model, model_routing, categories, agents, permission_profiles");
-    assert.equal(errors[0].split("allowed keys are ")[1].split(", ").length, 6);
+    assertHasError(errors, "allowed keys are $schema, fallback_models, categories, agents, permission_profiles");
+    assert.equal(errors[0].split("allowed keys are ")[1].split(", ").length, 5);
   });
 
-  it("string model value accepted", () => {
-    assertNoValidationErrors({ fallback_model: "anthropic/claude-sonnet-4.5" });
+  it("model_routing top-level key is rejected", () => {
+    const errors = validateBrosConfig({ model_routing: { planner: "planner-model" } });
+
+    assertHasError(errors, "model_routing is not supported");
   });
 
-  it("empty string model value rejected", () => {
-    const errors = validateBrosConfig({ fallback_model: "" });
-
-    assertHasError(errors, "fallback_model must be a non-empty model id string");
+  it("fallback_model top-level key is rejected", () => {
+    assertHasError(validateBrosConfig({ fallback_model: "openai/gpt-5.5" }), "fallback_model is not supported");
+    assertHasError(validateBrosConfig({ fallback_model: { model: "openai/gpt-5.5", variant: "medium" } }), "fallback_model is not supported");
   });
 
-  it("rich model entry with model+variant accepted", () => {
-    assertNoValidationErrors({ model_routing: { planner: { model: "test-model", variant: "fast" } } });
-  });
-
-  it("rich model entry with model+variant+fallback_models accepted", () => {
+  it("top-level fallback_models accepts ordered rich objects and strings", () => {
     assertNoValidationErrors({
-      model_routing: {
+      fallback_models: [
+        { model: "openai/gpt-5.5", variant: "primary-backup" },
+        "anthropic/claude-sonnet-4.5",
+      ],
+    });
+  });
+
+  it("top-level fallback_models rejects empty, duplicate, secret-like, and nested fallback entries", () => {
+    assertHasError(validateBrosConfig({ fallback_models: [] }), "fallback_models must not be empty");
+    assertHasError(validateBrosConfig({ fallback_models: ["test/a", "test/a"] }), "fallback_models contains duplicate model test/a");
+    assertHasError(validateBrosConfig({ fallback_models: [{ model: secretLikeValue }] }), "fallback_models[0].model must be a model id, not a secret-like value");
+    assertHasError(
+      validateBrosConfig({ fallback_models: [{ model: "test/a", fallback_models: ["test/b"] }] }),
+      "fallback_models[0].fallback_models is not supported in top-level fallback_models entries",
+    );
+  });
+
+  it("category model entry with model+variant+fallback_models accepted for unrestricted categories", () => {
+    assertNoValidationErrors({
+      categories: {
         planner: {
           model: "test-model",
           variant: "fast",
@@ -69,55 +86,37 @@ describe("validateBrosConfig", () => {
     });
   });
 
-  it("empty variant rejected", () => {
-    const errors = validateBrosConfig({ model_routing: { planner: { model: "test-model", variant: "" } } });
-
-    assertHasError(errors, "model_routing.planner.variant must be a non-empty string when provided");
-  });
-
-  it("secret-like variant rejected", () => {
-    const errors = validateBrosConfig({
-      model_routing: { planner: { model: "test-model", variant: secretLikeValue } },
-    });
-
-    assertHasError(errors, "model_routing.planner.variant must be a variant id, not a secret-like value");
-  });
-
-  it("secret-like model rejected", () => {
-    const errors = validateBrosConfig({ model_routing: { planner: { model: secretLikeValue } } });
-
-    assertHasError(errors, "model_routing.planner.model must be a model id, not a secret-like value");
+  it("empty and secret-like category model fields are rejected", () => {
+    assertHasError(
+      validateBrosConfig({ categories: { planner: { model: "test-model", variant: "" } } }),
+      "categories.planner.variant must be a non-empty string when provided",
+    );
+    assertHasError(
+      validateBrosConfig({ categories: { planner: { model: "test-model", variant: secretLikeValue } } }),
+      "categories.planner.variant must be a variant id, not a secret-like value",
+    );
+    assertHasError(
+      validateBrosConfig({ categories: { planner: { model: secretLikeValue } } }),
+      "categories.planner.model must be a model id, not a secret-like value",
+    );
   });
 
   it("unknown keys in model entry rejected", () => {
-    const config = JSON.parse('{"model_routing":{"planner":{"model":"test","__proto__":"x"}}}');
+    const config = JSON.parse('{"categories":{"planner":{"model":"test","__proto__":"x"}}}');
     const errors = validateBrosConfig(config);
 
-    assertHasError(errors, "model_routing.planner.__proto__ is not supported");
+    assertHasError(errors, "categories.planner.__proto__ is not supported");
   });
 
-  it("empty fallback_models array rejected", () => {
-    const errors = validateBrosConfig({ model_routing: { planner: { model: "test", fallback_models: [] } } });
-
-    assertHasError(errors, "model_routing.planner.fallback_models must not be empty");
-  });
-
-  it("duplicate fallback_models entries error", () => {
-    const errors = validateBrosConfig({
-      model_routing: { planner: { model: "test", fallback_models: ["fallback", "fallback"] } },
-    });
-
-    assertHasError(errors, "model_routing.planner.fallback_models contains duplicate model fallback");
-  });
-
-  it("restricted category rejects fallback_models in model_routing", () => {
-    for (const category of ["security", "coder_build", "qa_review", "ops"]) {
-      const errors = validateBrosConfig({
-        model_routing: { [category]: { model: `${category}-model`, fallback_models: ["fallback"] } },
-      });
-
-      assertHasError(errors, `model_routing.${category}.fallback_models is not allowed for restricted category ${category}`);
-    }
+  it("model-entry fallback_models rejects empty and duplicate arrays", () => {
+    assertHasError(
+      validateBrosConfig({ categories: { planner: { model: "test", fallback_models: [] } } }),
+      "categories.planner.fallback_models must not be empty",
+    );
+    assertHasError(
+      validateBrosConfig({ categories: { planner: { model: "test", fallback_models: ["fallback", "fallback"] } } }),
+      "categories.planner.fallback_models contains duplicate model fallback",
+    );
   });
 
   it("restricted category rejects fallback_models in categories", () => {
@@ -156,9 +155,18 @@ describe("validateBrosConfig", () => {
     });
   });
 
-  it("runtime aliases accepted in model_routing", () => {
+  it("canonical architecture and ui categories are accepted", () => {
+    assertNoValidationErrors({ categories: { architecture: "arch-model", ui: "ui-model" } });
+  });
+
+  it("legacy design and designer category names are rejected", () => {
+    assertHasError(validateBrosConfig({ categories: { design: "design-model" } }), "categories.design is not supported");
+    assertHasError(validateBrosConfig({ categories: { designer: "designer-model" } }), "categories.designer is not supported");
+  });
+
+  it("runtime aliases accepted for non-ambiguous categories", () => {
     assertNoValidationErrors({
-      model_routing: {
+      categories: {
         coder: "coder-model",
         "qa/review": "qa-model",
         "explorer/search": "explorer-model",
@@ -167,59 +175,45 @@ describe("validateBrosConfig", () => {
   });
 
   it("duplicate alias/canonical conflict detected", () => {
-    const errors = validateBrosConfig({ model_routing: { coder: "alias-model", coder_build: "canonical-model" } });
+    const errors = validateBrosConfig({ categories: { coder: "alias-model", coder_build: "canonical-model" } });
 
-    assertHasError(errors, "model_routing defines duplicate category coder_build via aliases");
+    assertHasError(errors, "categories defines duplicate category coder_build via aliases");
   });
 
-  it("$schema string accepted", () => {
+  it("$schema string accepted and non-string rejected", () => {
     assertNoValidationErrors({ $schema: "https://example.test/bros.schema.json" });
+    assertHasError(validateBrosConfig({ $schema: 1 }), "$schema must be a string when provided");
   });
 
-  it("$schema non-string rejected", () => {
-    const errors = validateBrosConfig({ $schema: 1 });
-
-    assertHasError(errors, "$schema must be a string when provided");
-  });
-
-  it("all 6 top-level keys accepted together", () => {
+  it("all supported top-level keys accepted together", () => {
     assertNoValidationErrors({
       $schema: "https://example.test/bros.schema.json",
-      fallback_model: "fallback-model",
-      model_routing: { planner: "planner-model" },
+      fallback_models: [{ model: "fallback-backup", variant: "backup" }],
       categories: { docs: "docs-category-model" },
       agents: { "bro-explore": "explore-agent-model" },
       permission_profiles: futurePermissionProfiles,
     });
   });
+
+  it("singular category and agent top-level keys remain unsupported", () => {
+    assertHasError(validateBrosConfig({ category: { docs: "docs" } }), "category is not supported");
+    assertHasError(validateBrosConfig({ agent: { "bro-docs": "docs" } }), "agent is not supported");
+  });
 });
 
 describe("resolveBrosConfig", () => {
-  it("multi-source deep merge for model_routing", () => {
-    const resolved = resolveBrosConfig([
-      { config: { model_routing: { planner: "planner-one", docs: "docs-one" } }, source: "one" },
-      { config: { model_routing: { planner: "planner-two", design: "design-two" } }, source: "two" },
-    ]);
-
-    assert.deepStrictEqual(resolved.errors, []);
-    assert.deepStrictEqual(resolved.modelRouting, {
-      planner: { model: "planner-two" },
-      docs: { model: "docs-one" },
-      design: { model: "design-two" },
-    });
-  });
-
   it("multi-source deep merge for categories", () => {
     const resolved = resolveBrosConfig([
       { config: { categories: { planner: "planner-one", docs: "docs-one" } }, source: "one" },
-      { config: { categories: { planner: "planner-two", design: "design-two" } }, source: "two" },
+      { config: { categories: { planner: "planner-two", architecture: "architecture-two", ui: "ui-two" } }, source: "two" },
     ]);
 
     assert.deepStrictEqual(resolved.errors, []);
     assert.deepStrictEqual(resolved.categories, {
       planner: { model: "planner-two" },
       docs: { model: "docs-one" },
-      design: { model: "design-two" },
+      architecture: { model: "architecture-two" },
+      ui: { model: "ui-two" },
     });
   });
 
@@ -235,6 +229,28 @@ describe("resolveBrosConfig", () => {
       "bro-docs": { model: "docs-one" },
       "bro-ui": { model: "ui-two" },
     });
+  });
+
+  it("fallback_models normalize ordered rich entries", () => {
+    const resolved = resolveBrosConfig([
+      {
+        config: {
+          fallback_models: [
+            { model: "test/primary", variant: "primary" },
+            "test/backup-b",
+          ],
+        },
+        source: "test",
+      },
+    ]);
+
+    assert.deepStrictEqual(resolved.errors, []);
+    assert.equal(Object.hasOwn(resolved, "fallbackModel"), false);
+    assert.equal(Object.hasOwn(resolved, "fallbackModelEntry"), false);
+    assert.deepStrictEqual(resolved.fallbackModels, [
+      { model: "test/primary", variant: "primary" },
+      { model: "test/backup-b" },
+    ]);
   });
 
   it("permission_profiles override instead of merging", () => {
@@ -255,86 +271,171 @@ describe("resolveBrosConfig", () => {
 
   it("source with errors is not merged", () => {
     const resolved = resolveBrosConfig([
-      { config: { model_routing: { planner: "planner-one" } }, source: "valid" },
-      { config: { model_routing: { planner: "" } }, source: "invalid" },
+      { config: { categories: { planner: "planner-one" } }, source: "valid" },
+      { config: { categories: { planner: "" } }, source: "invalid" },
     ]);
 
     assert.equal(resolved.config, undefined);
-    assert.deepStrictEqual(resolved.modelRouting, {});
-    assertHasError(resolved.errors, "invalid.model_routing.planner must be a non-empty model id string");
+    assert.deepStrictEqual(resolved.categories, {});
+    assertHasError(resolved.errors, "invalid.categories.planner must be a non-empty model id string");
+  });
+});
+
+describe("loadResolvedBrosConfig plugin input", () => {
+  it("rejects unwrapped removed model_routing", async () => {
+    const resolved = await loadResolvedBrosConfig({
+      input: { model_routing: { planner: "planner-model" } },
+      includeFiles: false,
+    });
+
+    assertHasError(resolved.errors, "OpenCode plugin input (plugin input).model_routing is not supported");
+  });
+
+  it("rejects unwrapped removed fallback_model", async () => {
+    const resolved = await loadResolvedBrosConfig({
+      input: { fallback_model: "openai/gpt-5.5" },
+      includeFiles: false,
+    });
+
+    assertHasError(resolved.errors, "OpenCode plugin input (plugin input).fallback_model is not supported");
+  });
+
+  it("rejects unwrapped fallback_models with unknown sibling", async () => {
+    const resolved = await loadResolvedBrosConfig({
+      input: { fallback_models: ["openai/gpt-5.5"], unexpected_sibling: true },
+      includeFiles: false,
+    });
+
+    assertHasError(resolved.errors, "OpenCode plugin input (plugin input).unexpected_sibling is not supported");
+  });
+
+  it("still rejects wrapped removed keys", async () => {
+    const resolved = await loadResolvedBrosConfig({
+      input: { bros_harness: { fallback_model: "openai/gpt-5.5", model_routing: { docs: "docs-model" } } },
+      includeFiles: false,
+    });
+
+    assertHasError(resolved.errors, "OpenCode plugin input (plugin input).fallback_model is not supported");
+    assertHasError(resolved.errors, "OpenCode plugin input (plugin input).model_routing is not supported");
+  });
+
+  it("accepts valid unwrapped allowed keys", async () => {
+    const resolved = await loadResolvedBrosConfig({
+      input: { fallback_models: ["openai/gpt-5.5"], categories: { docs: "docs-model" } },
+      includeFiles: false,
+    });
+
+    assert.deepStrictEqual(resolved.errors, []);
+    assert.deepStrictEqual(resolved.fallbackModels, [{ model: "openai/gpt-5.5" }]);
+    assert.deepStrictEqual(resolved.categories, { docs: { model: "docs-model" } });
   });
 });
 
 describe("applyModelRoutingToAgents", () => {
-  it("routing precedence: agents > categories > model_routing > fallback_model", () => {
+  it("routing precedence: agents > categories > fallback_models", () => {
     const baseAgents = {
       "mighty-bro": { model: "base-planner" },
       "bro-explore": { model: "base-explore" },
       "bro-docs": { model: "base-docs" },
       "bro-design": { model: "base-design" },
+      "bro-ui": { model: "base-ui" },
     };
     const resolvedConfig = {
-      fallbackModel: "fallback-model",
-      modelRouting: {
-        planner: { model: "routing-planner" },
-        explorer_search: { model: "routing-explore" },
-        docs: { model: "routing-docs" },
-      },
+      fallbackModels: [{ model: "fallback-model" }],
       categories: {
         explorer_search: { model: "category-explore" },
         docs: { model: "category-docs" },
+        architecture: { model: "category-architecture" },
+        ui: { model: "category-ui" },
       },
       agents: {
         "bro-docs": { model: "agent-docs" },
+        "bro-ui": { model: "agent-ui" },
       },
     };
 
     const { agents } = applyModelRoutingToAgents(baseAgents, resolvedConfig);
 
-    assert.equal(agents["mighty-bro"].model, "routing-planner");
+    assert.equal(agents["mighty-bro"].model, "fallback-model");
     assert.equal(agents["bro-explore"].model, "category-explore");
     assert.equal(agents["bro-docs"].model, "agent-docs");
-    assert.equal(agents["bro-design"].model, "fallback-model");
+    assert.equal(agents["bro-design"].model, "category-architecture");
+    assert.equal(agents["bro-ui"].model, "agent-ui");
   });
 
-  it("restricted category does not get fallback_model", () => {
+  it("restricted category does not get fallback_models", () => {
     const { agents, events } = applyModelRoutingToAgents(
       { "bro-build": { model: "base-build" } },
-      { fallbackModel: "fallback-model", modelRouting: {}, categories: {}, agents: {} },
+      { fallbackModels: [{ model: "fallback-model" }], categories: {}, agents: {} },
     );
 
     assert.equal(agents["bro-build"].model, "base-build");
     assert.deepStrictEqual(events, []);
   });
 
-  it("unrestricted category gets fallback_model", () => {
+  it("restricted category can still use explicit category route while ignoring global fallback_models", () => {
     const { agents, events } = applyModelRoutingToAgents(
-      { "bro-explore": { model: "base-explore" } },
-      { fallbackModel: "fallback-model", modelRouting: {}, categories: {}, agents: {} },
+      { "bro-build": { model: "base-build" } },
+      {
+        fallbackModels: [{ model: "fallback-model" }],
+        categories: { coder_build: { model: "explicit-build", variant: "high" } },
+        agents: {},
+      },
     );
 
-    assert.equal(agents["bro-explore"].model, "fallback-model");
+    assert.equal(agents["bro-build"].model, "explicit-build");
+    assert.equal(agents["bro-build"].variant, "high");
     assert.deepStrictEqual(events, [
-      { agent: "bro-explore", category: "explorer_search", model: "fallback-model", source: "fallback_model" },
+      { agent: "bro-build", category: "coder_build", model: "explicit-build", variant: "high", source: "categories", fallback_count: 0 },
     ]);
   });
 
-  it("variant propagated to agent", () => {
+  it("unrestricted category gets first fallback_models object variant and fallback count", () => {
+    const { agents, events } = applyModelRoutingToAgents(
+      { "bro-explore": { model: "base-explore" } },
+      {
+        fallbackModels: [{ model: "fallback-model", variant: "balanced" }, { model: "backup-two" }],
+        categories: {},
+        agents: {},
+      },
+    );
+
+    assert.equal(agents["bro-explore"].model, "fallback-model");
+    assert.equal(agents["bro-explore"].variant, "balanced");
+    assert.deepStrictEqual(events, [
+      { agent: "bro-explore", category: "explorer_search", model: "fallback-model", variant: "balanced", source: "fallback_models", fallback_count: 2 },
+    ]);
+  });
+
+  it("fallback_models order is preserved and first entry is selected", () => {
+    const resolved = resolveBrosConfig([
+      {
+        config: { fallback_models: ["test/first", { model: "test/second", variant: "second" }] },
+        source: "test",
+      },
+    ]);
+    const { agents } = applyModelRoutingToAgents({ "bro-docs": { model: "base-docs" } }, resolved);
+
+    assert.deepStrictEqual(resolved.fallbackModels, [{ model: "test/first" }, { model: "test/second", variant: "second" }]);
+    assert.equal(agents["bro-docs"].model, "test/first");
+    assert.equal(agents["bro-docs"].variant, undefined);
+  });
+
+  it("variant propagated to agent from category", () => {
     const { agents } = applyModelRoutingToAgents(
       { "mighty-bro": { model: "base-planner" } },
-      { modelRouting: { planner: { model: "planner-model", variant: "fast" } }, categories: {}, agents: {} },
+      { categories: { planner: { model: "planner-model", variant: "fast" } }, agents: {} },
     );
 
     assert.equal(agents["mighty-bro"].model, "planner-model");
     assert.equal(agents["mighty-bro"].variant, "fast");
   });
 
-  it("events generated for model override", () => {
+  it("events generated for category model override", () => {
     const { events } = applyModelRoutingToAgents(
       { "mighty-bro": { model: "base-planner" } },
       {
-        modelRouting: { planner: { model: "planner-model", variant: "fast", fallback_models: ["backup"] } },
-        categories: {},
+        categories: { planner: { model: "planner-model", variant: "fast", fallback_models: ["backup"] } },
         agents: {},
       },
     );
@@ -345,7 +446,7 @@ describe("applyModelRoutingToAgents", () => {
         category: "planner",
         model: "planner-model",
         variant: "fast",
-        source: "model_routing",
+        source: "categories",
         fallback_count: 1,
       },
     ]);
@@ -354,7 +455,7 @@ describe("applyModelRoutingToAgents", () => {
   it("no event when no override", () => {
     const { agents, events } = applyModelRoutingToAgents(
       { "mighty-bro": { model: "base-planner" } },
-      { modelRouting: {}, categories: {}, agents: {} },
+      { categories: {}, agents: {} },
     );
 
     assert.equal(agents["mighty-bro"].model, "base-planner");
@@ -457,7 +558,7 @@ describe("brosHarnessServer runtime model propagation", () => {
 });
 
 describe("brosConfigDefaults", () => {
-  it("has expected keys", () => {
+  it("has expected keys and canonical categories", () => {
     for (const key of [
       "modelEntryShape",
       "modelEntryAliases",
@@ -467,6 +568,10 @@ describe("brosConfigDefaults", () => {
     ]) {
       assert.ok(Object.hasOwn(brosConfigDefaults, key), `missing ${key}`);
     }
+    assert.ok(brosConfigDefaults.categories.includes("architecture"));
+    assert.ok(brosConfigDefaults.categories.includes("ui"));
+    assert.ok(!brosConfigDefaults.categories.includes("design"));
+    assert.ok(!brosConfigDefaults.modelEntryAliases.includes("designer"));
   });
 
   it("uses the OpenCode config directory for the global config path", () => {

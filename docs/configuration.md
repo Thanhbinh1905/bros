@@ -2,7 +2,7 @@
 
 ## Purpose and Locations
 
-`bros.config.json` is an optional package-specific configuration file for BROS Harness. It supports rich model routing and scoped permission profiles for packaged BROS agents.
+`bros.config.json` is an optional package-specific configuration file for BROS Harness. It supports category routing, exact agent routing, ordered fallback models, and scoped permission profiles for packaged BROS agents.
 
 Supported locations are loaded in this order:
 
@@ -18,36 +18,26 @@ For repository-local authoring, use the published raw schema URL as the recommen
 ```json
 {
   "$schema": "https://raw.githubusercontent.com/Thanhbinh1905/bros/main/examples/bros.config.schema.json",
-  "fallback_model": "anthropic/claude-sonnet-4-5",
-  "model_routing": {
-    "explorer": "anthropic/claude-sonnet-4-5",
-    "coder_build": {
-      "model": "anthropic/claude-sonnet-4-5",
-      "variant": "high"
-    },
-    "designer": "anthropic/claude-sonnet-4-5",
-    "reviewer": "anthropic/claude-sonnet-4-5",
-    "qa_review": "anthropic/claude-sonnet-4-5",
-    "security": "anthropic/claude-sonnet-4-5",
-    "docs": "anthropic/claude-sonnet-4-5",
-    "ops": "anthropic/claude-sonnet-4-5"
-  },
+  "fallback_models": [
+    { "model": "openai/gpt-5.4", "variant": "medium" },
+    "openai/gpt-5.4-mini-fast"
+  ],
   "categories": {
-    "explorer": {
-      "model": "anthropic/claude-sonnet-4-5",
-      "fallback_models": ["openai/gpt-5.5"]
-    },
-    "docs": {
-      "model": "anthropic/claude-sonnet-4-5",
-      "fallback_models": ["openai/gpt-5.5"]
-    }
+    "planner": { "model": "openai/gpt-5.5", "variant": "medium" },
+    "explorer_search": "openai/gpt-5.4-mini-fast",
+    "architecture": { "model": "openai/gpt-5.5", "variant": "high" },
+    "ui": { "model": "openai/gpt-5.4", "variant": "high" },
+    "docs": "openai/gpt-5.4-mini-fast",
+    "coder_build": "openai/gpt-5.5",
+    "qa_review": "openai/gpt-5.5",
+    "security": "openai/gpt-5.5",
+    "ops": "openai/gpt-5.5"
   },
   "agents": {
-    "mighty-bro": {
-      "model": "anthropic/claude-sonnet-4-5",
-      "variant": "high",
-      "fallback_models": ["openai/gpt-5.5"]
-    }
+    "mighty-bro": { "model": "openai/gpt-5.5", "variant": "medium" },
+    "bro-explore": { "model": "openai/gpt-5.4-mini-fast" },
+    "bro-design": { "model": "openai/gpt-5.5", "variant": "high" },
+    "bro-ui": { "model": "openai/gpt-5.4", "variant": "high" }
   },
   "permission_profiles": {
     "enabled": ["review_safe", "build_limited"],
@@ -59,35 +49,34 @@ For repository-local authoring, use the published raw schema URL as the recommen
 }
 ```
 
-Agents and editors can fetch the published schema from `https://raw.githubusercontent.com/Thanhbinh1905/bros/main/examples/bros.config.schema.json`. A local `./bros.config.schema.json` reference can still be used when the schema file is copied into the repository, but the raw URL is the recommended default for user-facing examples.
+Agents and editors can fetch the published schema from `https://raw.githubusercontent.com/Thanhbinh1905/bros/main/examples/bros.config.schema.json`.
 
 ## Top-Level Keys
 
 | Key | Type | Purpose |
 | --- | --- | --- |
-| `fallback_model` | model entry | Default model for non-restricted categories when no more specific route applies. |
-| `model_routing` | object | Category-level routing map using canonical category names or accepted aliases. |
-| `categories` | object | Category-level routing map that takes precedence over `model_routing`. |
-| `agents` | object | Agent-specific routing map with the highest routing precedence. |
+| `fallback_models` | array | Ordered global fallback list. The first entry is applied to non-restricted categories when no more specific route exists. Entries may be model id strings or objects with `model` and optional `variant`. |
+| `categories` | object | Category-level routing map for canonical categories and accepted non-ambiguous aliases. |
+| `agents` | object | Exact agent-specific routing map with the highest routing precedence. |
 | `permission_profiles` | object | Optional repo-scoped permission profiles for packaged BROS agents. |
 
-The optional `$schema` key is also accepted and must be a string when present. Unknown top-level keys fail validation.
+The optional `$schema` key is also accepted and must be a string when present. Unknown top-level keys fail validation. `fallback_model`, `model_routing`, singular `category`, and singular `agent` are not supported top-level keys.
 
 ## Model Entry Formats
 
 A model entry can be a string model identifier:
 
 ```json
-"anthropic/claude-sonnet-4-5"
+"openai/gpt-5.5"
 ```
 
 A model entry can also be a rich object:
 
 ```json
 {
-  "model": "anthropic/claude-sonnet-4-5",
+  "model": "openai/gpt-5.5",
   "variant": "high",
-  "fallback_models": ["openai/gpt-5.5"]
+  "fallback_models": ["openai/gpt-5.4"]
 }
 ```
 
@@ -96,6 +85,8 @@ Rich object fields are:
 - `model`: required non-empty model identifier.
 - `variant`: optional non-empty variant identifier.
 - `fallback_models`: optional non-empty array of fallback model identifiers, allowed only where runtime restrictions permit it.
+
+Top-level `fallback_models` entries are either strings or objects with `model` and optional `variant`; nested `fallback_models` inside those list entries are not supported.
 
 ## Categories and Aliases
 
@@ -107,7 +98,8 @@ Canonical categories are:
 - `security`
 - `qa_review`
 - `docs`
-- `design`
+- `architecture`
+- `ui`
 - `ops`
 
 Accepted aliases are:
@@ -116,7 +108,8 @@ Accepted aliases are:
 - `coder`, `build`, `coder/build` → `coder_build`
 - `qa`, `review`, `qa/review`, `reviewer` → `qa_review`
 - `release` → `ops`
-- `designer` → `design`
+
+`design` and `designer` are not canonical category names and are rejected to avoid ambiguity. Use `architecture` for `bro-design` and `ui` for `bro-ui`.
 
 Do not define the same normalized category more than once in the same map. For example, defining both `qa` and `qa_review` in one object is treated as a duplicate alias conflict.
 
@@ -134,7 +127,7 @@ Supported agent-specific routing keys are:
 - `bro-ops`
 - `bro-docs`
 
-Agent routes are not alias-normalized. The key must match one of the supported agent names exactly.
+Agent routes are not alias-normalized. The key must match one of the supported agent names exactly. Exact agent overrides win over category and fallback routes.
 
 ## Precedence
 
@@ -149,9 +142,8 @@ Model routing precedence after sources are merged is:
 
 1. `agents`
 2. `categories`
-3. `model_routing`
-4. `fallback_model`
-5. Packaged/default model routing
+3. `fallback_models`
+4. Packaged/default model routing
 
 More specific routes override less specific routes. Agent routes override category routes for the same packaged agent.
 
@@ -176,7 +168,7 @@ The restricted categories are:
 
 Restricted categories reject `fallback_models` in model entry objects. This applies whether the category is addressed through a canonical category name, an alias, or an agent whose category is restricted.
 
-The global `fallback_model` is not applied to restricted categories unless an explicit route exists through `model_routing`, `categories`, or `agents`. To change a restricted category, set an explicit route without `fallback_models`.
+Top-level `fallback_models` is not applied to restricted categories. To change a restricted category, set an explicit route through `categories` or `agents` without nested `fallback_models`.
 
 ## Permission Profiles
 
@@ -219,6 +211,8 @@ node --test tests/config.test.mjs
 | Duplicate alias conflict | Two aliases normalize to the same category in one routing map. | Keep only one key for each normalized category. |
 | Secret-like value rejection | A model identifier, variant, or reason contains material that matches sensitive-value patterns. | Remove credentials and use only model or variant identifiers and a non-sensitive reason. |
 | Restricted fallback rejection | `fallback_models` is set for `coder_build`, `security`, `qa_review`, `ops`, or an agent in one of those categories. | Use an explicit `model` without `fallback_models` for restricted categories. |
+| Removed `fallback_model` key | A config still uses the removed top-level `fallback_model` entry. | Replace it with an ordered top-level `fallback_models` array. |
+| Removed `model_routing` key | A config still uses the removed top-level `model_routing` map. | Move supported entries into `categories` and use `architecture` or `ui` instead of legacy design names. |
 | Stale install prompt | OpenCode is using an older cached package or a session that started before the config change. | Reinstall or refresh the plugin through the installation guide, then fully restart OpenCode. |
 
 Do not assume a configuration change is active until OpenCode has been restarted and routing status has been checked.

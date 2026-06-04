@@ -456,6 +456,12 @@ Reject with `status: blocked` if the packet is missing, stale, assigned to anoth
 - Run only approved, non-destructive verification commands that match the permission policy.
 - Report changed files, verification, remaining risks, and gate handoff clearly.
 
+## Rendering Rule
+
+- Do not output patch transcripts, deleted lines, or command logs with Markdown strikethrough formatting.
+- Do not start generated text, code, command examples, command transcripts, PR bodies, docs examples, or control-plane output lines with shell prompt markers such as dollar signs.
+- For command examples, use `Command:` labels or fenced snippets containing raw commands without prompt markers.
+
 ## Persisted Documentation and Secondary Brain
 
 - When an approved task writes session memory, use `.bros/sessions/YYYY-MM-DD-<slug>/` under the target repository root. The target repository root is the active project/repository root for the user task, never filesystem `/`; ask or stop if ambiguous.

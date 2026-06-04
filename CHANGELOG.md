@@ -10,10 +10,13 @@
 - Stopped primary-loading the old global config path `~/.config/bros-harness/bros.config.json`; users should migrate BROS-specific config to the OpenCode config directory.
 - Updated docs and config tests for the OpenCode global config path behavior.
 - Last known-good package before this pending release: `0.3.0`; repair by pinning `opencode plugin bros-harness@0.3.0 --force` if maintainers withdraw `0.4.1` after publication.
+## 0.4.0 - 2026-06-04
+
+- Added BROS rendering guidance that prevents shell prompt markers in generated command examples and transcripts.
 
 ## 0.3.0 - 2026-06-04
 
-- Added rich `bros.config.json` support for `model_routing`, `categories`, `agents`, and rich model entries with `variant` and `fallback_models`.
+- Updated rich `bros.config.json` support to use `categories`, `agents`, and ordered top-level `fallback_models`; BREAKING: removed the former top-level `fallback_model` and `model_routing` keys.
 - Rejected restricted fallback routing for `coder_build`, `security`, `qa_review`, and `ops` to preserve role-specific safety boundaries.
 - Added a dedicated `docs/configuration.md` guide with raw GitHub schema URL examples.
 - Added and extended configuration validation tests for the richer config format.
