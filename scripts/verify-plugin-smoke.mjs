@@ -193,4 +193,114 @@ if (opsBash["docker compose up*"] !== "ask" || opsBash["kubectl apply*"] !== "as
   throw new Error("Plugin smoke failed: bro-ops reopened operational mutation commands");
 }
 
-console.log("Plugin smoke passed: permission deny keys accepted, secret-like agent config rejected, model routing guards verified, and permission profiles fail closed.");
+function assertResolvedConfigAccepted(config, description) {
+  const resolved = resolveBrosConfig([{ source: "test", path: "test", config }]);
+  if (resolved.errors.length > 0) {
+    throw new Error(`Plugin smoke failed: ${description} was rejected: ${resolved.errors.join("; ")}`);
+  }
+  return resolved;
+}
+
+function assertResolvedConfigRejected(config, description, expectedFragments) {
+  const resolved = resolveBrosConfig([{ source: "test", path: "test", config }]);
+  if (resolved.errors.length === 0) {
+    throw new Error(`Plugin smoke failed: ${description} was accepted unexpectedly`);
+  }
+  const errorText = resolved.errors.join("; ");
+  for (const fragment of expectedFragments) {
+    if (!errorText.includes(fragment)) {
+      throw new Error(`Plugin smoke failed: ${description} did not include ${JSON.stringify(fragment)} in errors: ${errorText}`);
+    }
+  }
+  return resolved;
+}
+
+assertResolvedConfigAccepted({
+  model_routing: { explorer: { model: "test/rich", variant: "high" } },
+}, "rich model entry in model_routing");
+
+assertResolvedConfigAccepted({
+  model_routing: { docs: { model: "test/docs", fallback_models: ["test/fallback1"] } },
+}, "rich entry with fallback_models on unrestricted category");
+
+assertResolvedConfigRejected({
+  model_routing: { security: { model: "test/sec", fallback_models: ["test/fb"] } },
+}, "restricted category fallback_models in model_routing", ["restricted category"]);
+
+assertResolvedConfigAccepted({
+  categories: { explorer: "test/cat-explorer" },
+}, "categories map");
+
+assertResolvedConfigRejected({
+  categories: { coder_build: { model: "test/cb", fallback_models: ["test/fb"] } },
+}, "restricted category fallback_models in categories", ["restricted category"]);
+
+assertResolvedConfigAccepted({
+  agents: { "bro-explore": "test/agent-explore" },
+}, "agents map");
+
+assertResolvedConfigRejected({
+  agents: { "bro-build": { model: "test/bb", fallback_models: ["test/fb"] } },
+}, "restricted category fallback_models in agents", ["restricted category"]);
+
+assertResolvedConfigAccepted({
+  agents: { "bro-docs": { model: "test/bd", fallback_models: ["test/fb"] } },
+}, "unrestricted agent fallback_models");
+
+assertResolvedConfigRejected({
+  model_routing: { explorer: { model: "test/m", variant: "" } },
+}, "empty variant", ["variant"]);
+
+assertResolvedConfigRejected({
+  model_routing: { explorer: { model: "test/m", variant: "sk-AAAAAAAAAAAAAAAAAAAAAA" } },
+}, "secret-like variant", ["variant", "secret"]);
+
+assertResolvedConfigRejected(JSON.parse('{"model_routing":{"explorer":{"model":"test/m","__proto__":"bad"}}}'),
+  "unknown model entry key", ["not supported"]);
+
+const precedenceConfig = assertResolvedConfigAccepted({
+  model_routing: { explorer: "test/model-routing-explorer" },
+  categories: { explorer: "test/category-explorer" },
+  agents: { "bro-explore": "test/agent-explorer" },
+}, "routing precedence config");
+const routedPrecedence = applyModelRoutingToAgents({ "bro-explore": {} }, precedenceConfig);
+if (routedPrecedence.agents["bro-explore"].model !== "test/agent-explorer") {
+  throw new Error("Plugin smoke failed: routing precedence did not prefer agents over categories and model_routing");
+}
+
+const mergedCategoriesConfig = resolveBrosConfig([
+  { source: "test-a", path: "test-a", config: { categories: { explorer: "test/cat-explorer" } } },
+  { source: "test-b", path: "test-b", config: { categories: { docs: "test/cat-docs" } } },
+]);
+if (mergedCategoriesConfig.errors.length > 0) {
+  throw new Error(`Plugin smoke failed: deep merge categories config was rejected: ${mergedCategoriesConfig.errors.join("; ")}`);
+}
+if (mergedCategoriesConfig.categories.explorer?.model !== "test/cat-explorer" || mergedCategoriesConfig.categories.docs?.model !== "test/cat-docs") {
+  throw new Error("Plugin smoke failed: deep merge for categories did not preserve keys from both sources");
+}
+
+assertResolvedConfigAccepted({
+  $schema: "./test",
+  fallback_model: "test/fb",
+  model_routing: {},
+  categories: {},
+  agents: {},
+  permission_profiles: {
+    enabled: ["readonly"],
+    scope: "repo",
+    expires_at: "2099-01-01T00:00:00.000Z",
+    reason: "smoke test for all keys",
+  },
+}, "all rich config top-level keys");
+
+assertResolvedConfigRejected({ bad_key: true }, "unknown top-level key", [
+  "bad_key",
+  "$schema",
+  "fallback_model",
+  "model_routing",
+  "categories",
+  "agents",
+  "permission_profiles",
+]);
+
+console.log("Plugin smoke passed: permission deny keys accepted, secret-like agent config rejected, rich config model routing guards verified, routing precedence covered, and permission profiles fail closed.");

@@ -224,14 +224,23 @@ async function configStatus() {
   }
   const baseAgents = await readPackagedAgentModels();
   const routed = applyModelRoutingToAgents(baseAgents, resolved);
+  const modelRoutingKeys = Object.keys(resolved.modelRouting).sort();
+  const categoryKeys = Object.keys(resolved.categories).sort();
+  const agentKeys = Object.keys(resolved.agents).sort();
+  const activePermissionProfiles = resolved.permissionProfiles?.enabled ?? [];
   console.log("BROS Harness config status");
   console.log(`Global config path: ${brosConfigDefaults.globalConfigPath}`);
   console.log(`Repo config path: ${brosConfigDefaults.repoConfigPath}`);
   console.log("Precedence: packaged defaults < global BROS config < repo BROS config < OpenCode plugin input.");
   console.log(`Fallback model configured: ${resolved.fallbackModel ? "yes" : "no"}`);
-  console.log(`Explicit model routes: ${Object.keys(resolved.modelRouting).length}`);
+  console.log("Config surface:");
+  console.log(`- model_routing entries: ${modelRoutingKeys.length}${modelRoutingKeys.length ? ` (${modelRoutingKeys.join(", ")})` : ""}`);
+  console.log(`- categories entries: ${categoryKeys.length}${categoryKeys.length ? ` (${categoryKeys.join(", ")})` : ""}`);
+  console.log(`- agents entries: ${agentKeys.length}${agentKeys.length ? ` (${agentKeys.join(", ")})` : ""}`);
+  console.log(`- permission_profiles configured: ${resolved.permissionProfiles ? "yes" : "no"}`);
+  console.log(`Explicit model routes: ${modelRoutingKeys.length}`);
   console.log(`Supported permission profiles: ${brosConfigDefaults.permissionProfiles.join(", ")}`);
-  console.log(`Active permission profiles: ${resolved.permissionProfiles?.enabled?.length ? resolved.permissionProfiles.enabled.join(", ") : "none"}`);
+  console.log(`Active permission profiles: ${activePermissionProfiles.length ? activePermissionProfiles.join(", ") : "none"}`);
   if (resolved.permissionProfiles) {
     console.log(`Permission profile scope: ${resolved.permissionProfiles.scope}`);
     console.log(`Permission profile expiry: ${resolved.permissionProfiles.expires_at}`);
@@ -269,7 +278,56 @@ async function listAssets() {
 
 async function printAgentInstallPrompt() {
   const version = await getPackageVersion();
-  console.log(`Install BROS Harness into OpenCode by following docs/installation.md as the source of truth.\nDo not only paste JSON into opencode.jsonc; use OpenCode's plugin installer unless the guide's fallback applies.\nUse opencode plugin bros-harness@latest for first install. For an existing install, use opencode plugin bros-harness@latest --force. If @latest remains stale, clear only ~/.cache/opencode/packages/bros-harness@latest and rerun the installer.\nDo not edit providers, MCP, permissions, telemetry, secrets, npm publishing, or npm dist-tags.\nRestart OpenCode and verify BROS agents after installation.`);
+  const configExample = {
+    $schema: "https://raw.githubusercontent.com/Thanhbinh1905/bros/main/examples/bros.config.schema.json",
+    fallback_model: "anthropic/claude-sonnet-4-5",
+    model_routing: {
+      explorer: {
+        model: "anthropic/claude-haiku-4-5",
+        variant: "fast-search",
+      },
+      coder_build: "anthropic/claude-sonnet-4-5",
+      qa_review: "anthropic/claude-sonnet-4-5",
+      security: "anthropic/claude-sonnet-4-5",
+      ops: "anthropic/claude-sonnet-4-5",
+    },
+    categories: {
+      planner: "anthropic/claude-opus-4-5",
+      docs: "anthropic/claude-haiku-4-5",
+      design: {
+        model: "anthropic/claude-sonnet-4-5",
+        fallback_models: ["openai/gpt-5.5"],
+      },
+    },
+    agents: {
+      "bro-build": {
+        model: "openai/gpt-5.5",
+        variant: "implementation",
+      },
+      "bro-test": "anthropic/claude-sonnet-4-5",
+    },
+    permission_profiles: {
+      enabled: ["build_limited"],
+      scope: "repo",
+      expires_at: "2099-01-01T00:00:00.000Z",
+      reason: "Scoped local build validation approval",
+      hard_review: true,
+    },
+  };
+  console.log(`Install BROS Harness into OpenCode by following docs/installation.md as the source of truth.
+Do not only paste JSON into opencode.jsonc; use OpenCode's plugin installer unless the guide's fallback applies.
+Use opencode plugin bros-harness@latest for first install. For an existing install, use opencode plugin bros-harness@latest --force. If @latest remains stale, clear only ~/.cache/opencode/packages/bros-harness@latest and rerun the installer.
+Current package version detected by this CLI: ${version}.
+
+Optional manual BROS config after plugin installation:
+1. Show the user this complete bros.config.json example and ask for explicit approval before writing any config file.
+2. After explicit approval, write only ./bros.config.json for repo config, or only the chosen global config path (${brosConfigDefaults.globalConfigPath}) if the user explicitly chooses global config.
+3. Do not add or invoke an init-config command. Do not edit providers, MCP, top-level OpenCode permissions, telemetry, secrets, npm publishing, or npm dist-tags.
+
+Ready-to-paste bros.config.json example:
+${JSON.stringify(configExample, null, 2)}
+
+Restart OpenCode and verify BROS agents after installation.`);
 }
 
 const command = process.argv[2] ?? "help";

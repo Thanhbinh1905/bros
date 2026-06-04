@@ -32,6 +32,7 @@ const requiredFiles = [
   "scripts/verify-package-contents.mjs",
   "scripts/verify-no-secrets.mjs",
   "README.md",
+  "docs/configuration.md",
   "LICENSE",
 ];
 

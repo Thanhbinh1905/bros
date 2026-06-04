@@ -27,6 +27,8 @@ const categoryAliases = Object.freeze({
   review: "qa_review",
   "qa/review": "qa_review",
   release: "ops",
+  designer: "design",
+  reviewer: "qa_review",
 });
 
 const agentCategories = Object.freeze({
@@ -44,8 +46,10 @@ const agentCategories = Object.freeze({
 const fallbackRestrictedCategories = new Set(["coder_build", "security", "qa_review", "ops"]);
 export const permissionProfileNames = Object.freeze(["readonly", "review_safe", "build_limited", "trusted_ops"]);
 
-const allowedTopLevelKeys = new Set(["$schema", "fallback_model", "model_routing", "permission_profiles"]);
+const allowedTopLevelKeys = new Set(["$schema", "fallback_model", "model_routing", "categories", "agents", "permission_profiles"]);
 const sensitiveValuePattern = /(?:api[_-]?key|authorization|bearer|token|secret|password|credential|private[_-]?key|_auth|sk-[A-Za-z0-9]{20,})/i;
+const modelEntryKeys = new Set(["model", "variant", "fallback_models"]);
+const restrictedCategoryList = [...fallbackRestrictedCategories].join(", ");
 
 const enforcedDangerousBashDenies = Object.freeze({
   "sudo*": "deny",
@@ -244,6 +248,110 @@ function validateModelValue(value, path, errors) {
   }
 }
 
+function hasFallbackModels(value) {
+  return isObject(value) && Object.hasOwn(value, "fallback_models");
+}
+
+function validateModelEntry(value, path, errors, options = {}) {
+  if (typeof value === "string") {
+    validateModelValue(value, path, errors);
+    return;
+  }
+
+  if (!isObject(value)) {
+    errors.push(`${path} must be a non-empty model id string or model entry object`);
+    return;
+  }
+
+  // Parsed JSON is untrusted: all model entry object keys are allowlisted.
+  for (const key of Object.keys(value)) {
+    if (!modelEntryKeys.has(key)) errors.push(`${path}.${key} is not supported; allowed keys are model, variant, fallback_models`);
+  }
+
+  if (!Object.hasOwn(value, "model")) {
+    errors.push(`${path}.model must be a non-empty model id string`);
+  } else {
+    validateModelValue(value.model, `${path}.model`, errors);
+  }
+
+  if (Object.hasOwn(value, "variant")) {
+    if (typeof value.variant !== "string" || value.variant.trim() === "") {
+      errors.push(`${path}.variant must be a non-empty string when provided`);
+    } else if (sensitiveValuePattern.test(value.variant)) {
+      errors.push(`${path}.variant must be a variant id, not a secret-like value`);
+    }
+  }
+
+  if (!Object.hasOwn(value, "fallback_models")) return;
+
+  if (options.fallbackModelsAllowed === false) {
+    errors.push(options.restrictedFallbackError ?? `${path}.fallback_models is not allowed`);
+    return;
+  }
+
+  if (!Array.isArray(value.fallback_models)) {
+    errors.push(`${path}.fallback_models must be a non-empty array of model id strings`);
+    return;
+  }
+  if (value.fallback_models.length === 0) {
+    errors.push(`${path}.fallback_models must not be empty`);
+  }
+  const seenFallbacks = new Set();
+  for (const [index, fallbackModel] of value.fallback_models.entries()) {
+    const fallbackPath = `${path}.fallback_models[${index}]`;
+    validateModelValue(fallbackModel, fallbackPath, errors);
+    if (typeof fallbackModel !== "string") continue;
+    if (seenFallbacks.has(fallbackModel)) errors.push(`${path}.fallback_models contains duplicate model ${fallbackModel}`);
+    seenFallbacks.add(fallbackModel);
+  }
+}
+
+function restrictedFallbackError(path, category) {
+  return `${path}.fallback_models is not allowed for restricted category ${category}; restricted categories are ${restrictedCategoryList}`;
+}
+
+function validateModelMap(map, path, allowedKeys, errors, options = {}) {
+  if (!isObject(map)) {
+    errors.push(`${path} must be an object`);
+    return;
+  }
+
+  const seen = new Set();
+  for (const [rawKey, entry] of Object.entries(map)) {
+    const normalizedKey = options.normalizeKeys === false ? rawKey : normalizeCategory(rawKey);
+    const entryPath = `${path}.${rawKey}`;
+    if (!allowedKeys.includes(rawKey) && !allowedKeys.includes(normalizedKey)) {
+      errors.push(`${entryPath} is not supported; use one of ${allowedKeys.join(", ")}`);
+      continue;
+    }
+    if (seen.has(normalizedKey)) {
+      errors.push(`${path} defines duplicate category ${normalizedKey} via aliases`);
+    }
+    seen.add(normalizedKey);
+
+    const restrictedCategory = options.categoryForKey?.(rawKey, normalizedKey);
+    const fallbackModelsAllowed = !(restrictedCategory && fallbackRestrictedCategories.has(restrictedCategory));
+    const restrictedError = restrictedCategory && hasFallbackModels(entry) ? restrictedFallbackError(entryPath, restrictedCategory) : undefined;
+    validateModelEntry(entry, entryPath, errors, {
+      fallbackModelsAllowed,
+      restrictedFallbackError: restrictedError,
+    });
+  }
+}
+
+function validateCategoriesMap(map, path, errors) {
+  validateModelMap(map, path, [...modelRoutingCategories, ...Object.keys(categoryAliases)], errors, {
+    categoryForKey: (_rawCategory, normalizedCategory) => normalizedCategory,
+  });
+}
+
+function validateAgentsMap(map, path, errors) {
+  validateModelMap(map, path, Object.keys(agentCategories), errors, {
+    normalizeKeys: false,
+    categoryForKey: (agentName) => agentCategories[agentName],
+  });
+}
+
 function validatePermissionProfiles(value, path, errors) {
   if (!isObject(value)) {
     errors.push(`${path} must be an object`);
@@ -302,7 +410,7 @@ export function validateBrosConfig(config, source = "BROS config") {
 
   for (const key of Object.keys(config)) {
     if (!allowedTopLevelKeys.has(key)) {
-      errors.push(`${source}.${key} is not supported; allowed keys are fallback_model and model_routing`);
+      errors.push(`${source}.${key} is not supported; allowed keys are $schema, fallback_model, model_routing, categories, agents, permission_profiles`);
     }
   }
 
@@ -316,34 +424,39 @@ export function validateBrosConfig(config, source = "BROS config") {
   }
 
   if ("model_routing" in config) {
-    if (!isObject(config.model_routing)) {
-      errors.push(`${source}.model_routing must be an object`);
-    } else {
-      const seen = new Set();
-      for (const [rawCategory, model] of Object.entries(config.model_routing)) {
-        const category = normalizeCategory(rawCategory);
-        if (!modelRoutingCategories.includes(category)) {
-          errors.push(`${source}.model_routing.${rawCategory} is not a supported category; use one of ${modelRoutingCategories.join(", ")}`);
-          continue;
-        }
-        if (seen.has(category)) {
-          errors.push(`${source}.model_routing defines duplicate category ${category} via aliases`);
-        }
-        seen.add(category);
-        validateModelValue(model, `${source}.model_routing.${rawCategory}`, errors);
-      }
-    }
+    validateModelMap(config.model_routing, `${source}.model_routing`, [...modelRoutingCategories, ...Object.keys(categoryAliases)], errors, {
+      categoryForKey: (_rawCategory, category) => category,
+    });
+  }
+
+  if ("categories" in config) {
+    validateCategoriesMap(config.categories, `${source}.categories`, errors);
+  }
+
+  if ("agents" in config) {
+    validateAgentsMap(config.agents, `${source}.agents`, errors);
   }
 
   return errors;
 }
 
-function normalizeRouting(modelRouting = {}) {
-  const normalized = {};
-  for (const [rawCategory, model] of Object.entries(modelRouting)) {
-    normalized[normalizeCategory(rawCategory)] = model.trim();
-  }
+function normalizeModelEntry(entry) {
+  if (typeof entry === "string") return { model: entry.trim() };
+  const normalized = { model: entry.model.trim() };
+  if (typeof entry.variant === "string") normalized.variant = entry.variant.trim();
+  if (Array.isArray(entry.fallback_models)) normalized.fallback_models = entry.fallback_models.map((model) => model.trim());
   return normalized;
+}
+
+function normalizeModelMap(modelMap = {}, { normalizeKeys = true } = {}) {
+  const normalized = {};
+  const warnings = [];
+  for (const [rawKey, entry] of Object.entries(modelMap)) {
+    const key = normalizeKeys ? normalizeCategory(rawKey) : rawKey;
+    if (normalized[key]) warnings.push(`${normalizeKeys ? "model_routing" : "model map"} defines duplicate category ${key} via aliases; later source wins`);
+    normalized[key] = normalizeModelEntry(entry);
+  }
+  return { normalized, warnings };
 }
 
 function mergeConfig(base, override) {
@@ -354,9 +467,19 @@ function mergeConfig(base, override) {
       ...(base.model_routing ?? {}),
       ...(override.model_routing ?? {}),
     },
+    categories: {
+      ...(base.categories ?? {}),
+      ...(override.categories ?? {}),
+    },
+    agents: {
+      ...(base.agents ?? {}),
+      ...(override.agents ?? {}),
+    },
     permission_profiles: override.permission_profiles ?? base.permission_profiles,
   };
   if (!base.model_routing && !override.model_routing) delete next.model_routing;
+  if (!base.categories && !override.categories) delete next.categories;
+  if (!base.agents && !override.agents) delete next.agents;
   if (!base.permission_profiles && !override.permission_profiles) delete next.permission_profiles;
   return next;
 }
@@ -419,7 +542,20 @@ export function resolveBrosConfig(sources = []) {
   }
 
   const fallbackModel = resolved.fallback_model?.trim();
-  const modelRouting = normalizeRouting(resolved.model_routing ?? {});
+  const { normalized: modelRouting, warnings: routingWarnings } = normalizeModelMap(resolved.model_routing ?? {});
+  const { normalized: categories, warnings: categoryWarnings } = normalizeModelMap(resolved.categories ?? {});
+  for (const rawKey of Object.keys(resolved.categories ?? {})) {
+    const normalizedKey = normalizeCategory(rawKey);
+    if (rawKey !== normalizedKey && categories[normalizedKey] && !Object.hasOwn(categories, rawKey)) {
+      Object.defineProperty(categories, rawKey, {
+        value: categories[normalizedKey],
+        enumerable: false,
+      });
+    }
+  }
+  const { normalized: agentRouting } = normalizeModelMap(resolved.agents ?? {}, { normalizeKeys: false });
+  warnings.push(...routingWarnings);
+  warnings.push(...categoryWarnings);
   const permissionProfiles = resolved.permission_profiles
     ? {
         enabled: [...resolved.permission_profiles.enabled],
@@ -443,6 +579,8 @@ export function resolveBrosConfig(sources = []) {
     warnings,
     fallbackModel,
     modelRouting,
+    categories,
+    agents: agentRouting,
     permissionProfiles,
   };
 }
@@ -455,18 +593,36 @@ export function applyModelRoutingToAgents(agents, resolvedConfig) {
   const routedAgents = {};
   const events = [];
   const routing = resolvedConfig?.modelRouting ?? {};
+  const categoryRouting = resolvedConfig?.categories ?? {};
+  const agentRouting = resolvedConfig?.agents ?? {};
   const fallbackModel = resolvedConfig?.fallbackModel;
 
   for (const [agentName, agent] of Object.entries(agents)) {
     const category = agentCategories[agentName];
-    const explicitModel = category ? routing[category] : undefined;
+    let route;
+    let source;
+    if (agentRouting[agentName]) {
+      route = agentRouting[agentName];
+      source = "agents";
+    } else if (category && categoryRouting[category]) {
+      route = categoryRouting[category];
+      source = "categories";
+    } else if (category && routing[category]) {
+      route = routing[category];
+      source = "model_routing";
+    }
+    const explicitModel = typeof route === "string" ? route : route?.model;
+    const variant = typeof route === "object" ? route.variant : undefined;
+    const fallbackList = typeof route === "object" ? route.fallback_models ?? [] : [];
     const canUseFallback = category && !fallbackRestrictedCategories.has(category);
     const fallbackApplied = !explicitModel && canUseFallback && fallbackModel;
     const selectedModel = explicitModel ?? (fallbackApplied ? fallbackModel : agent.model);
-    routedAgents[agentName] = selectedModel ? { ...agent, model: selectedModel } : { ...agent };
+    const finalAgent = selectedModel ? { ...agent, model: selectedModel } : { ...agent };
+    if (variant && !finalAgent.variant) finalAgent.variant = variant;
+    routedAgents[agentName] = finalAgent;
 
     if (explicitModel && explicitModel !== agent.model) {
-      events.push({ agent: agentName, category, model: explicitModel, source: "model_routing" });
+      events.push({ agent: agentName, category, model: explicitModel, variant, source, fallback_count: fallbackList.length });
     } else if (fallbackApplied && fallbackModel !== agent.model) {
       events.push({ agent: agentName, category, model: fallbackModel, source: "fallback_model" });
     }
@@ -533,6 +689,10 @@ export const brosConfigDefaults = Object.freeze({
   globalConfigPath,
   repoConfigPath: `./${configFileName}`,
   categories: modelRoutingCategories,
+  modelEntryShape: "string or object with model, optional variant, and optional fallback_models array",
+  modelEntryAliases: Object.keys(categoryAliases),
+  agentNames: Object.keys(agentCategories),
+  restrictedCategoryMessage: `fallback_models is not allowed for restricted category <category>; restricted categories are ${restrictedCategoryList}`,
   fallbackRestrictedCategories: [...fallbackRestrictedCategories],
   permissionProfiles: permissionProfileNames,
 });
