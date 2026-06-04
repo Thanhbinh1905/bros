@@ -33,11 +33,11 @@ if (!openCodeRuntimeCfg.agent?.["mighty-bro"]) {
 
 const namespacedInputServer = await brosHarnessServer({
   client: {},
-  bros_harness: { fallback_model: "openai/gpt-5-mini" },
+  bros_harness: { fallback_models: ["openai/gpt-5.4-mini-fast"] },
 }, { includeFiles: false });
 const namespacedInputCfg = {};
 namespacedInputServer.config(namespacedInputCfg);
-if (namespacedInputCfg.agent?.["bro-docs"]?.model !== "openai/gpt-5-mini") {
+if (namespacedInputCfg.agent?.["bro-docs"]?.model !== "openai/gpt-5.4-mini-fast") {
   throw new Error("Plugin smoke failed: namespaced OpenCode plugin input was not applied");
 }
 
@@ -73,24 +73,24 @@ if (!rejectedSecretLikeAgent) {
   throw new Error("Plugin smoke failed: secret-like agent config was not rejected");
 }
 
-const invalidConfig = resolveBrosConfig([{ source: "test", path: "test", config: { model_routing: { security: "" } } }]);
-if (!invalidConfig.errors.some((error) => error.includes("model_routing.security"))) {
-  throw new Error("Plugin smoke failed: invalid model routing did not produce an actionable error");
+const invalidConfig = resolveBrosConfig([{ source: "test", path: "test", config: { categories: { security: "" } } }]);
+if (!invalidConfig.errors.some((error) => error.includes("categories.security"))) {
+  throw new Error("Plugin smoke failed: invalid category routing did not produce an actionable error");
 }
 
-const fallbackConfig = resolveBrosConfig([{ source: "test", path: "test", config: { fallback_model: "openai/gpt-5-mini" } }]);
+const fallbackConfig = resolveBrosConfig([{ source: "test", path: "test", config: { fallback_models: [{ model: "openai/gpt-5.4", variant: "medium" }, "openai/gpt-5.4-mini-fast"] } }]);
 const routedFallback = applyModelRoutingToAgents({
   "bro-docs": {},
   "bro-build": {},
 }, fallbackConfig);
-if (routedFallback.agents["bro-docs"].model !== "openai/gpt-5-mini") {
-  throw new Error("Plugin smoke failed: fallback_model was not applied to unrestricted docs category");
+if (routedFallback.agents["bro-docs"].model !== "openai/gpt-5.4" || routedFallback.agents["bro-docs"].variant !== "medium") {
+  throw new Error("Plugin smoke failed: fallback_models first object was not applied to unrestricted docs category");
 }
 if ("model" in routedFallback.agents["bro-build"]) {
-  throw new Error("Plugin smoke failed: fallback_model forced a model onto restricted coder/build category");
+  throw new Error("Plugin smoke failed: fallback_models forced a model onto restricted coder/build category");
 }
 
-const explicitConfig = resolveBrosConfig([{ source: "test", path: "test", config: { model_routing: { coder_build: "test-provider/coder-build-model" } } }]);
+const explicitConfig = resolveBrosConfig([{ source: "test", path: "test", config: { categories: { coder_build: "test-provider/coder-build-model" } } }]);
 const routedExplicit = applyModelRoutingToAgents({ "bro-build": {} }, explicitConfig);
 if (routedExplicit.agents["bro-build"].model !== "test-provider/coder-build-model") {
   throw new Error("Plugin smoke failed: explicit coder/build model route was not applied");
@@ -216,16 +216,20 @@ function assertResolvedConfigRejected(config, description, expectedFragments) {
 }
 
 assertResolvedConfigAccepted({
-  model_routing: { explorer: { model: "test/rich", variant: "high" } },
-}, "rich model entry in model_routing");
+  categories: { explorer: { model: "test/rich", variant: "high" } },
+}, "rich model entry in categories");
 
 assertResolvedConfigAccepted({
-  model_routing: { docs: { model: "test/docs", fallback_models: ["test/fallback1"] } },
+  categories: { docs: { model: "test/docs", fallback_models: ["test/fallback1"] } },
 }, "rich entry with fallback_models on unrestricted category");
 
 assertResolvedConfigRejected({
-  model_routing: { security: { model: "test/sec", fallback_models: ["test/fb"] } },
-}, "restricted category fallback_models in model_routing", ["restricted category"]);
+  model_routing: { security: "test/sec" },
+}, "removed model_routing top-level key", ["model_routing", "not supported"]);
+
+assertResolvedConfigRejected({
+  fallback_model: "test/legacy-fallback",
+}, "removed fallback_model top-level key", ["fallback_model", "not supported"]);
 
 assertResolvedConfigAccepted({
   categories: { explorer: "test/cat-explorer" },
@@ -248,24 +252,23 @@ assertResolvedConfigAccepted({
 }, "unrestricted agent fallback_models");
 
 assertResolvedConfigRejected({
-  model_routing: { explorer: { model: "test/m", variant: "" } },
+  categories: { explorer: { model: "test/m", variant: "" } },
 }, "empty variant", ["variant"]);
 
 assertResolvedConfigRejected({
-  model_routing: { explorer: { model: "test/m", variant: "sk-AAAAAAAAAAAAAAAAAAAAAA" } },
+  categories: { explorer: { model: "test/m", variant: "sk-AAAAAAAAAAAAAAAAAAAAAA" } },
 }, "secret-like variant", ["variant", "secret"]);
 
-assertResolvedConfigRejected(JSON.parse('{"model_routing":{"explorer":{"model":"test/m","__proto__":"bad"}}}'),
+assertResolvedConfigRejected(JSON.parse('{"categories":{"explorer":{"model":"test/m","__proto__":"bad"}}}'),
   "unknown model entry key", ["not supported"]);
 
 const precedenceConfig = assertResolvedConfigAccepted({
-  model_routing: { explorer: "test/model-routing-explorer" },
   categories: { explorer: "test/category-explorer" },
   agents: { "bro-explore": "test/agent-explorer" },
 }, "routing precedence config");
 const routedPrecedence = applyModelRoutingToAgents({ "bro-explore": {} }, precedenceConfig);
 if (routedPrecedence.agents["bro-explore"].model !== "test/agent-explorer") {
-  throw new Error("Plugin smoke failed: routing precedence did not prefer agents over categories and model_routing");
+  throw new Error("Plugin smoke failed: routing precedence did not prefer agents over categories");
 }
 
 const mergedCategoriesConfig = resolveBrosConfig([
@@ -281,8 +284,7 @@ if (mergedCategoriesConfig.categories.explorer?.model !== "test/cat-explorer" ||
 
 assertResolvedConfigAccepted({
   $schema: "./test",
-  fallback_model: "test/fb",
-  model_routing: {},
+  fallback_models: [{ model: "test/fallback-a", variant: "backup" }, "test/fallback-b"],
   categories: {},
   agents: {},
   permission_profiles: {
@@ -296,11 +298,10 @@ assertResolvedConfigAccepted({
 assertResolvedConfigRejected({ bad_key: true }, "unknown top-level key", [
   "bad_key",
   "$schema",
-  "fallback_model",
-  "model_routing",
+  "fallback_models",
   "categories",
   "agents",
   "permission_profiles",
 ]);
 
-console.log("Plugin smoke passed: permission deny keys accepted, secret-like agent config rejected, rich config model routing guards verified, routing precedence covered, and permission profiles fail closed.");
+console.log("Plugin smoke passed: permission deny keys accepted, secret-like agent config rejected, category routing guards verified, routing precedence covered, and permission profiles fail closed.");

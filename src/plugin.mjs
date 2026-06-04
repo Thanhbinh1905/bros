@@ -223,7 +223,7 @@ export async function brosHarnessServer(input = {}, options = {}) {
   const agents = profiled.agents;
   const routingMessages = [
     ...resolvedConfig.warnings,
-    ...routed.events.map((event) => `model routing applied: ${event.agent} (${event.category}) uses ${event.source}`),
+    ...routed.events.map((event) => `routing applied: ${event.agent} (${event.category}) uses ${event.source}`),
     ...profiled.events.map((event) => `permission profile applied: ${event.agent} uses ${event.profile} within ${event.scope} scope until ${event.expires_at}; reason: ${event.reason}`),
   ];
 

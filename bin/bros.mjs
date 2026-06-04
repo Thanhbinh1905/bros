@@ -13,7 +13,7 @@ const commands = [
   ["snippet", "Print OpenCode installer commands and resulting plugin entry."],
   ["doctor", "Validate package asset directories and manifest shape without mutation."],
   ["status", "Print local package status without reading configs, env, or credentials."],
-  ["config-status", "Validate BROS global/repo/plugin config files and show model-routing and permission-profile effects."],
+  ["config-status", "Validate BROS global/repo/plugin config files and show category, agent, fallback, and permission-profile effects."],
   ["list-assets", "Summarize packaged OpenCode agent, command, skill, doc, and template counts."],
   ["agent-install-prompt", "Print a safe prompt an AI agent can follow to install the plugin."]
 ];
@@ -224,7 +224,6 @@ async function configStatus() {
   }
   const baseAgents = await readPackagedAgentModels();
   const routed = applyModelRoutingToAgents(baseAgents, resolved);
-  const modelRoutingKeys = Object.keys(resolved.modelRouting).sort();
   const categoryKeys = Object.keys(resolved.categories).sort();
   const agentKeys = Object.keys(resolved.agents).sort();
   const activePermissionProfiles = resolved.permissionProfiles?.enabled ?? [];
@@ -232,13 +231,12 @@ async function configStatus() {
   console.log(`Global config path: ${brosConfigDefaults.globalConfigPath}`);
   console.log(`Repo config path: ${brosConfigDefaults.repoConfigPath}`);
   console.log("Precedence: packaged defaults < global BROS config < repo BROS config < OpenCode plugin input.");
-  console.log(`Fallback model configured: ${resolved.fallbackModel ? "yes" : "no"}`);
+  console.log(`Fallback models configured: ${resolved.fallbackModels?.length ?? 0}`);
   console.log("Config surface:");
-  console.log(`- model_routing entries: ${modelRoutingKeys.length}${modelRoutingKeys.length ? ` (${modelRoutingKeys.join(", ")})` : ""}`);
   console.log(`- categories entries: ${categoryKeys.length}${categoryKeys.length ? ` (${categoryKeys.join(", ")})` : ""}`);
   console.log(`- agents entries: ${agentKeys.length}${agentKeys.length ? ` (${agentKeys.join(", ")})` : ""}`);
   console.log(`- permission_profiles configured: ${resolved.permissionProfiles ? "yes" : "no"}`);
-  console.log(`Explicit model routes: ${modelRoutingKeys.length}`);
+  console.log(`Explicit category routes: ${categoryKeys.length}`);
   console.log(`Supported permission profiles: ${brosConfigDefaults.permissionProfiles.join(", ")}`);
   console.log(`Active permission profiles: ${activePermissionProfiles.length ? activePermissionProfiles.join(", ") : "none"}`);
   if (resolved.permissionProfiles) {
@@ -280,31 +278,37 @@ async function printAgentInstallPrompt() {
   const version = await getPackageVersion();
   const configExample = {
     $schema: "https://raw.githubusercontent.com/Thanhbinh1905/bros/main/examples/bros.config.schema.json",
-    fallback_model: "anthropic/claude-sonnet-4-5",
-    model_routing: {
-      explorer: {
-        model: "anthropic/claude-haiku-4-5",
-        variant: "fast-search",
-      },
-      coder_build: "anthropic/claude-sonnet-4-5",
-      qa_review: "anthropic/claude-sonnet-4-5",
-      security: "anthropic/claude-sonnet-4-5",
-      ops: "anthropic/claude-sonnet-4-5",
-    },
+    fallback_models: [
+      { model: "openai/gpt-5.4", variant: "medium" },
+      "openai/gpt-5.4-mini-fast",
+    ],
     categories: {
-      planner: "anthropic/claude-opus-4-5",
-      docs: "anthropic/claude-haiku-4-5",
-      design: {
-        model: "anthropic/claude-sonnet-4-5",
-        fallback_models: ["openai/gpt-5.5"],
-      },
+      planner: { model: "openai/gpt-5.5", variant: "medium" },
+      explorer_search: "openai/gpt-5.4-mini-fast",
+      coder_build: { model: "openai/gpt-5.5", variant: "high" },
+      qa_review: "openai/gpt-5.5",
+      security: "openai/gpt-5.5",
+      docs: "openai/gpt-5.4-mini-fast",
+      architecture: { model: "openai/gpt-5.5", variant: "high" },
+      ui: { model: "openai/gpt-5.4", variant: "high" },
+      ops: "openai/gpt-5.5",
     },
     agents: {
-      "bro-build": {
+      "mighty-bro": {
         model: "openai/gpt-5.5",
-        variant: "implementation",
+        variant: "medium",
       },
-      "bro-test": "anthropic/claude-sonnet-4-5",
+      "bro-explore": {
+        model: "openai/gpt-5.4-mini-fast",
+      },
+      "bro-design": {
+        model: "openai/gpt-5.5",
+        variant: "high",
+      },
+      "bro-ui": {
+        model: "openai/gpt-5.4",
+        variant: "high",
+      },
     },
     permission_profiles: {
       enabled: ["build_limited"],

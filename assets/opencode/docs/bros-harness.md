@@ -103,7 +103,9 @@ For normal prompts that are only exploratory, diagnostic, or clarification-orien
 
 ## Rendering
 
-Do not show patch transcripts or deleted lines with Markdown strikethrough. Use normal summaries, and only use fenced `diff` or `text` blocks when a patch excerpt is explicitly needed.
+Do not show patch transcripts, deleted lines, or command logs with Markdown strikethrough. Use normal summaries, and only use fenced `diff` or `text` blocks when a patch excerpt is explicitly needed.
+
+Generated command examples and transcripts must not start text or code lines with shell prompt markers such as dollar signs. Use `Command:` labels or fenced snippets containing raw commands without prompt markers.
 
 ## Investigation Permissions
 
@@ -113,7 +115,7 @@ BROS agents can read, glob, grep, and use configured builtin or user-added skill
 
 OpenCode BROS agents use pattern-based Bash permissions. `bro-build` defaults to flexible local Bash for implementation work, closer to OpenCode build mode, while explicit ask/deny gates remain for risky command classes. Review, security, exploration, and orchestration agents remain narrower by default.
 
-Optional BROS configuration can be supplied through `bros.config.json`. See `docs/configuration.md` for the full guide, `examples/bros.config.schema.json` for the schema, and `examples/bros.config.example.json` for a complete example. The published schema is fetchable at `https://raw.githubusercontent.com/Thanhbinh1905/bros/main/examples/bros.config.schema.json`. The rich routing surface supports `fallback_model`, `model_routing`, `categories`, `agents`, and `permission_profiles`; routing precedence is `agents` > `categories` > `model_routing` > `fallback_model`.
+Optional BROS configuration can be supplied through `bros.config.json`. See `docs/configuration.md` for the full guide, `examples/bros.config.schema.json` for the schema, and `examples/bros.config.example.json` for a complete example. The published schema is fetchable at `https://raw.githubusercontent.com/Thanhbinh1905/bros/main/examples/bros.config.schema.json`. The rich routing surface supports top-level `fallback_models`, `categories`, `agents`, and `permission_profiles`; routing precedence is `agents` > `categories` > `fallback_models` > packaged/default agent config. Removed `fallback_model` and `model_routing` keys are rejected.
 
 Optional BROS permission profiles can be enabled in `bros.config.json` to reduce repeated prompts for approved local repository work without changing top-level OpenCode permissions. Profiles are opt-in, repo-scoped, expiry-bound, and reason-logged at plugin startup. Supported profiles are:
 
