@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.1 - Pending release
+## 0.2.1 - 2026-06-04
 
 - Simplified OpenCode installation guidance for agents and manual setup while preserving safety boundaries around providers, permissions, secrets, publishing, and dist-tags.
 - Removed hardcoded packaged BROS agent models so agents inherit OpenCode defaults unless explicit BROS model routing is configured.
