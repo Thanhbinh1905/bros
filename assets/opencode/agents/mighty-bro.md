@@ -312,6 +312,8 @@ When dispatching role agents, separate trusted policy/gates from untrusted user 
 - Do not output patch transcripts, deleted lines, or command logs with Markdown strikethrough formatting.
 - Summarize changed files and outcomes in normal bullets.
 - Use fenced `diff` or `text` blocks only when the user explicitly needs a patch excerpt.
+- Do not start generated text, code, command examples, command transcripts, PR bodies, docs examples, or control-plane output lines with shell prompt markers such as dollar signs.
+- For command examples, use `Command:` labels or fenced snippets containing raw commands without prompt markers.
 
 ## Persisted Documentation and Main Session Trace
 

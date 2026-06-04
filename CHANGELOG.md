@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0 - 2026-06-04
+
+- Added BROS rendering guidance that prevents shell prompt markers in generated command examples and transcripts.
+
 ## 0.3.0 - 2026-06-04
 
 - Updated rich `bros.config.json` support to use `categories`, `agents`, and ordered top-level `fallback_models`; BREAKING: removed the former top-level `fallback_model` and `model_routing` keys.

@@ -103,7 +103,9 @@ For normal prompts that are only exploratory, diagnostic, or clarification-orien
 
 ## Rendering
 
-Do not show patch transcripts or deleted lines with Markdown strikethrough. Use normal summaries, and only use fenced `diff` or `text` blocks when a patch excerpt is explicitly needed.
+Do not show patch transcripts, deleted lines, or command logs with Markdown strikethrough. Use normal summaries, and only use fenced `diff` or `text` blocks when a patch excerpt is explicitly needed.
+
+Generated command examples and transcripts must not start text or code lines with shell prompt markers such as dollar signs. Use `Command:` labels or fenced snippets containing raw commands without prompt markers.
 
 ## Investigation Permissions
 
