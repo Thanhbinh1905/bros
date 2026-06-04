@@ -12,6 +12,7 @@ import {
   applyModelRoutingToAgents,
   applyPermissionProfilesToAgents,
   loadResolvedBrosConfig,
+  resolveModelRouteForAgent,
 } from "./config.mjs";
 
 const packageRoot = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -35,6 +36,18 @@ const requiredAssetDirs = [
   brosHarness.docsDir,
   brosHarness.templatesDir
 ];
+
+const knownBrosAgentIds = new Set([
+  "mighty-bro",
+  "bro-explore",
+  "bro-build",
+  "bro-shield",
+  "bro-test",
+  "bro-docs",
+  "bro-design",
+  "bro-ui",
+  "bro-ops",
+]);
 
 export async function verifyBrosHarnessAssets() {
   await Promise.all(requiredAssetDirs.map((path) => access(path)));
@@ -195,14 +208,22 @@ function mergeCommands(cfg, commands) {
   }
 }
 
-function mergeAgents(cfg, agents) {
+function mergeAgents(cfg, agents, resolvedConfig) {
   if (cfg.agent !== undefined && (cfg.agent === null || typeof cfg.agent !== "object" || Array.isArray(cfg.agent))) {
     return;
   }
 
   cfg.agent ??= {};
   for (const [name, agent] of Object.entries(agents)) {
-    cfg.agent[name] ??= agent;
+    if (cfg.agent[name] === undefined) {
+      cfg.agent[name] = agent;
+      continue;
+    }
+
+    if (knownBrosAgentIds.has(name) && cfg.agent[name] !== null && typeof cfg.agent[name] === "object" && !Array.isArray(cfg.agent[name])) {
+      const explicitRoute = resolveModelRouteForAgent(name, resolvedConfig, { allowFallback: false });
+      if (explicitRoute?.model) cfg.agent[name].model = explicitRoute.model;
+    }
   }
 }
 
@@ -234,7 +255,7 @@ export async function brosHarnessServer(input = {}, options = {}) {
         console.warn(`BROS Harness config: ${message}`);
       }
       mergeSkillsPath(cfg);
-      mergeAgents(cfg, agents);
+      mergeAgents(cfg, agents, resolvedConfig);
       mergeCommands(cfg, commands);
       assertNoForbiddenConfigMutation(forbiddenConfigBefore, cfg);
     }

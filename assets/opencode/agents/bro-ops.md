@@ -109,6 +109,8 @@ permission:
     "npm pack": ask
     "npm publish*": deny
     "npm run validate": allow
+    "npm run verify:no-secrets": allow
+    "npm run verify:package": allow
     "npm run test": allow
     "npm run test:*": allow
     "npm test": allow

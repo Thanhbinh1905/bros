@@ -159,7 +159,7 @@ bros config-status
 bros list-assets
 ```
 
-These helpers are read-only. Most inspect package-local metadata and assets only. `bros config-status` additionally validates only BROS-specific config at `~/.config/bros-harness/bros.config.json` and `./bros.config.json`; it does not read `.opencode/`, environment variables, providers, MCP servers, telemetry settings, or credential values.
+These helpers are read-only. Most inspect package-local metadata and assets only. `bros config-status` additionally validates only BROS-specific config at `~/.config/opencode/bros.config.json` and `./bros.config.json`; it does not read `.opencode/`, environment variables, providers, MCP servers, telemetry settings, or credential values.
 
 For AI-assisted setup from a local checkout, use a narrow prompt:
 
@@ -187,7 +187,7 @@ On load, it verifies packaged asset directories and uses OpenCode’s in-memory 
 - packaged BROS agent entries to `agent`, without overwriting existing agent keys; and
 - packaged command prompt entries to `command`, without overwriting existing command keys.
 
-Optional BROS-specific model routing and permission profiles can be supplied in `bros.config.json` files. See `docs/configuration.md` for the dedicated configuration guide, including the rich config shape for `fallback_model`, `model_routing`, `categories`, `agents`, and `permission_profiles`. Config precedence is packaged defaults, global BROS config, repo BROS config, then OpenCode plugin input; routing precedence is `agents` > `categories` > `model_routing` > `fallback_model`. `fallback_model` is never silently applied to restricted code, security, QA/review, or ops/release categories. Permission profiles are opt-in, repo-scoped, expiry-bound, reason-logged, and keep hard denies for secret reads, publish, destructive actions, force push, and production/cloud mutation.
+Optional BROS-specific model routing and permission profiles can be supplied in `bros.config.json` files. See `docs/configuration.md` for the dedicated configuration guide, including the rich config shape for `fallback_model`, `model_routing`, `categories`, `agents`, and `permission_profiles`. Config precedence is packaged defaults, global BROS config, repo BROS config, then OpenCode plugin input; routing precedence is `agents` > `categories` > `model_routing` > `fallback_model`. Explicit `agents`, `categories`, or `model_routing` entries can update only the runtime `model` field for preexisting known BROS agents; prompt, permission, mode, tool configuration, and other non-model fields remain untouched. `fallback_model` is never silently applied to restricted code, security, QA/review, or ops/release categories. Restart OpenCode after BROS configuration or plugin installation changes before checking active routing. Permission profiles are opt-in, repo-scoped, expiry-bound, reason-logged, and keep hard denies for secret reads, publish, destructive actions, force push, and production/cloud mutation.
 
 `bro-build` defaults to flexible local Bash for routine development and inspection, closer to OpenCode build mode. Git mutation, dependency installs, Docker mutation, deploy/publish, secret-reading, destructive, force-push, and production/cloud command classes remain ask-gated or denied.
 
