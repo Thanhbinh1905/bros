@@ -2,7 +2,7 @@
 
 ## 0.3.0 - 2026-06-04
 
-- Added rich `bros.config.json` support for `model_routing`, `categories`, `agents`, and rich model entries with `variant` and `fallback_models`.
+- Updated rich `bros.config.json` support to use `categories`, `agents`, and ordered top-level `fallback_models`; BREAKING: removed the former top-level `fallback_model` and `model_routing` keys.
 - Rejected restricted fallback routing for `coder_build`, `security`, `qa_review`, and `ops` to preserve role-specific safety boundaries.
 - Added a dedicated `docs/configuration.md` guide with raw GitHub schema URL examples.
 - Added and extended configuration validation tests for the richer config format.

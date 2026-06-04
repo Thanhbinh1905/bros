@@ -5,14 +5,15 @@ import { join, resolve } from "node:path";
 const configFileName = "bros.config.json";
 const globalConfigPath = join(homedir(), ".config", "bros-harness", configFileName);
 
-export const modelRoutingCategories = Object.freeze([
+export const routingCategories = Object.freeze([
   "planner",
   "explorer_search",
   "coder_build",
   "security",
   "qa_review",
   "docs",
-  "design",
+  "architecture",
+  "ui",
   "ops",
 ]);
 
@@ -27,7 +28,6 @@ const categoryAliases = Object.freeze({
   review: "qa_review",
   "qa/review": "qa_review",
   release: "ops",
-  designer: "design",
   reviewer: "qa_review",
 });
 
@@ -38,15 +38,17 @@ const agentCategories = Object.freeze({
   "bro-shield": "security",
   "bro-test": "qa_review",
   "bro-docs": "docs",
-  "bro-design": "design",
-  "bro-ui": "design",
+  "bro-design": "architecture",
+  "bro-ui": "ui",
   "bro-ops": "ops",
 });
 
 const fallbackRestrictedCategories = new Set(["coder_build", "security", "qa_review", "ops"]);
 export const permissionProfileNames = Object.freeze(["readonly", "review_safe", "build_limited", "trusted_ops"]);
 
-const allowedTopLevelKeys = new Set(["$schema", "fallback_model", "model_routing", "categories", "agents", "permission_profiles"]);
+const allowedTopLevelKeys = new Set(["$schema", "fallback_models", "categories", "agents", "permission_profiles"]);
+const removedTopLevelKeys = new Set(["model_routing", "fallback_model"]);
+const ignoredOpenCodePluginInputKeys = new Set(["client", "project", "directory", "$"]);
 const sensitiveValuePattern = /(?:api[_-]?key|authorization|bearer|token|secret|password|credential|private[_-]?key|_auth|sk-[A-Za-z0-9]{20,})/i;
 const modelEntryKeys = new Set(["model", "variant", "fallback_models"]);
 const restrictedCategoryList = [...fallbackRestrictedCategories].join(", ");
@@ -306,6 +308,30 @@ function validateModelEntry(value, path, errors, options = {}) {
   }
 }
 
+function validateFallbackModelList(value, path, errors) {
+  if (!Array.isArray(value)) {
+    errors.push(`${path} must be a non-empty array of model id strings or model entry objects`);
+    return;
+  }
+  if (value.length === 0) {
+    errors.push(`${path} must not be empty`);
+  }
+  const seenFallbacks = new Set();
+  for (const [index, fallbackEntry] of value.entries()) {
+    const entryPath = `${path}[${index}]`;
+    validateModelEntry(fallbackEntry, entryPath, errors, { fallbackModelsAllowed: false, restrictedFallbackError: `${entryPath}.fallback_models is not supported in top-level fallback_models entries` });
+    if (typeof fallbackEntry === "string") {
+      const model = fallbackEntry.trim();
+      if (seenFallbacks.has(model)) errors.push(`${path} contains duplicate model ${model}`);
+      seenFallbacks.add(model);
+    } else if (isObject(fallbackEntry) && typeof fallbackEntry.model === "string") {
+      const model = fallbackEntry.model.trim();
+      if (seenFallbacks.has(model)) errors.push(`${path} contains duplicate model ${model}`);
+      seenFallbacks.add(model);
+    }
+  }
+}
+
 function restrictedFallbackError(path, category) {
   return `${path}.fallback_models is not allowed for restricted category ${category}; restricted categories are ${restrictedCategoryList}`;
 }
@@ -340,7 +366,7 @@ function validateModelMap(map, path, allowedKeys, errors, options = {}) {
 }
 
 function validateCategoriesMap(map, path, errors) {
-  validateModelMap(map, path, [...modelRoutingCategories, ...Object.keys(categoryAliases)], errors, {
+  validateModelMap(map, path, [...routingCategories, ...Object.keys(categoryAliases)], errors, {
     categoryForKey: (_rawCategory, normalizedCategory) => normalizedCategory,
   });
 }
@@ -410,23 +436,20 @@ export function validateBrosConfig(config, source = "BROS config") {
 
   for (const key of Object.keys(config)) {
     if (!allowedTopLevelKeys.has(key)) {
-      errors.push(`${source}.${key} is not supported; allowed keys are $schema, fallback_model, model_routing, categories, agents, permission_profiles`);
+      errors.push(`${source}.${key} is not supported; allowed keys are $schema, fallback_models, categories, agents, permission_profiles`);
     }
   }
 
   if ("$schema" in config && typeof config.$schema !== "string") {
     errors.push(`${source}.$schema must be a string when provided`);
   }
-  if ("fallback_model" in config) validateModelValue(config.fallback_model, `${source}.fallback_model`, errors);
+  if ("fallback_model" in config) {
+    errors.push(`${source}.fallback_model is not supported; use ordered fallback_models instead`);
+  }
+  if ("fallback_models" in config) validateFallbackModelList(config.fallback_models, `${source}.fallback_models`, errors);
 
   if ("permission_profiles" in config) {
     validatePermissionProfiles(config.permission_profiles, `${source}.permission_profiles`, errors);
-  }
-
-  if ("model_routing" in config) {
-    validateModelMap(config.model_routing, `${source}.model_routing`, [...modelRoutingCategories, ...Object.keys(categoryAliases)], errors, {
-      categoryForKey: (_rawCategory, category) => category,
-    });
   }
 
   if ("categories" in config) {
@@ -448,12 +471,16 @@ function normalizeModelEntry(entry) {
   return normalized;
 }
 
+function normalizeFallbackModelList(entries = []) {
+  return entries.map((entry) => normalizeModelEntry(entry));
+}
+
 function normalizeModelMap(modelMap = {}, { normalizeKeys = true } = {}) {
   const normalized = {};
   const warnings = [];
   for (const [rawKey, entry] of Object.entries(modelMap)) {
     const key = normalizeKeys ? normalizeCategory(rawKey) : rawKey;
-    if (normalized[key]) warnings.push(`${normalizeKeys ? "model_routing" : "model map"} defines duplicate category ${key} via aliases; later source wins`);
+    if (normalized[key]) warnings.push(`${normalizeKeys ? "categories" : "model map"} defines duplicate category ${key} via aliases; later source wins`);
     normalized[key] = normalizeModelEntry(entry);
   }
   return { normalized, warnings };
@@ -463,10 +490,6 @@ function mergeConfig(base, override) {
   const next = {
     ...base,
     ...override,
-    model_routing: {
-      ...(base.model_routing ?? {}),
-      ...(override.model_routing ?? {}),
-    },
     categories: {
       ...(base.categories ?? {}),
       ...(override.categories ?? {}),
@@ -477,7 +500,6 @@ function mergeConfig(base, override) {
     },
     permission_profiles: override.permission_profiles ?? base.permission_profiles,
   };
-  if (!base.model_routing && !override.model_routing) delete next.model_routing;
   if (!base.categories && !override.categories) delete next.categories;
   if (!base.agents && !override.agents) delete next.agents;
   if (!base.permission_profiles && !override.permission_profiles) delete next.permission_profiles;
@@ -490,9 +512,12 @@ function extractPluginBrosConfig(input) {
   if (input.bros_harness !== undefined) return input.bros_harness;
   if (input.brosHarness !== undefined) return input.brosHarness;
 
+  const hasUnwrappedBrosConfig = Object.keys(input).some((key) => allowedTopLevelKeys.has(key) || removedTopLevelKeys.has(key));
+  if (!hasUnwrappedBrosConfig) return undefined;
+
   const config = {};
-  for (const key of allowedTopLevelKeys) {
-    if (key in input) config[key] = input[key];
+  for (const key of Object.keys(input)) {
+    if (!ignoredOpenCodePluginInputKeys.has(key)) config[key] = input[key];
   }
 
   return Object.keys(config).length > 0 ? config : undefined;
@@ -538,11 +563,10 @@ export function resolveBrosConfig(sources = []) {
   }
 
   if (errors.length > 0) {
-    return { config: undefined, errors, warnings, modelRouting: {} };
+    return { config: undefined, errors, warnings, categories: {}, agents: {}, fallbackModels: [] };
   }
 
-  const fallbackModel = resolved.fallback_model?.trim();
-  const { normalized: modelRouting, warnings: routingWarnings } = normalizeModelMap(resolved.model_routing ?? {});
+  const fallbackModels = normalizeFallbackModelList(resolved.fallback_models ?? []);
   const { normalized: categories, warnings: categoryWarnings } = normalizeModelMap(resolved.categories ?? {});
   for (const rawKey of Object.keys(resolved.categories ?? {})) {
     const normalizedKey = normalizeCategory(rawKey);
@@ -554,7 +578,6 @@ export function resolveBrosConfig(sources = []) {
     }
   }
   const { normalized: agentRouting } = normalizeModelMap(resolved.agents ?? {}, { normalizeKeys: false });
-  warnings.push(...routingWarnings);
   warnings.push(...categoryWarnings);
   const permissionProfiles = resolved.permission_profiles
     ? {
@@ -565,10 +588,10 @@ export function resolveBrosConfig(sources = []) {
         hard_review: resolved.permission_profiles.hard_review === true,
       }
     : undefined;
-  if (fallbackModel) {
+  if (fallbackModels.length > 0) {
     for (const category of fallbackRestrictedCategories) {
-      if (!modelRouting[category]) {
-        warnings.push(`fallback_model will not be applied to ${category}; set model_routing.${category} explicitly to change that category`);
+      if (!categories[category]) {
+        warnings.push(`fallback_models will not be applied to ${category}; set categories.${category} explicitly to change that category`);
       }
     }
   }
@@ -577,8 +600,7 @@ export function resolveBrosConfig(sources = []) {
     config: resolved,
     errors,
     warnings,
-    fallbackModel,
-    modelRouting,
+    fallbackModels,
     categories,
     agents: agentRouting,
     permissionProfiles,
@@ -592,10 +614,11 @@ export async function loadResolvedBrosConfig(options = {}) {
 export function applyModelRoutingToAgents(agents, resolvedConfig) {
   const routedAgents = {};
   const events = [];
-  const routing = resolvedConfig?.modelRouting ?? {};
   const categoryRouting = resolvedConfig?.categories ?? {};
   const agentRouting = resolvedConfig?.agents ?? {};
-  const fallbackModel = resolvedConfig?.fallbackModel;
+  const globalFallbackModels = resolvedConfig?.fallbackModels ?? [];
+  const primaryFallbackEntry = globalFallbackModels[0];
+  const primaryFallbackModel = primaryFallbackEntry?.model;
 
   for (const [agentName, agent] of Object.entries(agents)) {
     const category = agentCategories[agentName];
@@ -607,24 +630,23 @@ export function applyModelRoutingToAgents(agents, resolvedConfig) {
     } else if (category && categoryRouting[category]) {
       route = categoryRouting[category];
       source = "categories";
-    } else if (category && routing[category]) {
-      route = routing[category];
-      source = "model_routing";
     }
     const explicitModel = typeof route === "string" ? route : route?.model;
-    const variant = typeof route === "object" ? route.variant : undefined;
+    const explicitVariant = typeof route === "object" ? route.variant : undefined;
+    const fallbackVariant = primaryFallbackEntry?.variant;
+    const variant = explicitVariant ?? (!explicitModel ? fallbackVariant : undefined);
     const fallbackList = typeof route === "object" ? route.fallback_models ?? [] : [];
     const canUseFallback = category && !fallbackRestrictedCategories.has(category);
-    const fallbackApplied = !explicitModel && canUseFallback && fallbackModel;
-    const selectedModel = explicitModel ?? (fallbackApplied ? fallbackModel : agent.model);
+    const fallbackApplied = !explicitModel && canUseFallback && primaryFallbackModel;
+    const selectedModel = explicitModel ?? (fallbackApplied ? primaryFallbackModel : agent.model);
     const finalAgent = selectedModel ? { ...agent, model: selectedModel } : { ...agent };
     if (variant && !finalAgent.variant) finalAgent.variant = variant;
     routedAgents[agentName] = finalAgent;
 
     if (explicitModel && explicitModel !== agent.model) {
       events.push({ agent: agentName, category, model: explicitModel, variant, source, fallback_count: fallbackList.length });
-    } else if (fallbackApplied && fallbackModel !== agent.model) {
-      events.push({ agent: agentName, category, model: fallbackModel, source: "fallback_model" });
+    } else if (fallbackApplied && primaryFallbackModel !== agent.model) {
+      events.push({ agent: agentName, category, model: primaryFallbackModel, variant, source: "fallback_models", fallback_count: globalFallbackModels.length });
     }
   }
 
@@ -688,7 +710,7 @@ export const brosConfigDefaults = Object.freeze({
   fileName: configFileName,
   globalConfigPath,
   repoConfigPath: `./${configFileName}`,
-  categories: modelRoutingCategories,
+  categories: routingCategories,
   modelEntryShape: "string or object with model, optional variant, and optional fallback_models array",
   modelEntryAliases: Object.keys(categoryAliases),
   agentNames: Object.keys(agentCategories),
