@@ -462,8 +462,8 @@ export function applyModelRoutingToAgents(agents, resolvedConfig) {
     const explicitModel = category ? routing[category] : undefined;
     const canUseFallback = category && !fallbackRestrictedCategories.has(category);
     const fallbackApplied = !explicitModel && canUseFallback && fallbackModel;
-    const model = explicitModel ?? (fallbackApplied ? fallbackModel : agent.model);
-    routedAgents[agentName] = { ...agent, model };
+    const selectedModel = explicitModel ?? (fallbackApplied ? fallbackModel : agent.model);
+    routedAgents[agentName] = selectedModel ? { ...agent, model: selectedModel } : { ...agent };
 
     if (explicitModel && explicitModel !== agent.model) {
       events.push({ agent: agentName, category, model: explicitModel, source: "model_routing" });

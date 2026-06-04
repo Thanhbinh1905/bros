@@ -80,20 +80,26 @@ if (!invalidConfig.errors.some((error) => error.includes("model_routing.security
 
 const fallbackConfig = resolveBrosConfig([{ source: "test", path: "test", config: { fallback_model: "openai/gpt-5-mini" } }]);
 const routedFallback = applyModelRoutingToAgents({
-  "bro-docs": { model: "openai/gpt-5.5" },
-  "bro-build": { model: "openai/gpt-5.5" },
+  "bro-docs": {},
+  "bro-build": {},
 }, fallbackConfig);
 if (routedFallback.agents["bro-docs"].model !== "openai/gpt-5-mini") {
   throw new Error("Plugin smoke failed: fallback_model was not applied to unrestricted docs category");
 }
-if (routedFallback.agents["bro-build"].model !== "openai/gpt-5.5") {
-  throw new Error("Plugin smoke failed: fallback_model silently changed restricted coder/build category");
+if ("model" in routedFallback.agents["bro-build"]) {
+  throw new Error("Plugin smoke failed: fallback_model forced a model onto restricted coder/build category");
 }
 
-const explicitConfig = resolveBrosConfig([{ source: "test", path: "test", config: { model_routing: { coder_build: "openai/gpt-5.5-coder" } } }]);
-const routedExplicit = applyModelRoutingToAgents({ "bro-build": { model: "openai/gpt-5.5" } }, explicitConfig);
-if (routedExplicit.agents["bro-build"].model !== "openai/gpt-5.5-coder") {
+const explicitConfig = resolveBrosConfig([{ source: "test", path: "test", config: { model_routing: { coder_build: "test-provider/coder-build-model" } } }]);
+const routedExplicit = applyModelRoutingToAgents({ "bro-build": {} }, explicitConfig);
+if (routedExplicit.agents["bro-build"].model !== "test-provider/coder-build-model") {
   throw new Error("Plugin smoke failed: explicit coder/build model route was not applied");
+}
+
+const inheritConfig = resolveBrosConfig([{ source: "test", path: "test", config: {} }]);
+const routedInherit = applyModelRoutingToAgents({ "bro-docs": {}, "bro-build": {} }, inheritConfig);
+if ("model" in routedInherit.agents["bro-docs"] || "model" in routedInherit.agents["bro-build"]) {
+  throw new Error("Plugin smoke failed: agents without configured routing did not inherit OpenCode default model");
 }
 
 const futureExpiry = new Date(Date.now() + 60 * 60 * 1000).toISOString();

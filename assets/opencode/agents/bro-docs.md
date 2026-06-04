@@ -2,7 +2,6 @@
 name: bro-docs
 description: "Subagent for project documentation, architecture docs, API references, release notes, runbooks, decision logs, and final delivery reports. Display alias: Bro Docs."
 mode: subagent
-model: openai/gpt-5.5
 permission:
   read: allow
   grep: allow

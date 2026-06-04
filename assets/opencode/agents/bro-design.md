@@ -2,7 +2,6 @@
 name: bro-design
 description: "Subagent for architecture packages, ADRs, API contracts, system diagrams, data models, integration boundaries, and scalability plans. Display alias: Bro Design."
 mode: subagent
-model: openai/gpt-5.5
 permission:
   read: allow
   grep: allow

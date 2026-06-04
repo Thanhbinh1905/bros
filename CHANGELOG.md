@@ -1,6 +1,12 @@
 # Changelog
 
-## 0.2.0 - Pending release
+## 0.2.1 - 2026-06-04
+
+- Simplified OpenCode installation guidance for agents and manual setup while preserving safety boundaries around providers, permissions, secrets, publishing, and dist-tags.
+- Removed hardcoded packaged BROS agent models so agents inherit OpenCode defaults unless explicit BROS model routing is configured.
+- Updated plugin smoke coverage for model inheritance, fallback routing, and explicit coder/build routing behavior.
+
+## 0.2.0 - 2026-06-04
 
 - Fixed OpenCode plugin startup by ignoring OpenCode runtime context fields when resolving optional BROS config input.
 - Updated OpenCode install and repair guidance to prefer `bros-harness@latest`, including explicit `--force` upgrade commands for existing plugin installs and source-checkout shadowing notes.

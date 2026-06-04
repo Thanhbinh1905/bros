@@ -2,7 +2,6 @@
 name: bro-explore
 description: "Subagent for evidence-first discovery, repository search, read-only investigation, citations, limitations, and evidence packets; no decisions or implementation. Display alias: Bro Explore."
 mode: subagent
-model: openai/gpt-5.5
 permission:
   read: allow
   grep: allow
