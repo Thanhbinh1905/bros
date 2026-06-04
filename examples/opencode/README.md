@@ -5,34 +5,47 @@ Use the complete installation guide as the source of truth: [`../../docs/install
 Quick project install:
 
 ```bash
-opencode plugin bros-harness@latest
+bunx bros-harness@latest install
 ```
 
-Repair or upgrade an existing project install:
+Update or repair an existing project install:
 
 ```bash
-opencode plugin bros-harness@latest --force
+bunx bros-harness@latest update
 ```
 
 Use global scope when requested:
 
 ```bash
-opencode plugin bros-harness@latest --global
+bunx bros-harness@latest install --scope global
 ```
 
-Repair or upgrade an existing global install:
+Update or repair an existing global install:
 
 ```bash
-opencode plugin bros-harness@latest --force --global
+bunx bros-harness@latest update --scope global
 ```
 
-The installer writes a config entry like this:
+Fallback package-runner forms when direct `bunx` is unavailable:
+
+```bash
+bunx --package bros-harness@latest bros install
+bunx --package bros-harness@latest bros update
+npx --package bros-harness@latest bros install
+npx --package bros-harness@latest bros update
+```
+
+Older OpenCode plugin installer commands such as `opencode plugin bros-harness@latest --force` are fallback/troubleshooting only after the package-runner path is unavailable or insufficient.
+
+The package-runner installer writes a config entry like this:
 
 ```json
 {
-  "plugin": ["bros-harness@latest"]
+  "plugin": ["bros-harness@0.5.1"]
 }
 ```
+
+The exact version is the current package version. Use `--channel latest` only when intentionally keeping the `@latest` selector. If OpenCode keeps loading a stale cached package after update and restart, preview `--refresh-cache --dry-run` before any explicit scoped refresh.
 
 This example does not include provider keys, private endpoints, MCP servers, permissions, telemetry, credentials, or local absolute paths. Restart OpenCode after installation, upgrade, or any approved config change.
 

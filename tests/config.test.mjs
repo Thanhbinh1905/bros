@@ -66,7 +66,7 @@ describe("validateBrosConfig", () => {
 
   it("top-level fallback_models rejects empty, duplicate, secret-like, and nested fallback entries", () => {
     assertHasError(validateBrosConfig({ fallback_models: [] }), "fallback_models must not be empty");
-    assertHasError(validateBrosConfig({ fallback_models: ["test/a", "test/a"] }), "fallback_models contains duplicate model test/a");
+    assertHasError(validateBrosConfig({ fallback_models: ["test/a", "test/a"] }), "fallback_models[1] duplicates an earlier model entry");
     assertHasError(validateBrosConfig({ fallback_models: [{ model: secretLikeValue }] }), "fallback_models[0].model must be a model id, not a secret-like value");
     assertHasError(
       validateBrosConfig({ fallback_models: [{ model: "test/a", fallback_models: ["test/b"] }] }),
@@ -115,7 +115,7 @@ describe("validateBrosConfig", () => {
     );
     assertHasError(
       validateBrosConfig({ categories: { planner: { model: "test", fallback_models: ["fallback", "fallback"] } } }),
-      "categories.planner.fallback_models contains duplicate model fallback",
+      "categories.planner.fallback_models[1] duplicates an earlier model entry",
     );
   });
 
@@ -198,6 +198,25 @@ describe("validateBrosConfig", () => {
   it("singular category and agent top-level keys remain unsupported", () => {
     assertHasError(validateBrosConfig({ category: { docs: "docs" } }), "category is not supported");
     assertHasError(validateBrosConfig({ agent: { "bro-docs": "docs" } }), "agent is not supported");
+  });
+
+  it("unsupported config values are not echoed in validation errors", () => {
+    const rawUnsupportedProfile = "SECRET_VALUE_UNSUPPORTED_PROFILE";
+    const errors = validateBrosConfig({
+      fallback_models: ["secret-model-value", "secret-model-value"],
+      categories: { planner: { model: "planner-model", fallback_models: ["secret-fallback", "secret-fallback"] } },
+      permission_profiles: {
+        ...futurePermissionProfiles,
+        enabled: [rawUnsupportedProfile],
+      },
+    });
+
+    assertHasError(errors, "fallback_models[1] duplicates an earlier model entry");
+    assertHasError(errors, "categories.planner.fallback_models[1] duplicates an earlier model entry");
+    assertHasError(errors, "permission_profiles.enabled[0] is not a supported profile");
+    assert.equal(errors.join("\n").includes(rawUnsupportedProfile), false);
+    assert.equal(errors.join("\n").includes("secret-model-value"), false);
+    assert.equal(errors.join("\n").includes("secret-fallback"), false);
   });
 });
 
@@ -509,8 +528,8 @@ describe("brosHarnessServer runtime model propagation", () => {
     assert.equal(cfg.agent["bro-shield"].prompt, "existing shield prompt");
   });
 
-  it("patches preexisting known BROS agent model from explicit model_routing", async () => {
-    const server = await brosHarnessServer({ bros_harness: { model_routing: { qa_review: "test/qa-model" } } }, { includeFiles: false });
+  it("patches preexisting known BROS agent model from explicit category routing", async () => {
+    const server = await brosHarnessServer({ bros_harness: { categories: { qa_review: "test/qa-model" } } }, { includeFiles: false });
     const cfg = {
       agent: {
         "bro-test": { model: "test/original-qa", prompt: "existing qa prompt" },
@@ -524,7 +543,7 @@ describe("brosHarnessServer runtime model propagation", () => {
   });
 
   it("does not patch unknown preexisting agents", async () => {
-    const server = await brosHarnessServer({ bros_harness: { model_routing: { docs: "test/docs-model" } } }, { includeFiles: false });
+    const server = await brosHarnessServer({ bros_harness: { categories: { docs: "test/docs-model" } } }, { includeFiles: false });
     const cfg = {
       agent: {
         "not-a-bro": { model: "test/original", prompt: "unknown prompt" },
@@ -537,8 +556,8 @@ describe("brosHarnessServer runtime model propagation", () => {
     assert.equal(cfg.agent["not-a-bro"].prompt, "unknown prompt");
   });
 
-  it("does not apply fallback_model to restricted preexisting BROS agents", async () => {
-    const server = await brosHarnessServer({ bros_harness: { fallback_model: "test/fallback" } }, { includeFiles: false });
+  it("does not apply fallback_models to restricted preexisting BROS agents", async () => {
+    const server = await brosHarnessServer({ bros_harness: { fallback_models: ["test/fallback"] } }, { includeFiles: false });
     const cfg = {
       agent: {
         "bro-build": { model: "test/build-original" },

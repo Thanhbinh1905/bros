@@ -1,104 +1,97 @@
 # Installation Guide
 
-This is the source of truth for installing BROS Harness into OpenCode.
+This is the canonical guide for installing and updating BROS Harness in OpenCode.
 
-BROS Harness is a package-first OpenCode plugin. The primary installation path is OpenCode's own plugin installer. Do not rely on only pasting `{"plugin":["bros-harness"]}` into `opencode.jsonc`: that config entry does not guarantee OpenCode has installed or cached the npm package it must load.
+BROS Harness is a package-first OpenCode plugin. The supported package-native commands update OpenCode config safely, create a minimal `bros.config.json` when absent, preserve unrelated config fields, and require a full OpenCode restart before verification.
 
-## For LLM Agents
+## Primary commands
 
-Fetch this guide from the raw GitHub URL and follow it step by step:
+Project scope is the default.
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/Thanhbinh1905/bros/main/docs/installation.md
-```
-
-Do not edit providers, MCP servers, permissions, telemetry, secrets, npm publishing, or npm dist-tags while installing BROS Harness. Use OpenCode's plugin installer below, restart OpenCode, and verify the BROS agents after installation.
-
-## For Manual
-
-Paste this prompt into Claude Code, AmpCode, Cursor, or another coding agent:
-
-```text
-Install BROS Harness into OpenCode by fetching and following the full guide step by step:
-https://raw.githubusercontent.com/Thanhbinh1905/bros/main/docs/installation.md
-
-Use OpenCode's plugin installer from the guide. Do not only paste JSON into opencode.jsonc unless the guide's fallback applies.
-Do not edit providers, MCP servers, permissions, telemetry, secrets, npm publishing, or npm dist-tags.
-Restart OpenCode and verify BROS agents after installation.
-```
-
-## 30-second orientation
-
-**BE THE BRO** is the memory hook: use AI help with discipline. BROS gives OpenCode a gated delivery crew for planning, building, reviewing, and documenting work, but the display tone never overrides technical rules. Start with the lightest safe mode, require approved packets for implementation, verify before handoff, and treat publish, merge, deploy, credential, dependency-install, destructive, and production actions as separate gates.
-
-After installation, the common modes are:
-
-| Mode | Dùng khi nào / when to use | Cách dùng / how to use |
-| --- | --- | --- |
-| **Normal prompt** | Quick questions, status, small clarifications, or narrow handoffs. | Ask `mighty-bro` directly; it will answer, route, or recommend `/bros-plan` or `/bros-assemble`. |
-| **`/bros-plan`** | You need an approved plan and task packets before implementation. | Provide the objective, constraints, evidence, and acceptance criteria; it stops before build. |
-| **`/bros-build`** | You have an approved packet for local implementation. | Provide the packet reference and required evidence; it builds only inside approved scope. |
-| **`/bros-review`** | You need an independent audit of a plan, change, or delivery claim. | Provide artifacts to inspect; it reports issues and does not remediate unless separately approved. |
-| **`/bros-assemble`** | You want one-prompt convenience for bounded safe-scope work. | Provide a bounded objective; it preserves gates and stops rather than auto-publishing, merging, deploying, installing dependencies, handling credentials, or doing destructive work. |
-
-## Prerequisites
-
-Confirm the local tools are available:
+Install:
 
 ```bash
-opencode --version
-opencode plugin --help
-npm --version
-node --version
+bunx bros-harness@latest install
 ```
 
-Check the published package metadata:
+Update:
 
 ```bash
-npm view bros-harness dist-tags version --json
+bunx bros-harness@latest update
 ```
 
-The current fix version documented here is `bros-harness@0.4.2`. Before installing, confirm npm `latest` has advanced to `0.4.2`; if it still reports an older version, the registry is still serving a pre-release or stale BROS Harness build.
-
-## Install
-
-For the current project config, run:
+Fallbacks when the direct `bunx` form is unavailable:
 
 ```bash
-opencode plugin bros-harness@latest
+bunx --package bros-harness@latest bros install
+bunx --package bros-harness@latest bros update
+npx --package bros-harness@latest bros install
+npx --package bros-harness@latest bros update
 ```
 
-If BROS Harness is already installed and OpenCode is not picking up the new npm release, replace the existing plugin version explicitly:
+Global package installation is secondary and should be used only when you intentionally want the CLI available outside one command invocation:
 
 ```bash
-opencode plugin bros-harness@latest --force
+npm install -g bros-harness@latest
+bros install
+bros update
 ```
 
-For global OpenCode config, run this only when you want BROS Harness in every OpenCode workspace:
+Global OpenCode config scope is separate from globally installing the npm package. To write the global OpenCode config, pass `--scope global`:
 
 ```bash
-opencode plugin bros-harness@latest --global
+bunx bros-harness@latest install --scope global
+bunx bros-harness@latest update --scope global
 ```
 
-For an existing global install, replace the global plugin version explicitly:
+Preview without writing files:
 
 ```bash
-opencode plugin bros-harness@latest --force --global
+bunx bros-harness@latest install --dry-run
+bunx bros-harness@latest update --dry-run --json
 ```
 
-If OpenCode has a stale cached package, or if npm metadata shows a stale `latest` dist-tag, pin the validated package and replace the existing plugin entry:
+Machine-readable output:
 
 ```bash
-opencode plugin bros-harness@0.4.2 --force
+bunx bros-harness@latest install --json
 ```
 
-For global scope with the pinned package, add `--global`:
+By default, both `install` and `update` write the concrete current package version into OpenCode config. Use `--channel latest` only when you intentionally want the config entry to stay on `@latest`.
+
+## What install/update changes
+
+For project scope, the CLI targets the existing OpenCode config in this order:
+
+- `./opencode.jsonc`, when present
+- `./opencode.json`, when `opencode.jsonc` is absent
+- `./opencode.jsonc`, when no OpenCode config exists yet
+- `./bros.config.json`
+
+For global OpenCode scope, the CLI uses the same OpenCode config selection under `~/.config/opencode`:
+
+- `~/.config/opencode/opencode.jsonc`, when present or when no OpenCode config exists yet
+- `~/.config/opencode/opencode.json`, when `opencode.jsonc` is absent and `opencode.json` exists
+- `~/.config/opencode/bros.config.json`
+
+The command ensures the OpenCode plugin entry is present as:
+
+```json
+{
+  "plugin": ["bros-harness@0.5.1"]
+}
+```
+
+The exact version is the current `bros-harness` package version being executed by the package runner. A concrete pinned version is the default because OpenCode can otherwise keep resolving a stale cached `@latest` package. Existing non-BROS plugin entries are preserved. Existing BROS plugin specs such as `bros-harness`, `bros-harness@latest`, or pinned `bros-harness@...` are normalized to the current package version so rerunning `update` remains idempotent.
+
+If you intentionally prefer the convenience selector instead of a concrete version, opt in explicitly:
 
 ```bash
-opencode plugin bros-harness@0.4.2 --force --global
+bunx bros-harness@latest install --channel latest
+bunx bros-harness@latest update --channel latest
 ```
 
-The installer makes the package available to OpenCode and writes a config entry like this:
+That writes:
 
 ```json
 {
@@ -106,15 +99,40 @@ The installer makes the package available to OpenCode and writes a config entry 
 }
 ```
 
-This guide uses `bros-harness@latest` so rerunning OpenCode's installer can pick up the current npm release. If `@latest` still loads an old package after `--force`, clear only OpenCode's stale BROS cache at `~/.cache/opencode/packages/bros-harness@latest`, rerun the installer, and restart OpenCode.
+Existing `opencode.jsonc` files are preserved as the update target so the CLI does not create a duplicate sibling `opencode.json`. The CLI accepts standard JSONC comments and trailing commas, then writes normalized JSON-compatible content back to the selected file with a backup when changes are made.
 
-## Restart
+If `bros.config.json` is absent, the command creates the minimal valid config:
 
-Fully quit and restart OpenCode after installing or changing plugin config. OpenCode loads plugins at startup, so an already-running session can keep using stale config.
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/Thanhbinh1905/bros/main/examples/bros.config.schema.json"
+}
+```
 
-## Verify
+If `bros.config.json` already exists, user-managed fields are preserved. Unknown or invalid BROS config shapes fail closed; the CLI does not attempt risky migrations.
 
-After restart, verify that BROS agents are visible:
+## Safety guarantees
+
+The package-native install/update path:
+
+- writes only the selected OpenCode config and BROS config files;
+- backs up existing files before mutation;
+- uses dry-run mode without writes or backups;
+- writes atomically with a temporary file in the same directory where practical;
+- refuses malformed JSON/JSONC and unsafe symlink targets;
+- preserves existing `opencode.jsonc` target files instead of creating duplicate `opencode.json` files;
+- preserves unrelated OpenCode config fields;
+- redacts sensitive-looking terms from command output;
+- does not execute package-manager install/update commands internally;
+- does not delete caches by default;
+- deletes no cache data unless `--refresh-cache` is explicitly passed;
+- does not collect provider API keys, prompt for provider auth, write `.env` files, add MCP servers, edit telemetry, publish packages, or mutate production/cloud resources.
+
+OpenCode loads config at startup. Fully quit and restart OpenCode after any install/update command before checking agents or commands.
+
+## Verify after restart
+
+After restarting OpenCode, verify that BROS agents are visible:
 
 ```bash
 opencode agent list
@@ -138,230 +156,93 @@ Run a minimal smoke test:
 opencode run --agent mighty-bro "hello"
 ```
 
-If BROS commands are available in the active session, `/bros-status` can also be used after restart.
-
-Useful command lanes after verification:
-
-| Command or mode | Use |
-| --- | --- |
-| Normal prompt to `mighty-bro` | Quick classification: inline answer, quick Explorer, direct specialist, suggest `/bros-plan`, or suggest `/bros-assemble`. |
-| `/bros-plan` | Planning-only Phases 0-4; no auto-build. |
-| `/bros-build` | Approved implementation from complete task packets. |
-| `/bros-review` | Audit plan or delivery artifacts without automatic remediation. |
-| `/bros-assemble` | One-prompt safe-scope classify → plan → build → QA/security/ops → docs/final report; stops on security, destructive, production, publish, secret, dependency-install, git mutation, QA, architecture, or missing-packet gates. |
-
-The package CLI also provides read-only diagnostics for local package inspection:
+Local package diagnostics:
 
 ```bash
 bros doctor
 bros status
+bros config-status
+bros list-assets
 ```
 
-These commands inspect package-local metadata and packaged assets only. They do not read user config files, `.opencode/`, environment variables, providers, MCP servers, telemetry settings, or credential values.
+`bros config-status` validates only BROS-specific config at the supported BROS config paths. It does not read provider credentials, MCP secrets, telemetry values, or environment values.
 
-## Troubleshooting
+## LLM-agent assisted guide
 
-If `opencode agent list` does not show `mighty-bro` or the `bro-*` agents, do not keep editing JSON. Check these causes first:
-
-- OpenCode was not restarted after the plugin install.
-- An older BROS plugin version was already installed and the installer was run without `--force`.
-- `bros-harness@0.1.7` is installed; that version rejects OpenCode runtime context during startup and does not register BROS agents.
-- The active config contains bare `bros-harness`; use `bros-harness@latest` so OpenCode uses its package installer/cache path.
-- The plugin was installed in project scope but OpenCode was started from another project.
-- The plugin was installed globally only in a different user or config home.
-- OpenCode cached a stale package version.
-- The config contains a manual plugin entry but OpenCode never installed the package.
-
-Use the installer to repair stale package resolution:
-
-```bash
-opencode plugin bros-harness@latest --force
-```
-
-If OpenCode still reports `Plugin export is not a function` for `bros-harness@latest`, inspect the cached package version. If `~/.cache/opencode/packages/bros-harness@latest/node_modules/bros-harness/package.json` is older than npm `latest`, remove only `~/.cache/opencode/packages/bros-harness@latest`, rerun the installer command above, and restart OpenCode.
-
-Then restart OpenCode and run verification again.
-
-## Rollback
-
-Rollback should be explicit and scoped. Do not use broad reset, deletion, or automatic config-rewrite commands.
-
-1. Identify where the plugin was installed: project scope or global scope.
-2. Open the relevant OpenCode config file in an editor.
-3. Remove only the `bros-harness` entry from the `plugin` array, preserving unrelated plugins and config keys.
-4. Save the file and fully restart OpenCode.
-5. Verify that the BROS agents are no longer listed with `opencode agent list`.
-
-If the plugin was pinned to a bad version, prefer repairing to an explicit known-good pinned version with OpenCode's plugin installer rather than deleting unrelated config. For rollback from a withdrawn or bad `0.4.2` release, use the last known-good pre-`0.4.2` package documented in the changelog, currently `0.3.0`. Example:
-
-```bash
-opencode plugin bros-harness@0.3.0 --force
-```
-
-For global rollback, apply the same scoped edit or pinned repair to global scope only after confirming the user intended a global change. Do not edit providers, MCP servers, permissions, telemetry, secrets, or credentials as part of rollback.
-
-## Manual Config Fallback
-
-Manual config editing is a fallback, not the recommended installation path. Use it only when the package is already resolvable by OpenCode or when using a local development path.
-
-For package config, merge only the plugin entry:
-
-```json
-{
-  "plugin": ["bros-harness@latest"]
-}
-```
-
-For local repository smoke tests, use an absolute file URL:
-
-```json
-{
-  "plugin": ["file:///absolute/path/to/bros/src/plugin.mjs"]
-}
-```
-
-After any manual config edit, fully restart OpenCode and verify with `opencode agent list`.
-
-## AI Agent Prompt
-
-Use this prompt when asking an AI coding agent to install BROS Harness:
+Use this prompt for Claude Code, AmpCode, Cursor, OpenCode, or another coding agent:
 
 ```text
-Install BROS Harness into OpenCode by following docs/installation.md as the source of truth.
-First check opencode --version, opencode plugin --help, npm --version, node --version,
-and npm view bros-harness dist-tags version --json.
-Ask whether to use project scope or global scope.
-After approval, use opencode plugin bros-harness@latest for project scope or
-opencode plugin bros-harness@latest --global for global scope.
-If updating an existing install, use bros-harness@latest --force in the same approved scope.
-If latest resolution or cache state is suspect after 0.4.2 is published, pin bros-harness@0.4.2 --force.
-Do not run npm install, publish packages, mutate npm dist-tags, edit providers,
-MCP servers, permissions, telemetry, secrets, or credentials.
-If manual config editing is explicitly requested, merge only the plugin entry
-and show the diff before writing.
-Tell the human to fully restart OpenCode, then verify with opencode agent list
-and opencode run --agent mighty-bro "hello".
+Install or update BROS Harness by following docs/installation.md as the source of truth.
+
+Ask whether project scope or global OpenCode scope is intended. Prefer project scope unless the human explicitly chooses global scope.
+
+Use these commands:
+- Install: bunx bros-harness@latest install
+- Update: bunx bros-harness@latest update
+- Fallback install: bunx --package bros-harness@latest bros install, or npx --package bros-harness@latest bros install
+- Fallback update: bunx --package bros-harness@latest bros update, or npx --package bros-harness@latest bros update
+- Global npm package path is secondary: npm install -g bros-harness@latest, then bros install or bros update
+
+Before any config edit, show the selected scope and files. Use --dry-run first when possible. Do not edit providers, MCP servers, top-level permissions, telemetry, secrets, credentials, .env files, npm publishing, npm dist-tags, production resources, or cloud resources.
+
+Do not delete caches by default. If OpenCode Desktop still appears stale after restart and normal update, use `--refresh-cache --dry-run` first, then ask for explicit approval before running a non-dry-run refresh. The refresh must be scoped to the BROS package cache, never the full cache or node_modules directory.
+
+After install/update, tell the human to fully restart OpenCode, then verify with opencode agent list and opencode run --agent mighty-bro "hello".
 ```
 
-The package helper prints a short reference prompt:
+The CLI can print a similar prompt:
 
 ```bash
 bros agent-install-prompt
 ```
 
-## Runtime Behavior
+## Scoped OpenCode package cache refresh
 
-On startup, the plugin uses OpenCode's in-memory `config(cfg)` hook only. It adds package-relative BROS skills, packaged BROS agents, and packaged BROS commands without replacing existing keys.
+Use cache refresh only after normal install/update, restart, and verification still indicate stale BROS package loading. Default install/update never deletes caches.
 
-The runtime plugin does not write user config files, install dependencies, publish packages, register providers, add MCP servers, change top-level OpenCode permissions, configure telemetry, or read, validate, or write secrets. Optional BROS permission profiles only tune packaged BROS agent permissions in memory after fail-closed validation.
+Preview first:
 
-`bro-build` is intentionally more flexible than planning and review agents: routine local Bash and inspection commands are allowed by default so implementation work does not repeatedly prompt for harmless commands. Git mutation, dependency installs, Docker mutation, deploy/publish, secret-reading, destructive, force-push, and production/cloud command classes remain ask-gated or denied.
+```bash
+bunx bros-harness@latest update --refresh-cache --dry-run --json
+```
 
-## BROS Harness Config
+After explicit approval, run the scoped refresh:
 
-BROS Harness supports optional package-specific JSON config for rich category/agent model routing and scoped permission profiles. The supported config file locations are:
+```bash
+bunx bros-harness@latest update --refresh-cache
+```
 
-- repo config at `./bros.config.json` from the OpenCode working directory;
-- global config at `~/.config/opencode/bros.config.json`.
+Likely OpenCode Desktop package cache roots:
 
-For repo-local authoring, use the published raw schema URL so editors and agents can fetch the schema easily:
+- Windows: `%userprofile%\.cache\opencode\node_modules`
+- macOS/Linux: `~/.cache/opencode/node_modules`
+
+Rules:
+
+1. Dry-run before deletion.
+2. Delete only `node_modules/bros-harness` under the OpenCode cache root.
+3. If text `bun.lock` exists, remove only the BROS package lock entry while preserving dependency declarations.
+4. If binary `bun.lockb` exists, delete only that lock file, and only during explicit non-dry-run refresh.
+5. Do not delete the full cache directory.
+6. Do not delete the full `node_modules` directory.
+7. Restart OpenCode Desktop after the scoped refresh.
+8. Rerun the package-native update command and verify agents again.
+
+Do not inspect or print credentials while troubleshooting cache state.
+
+## Manual config fallback
+
+Manual config editing is a fallback when the package-native command cannot run but OpenCode can already resolve the package. Merge only the plugin entry and preserve unrelated config:
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/Thanhbinh1905/bros/main/examples/bros.config.schema.json",
-  "fallback_models": [
-    { "model": "openai/gpt-5.4", "variant": "medium" },
-    "openai/gpt-5.4-mini-fast"
-  ],
-  "categories": {
-    "planner": { "model": "openai/gpt-5.5", "variant": "medium" },
-    "explorer_search": "openai/gpt-5.4-mini-fast",
-    "architecture": { "model": "openai/gpt-5.5", "variant": "high" },
-    "ui": { "model": "openai/gpt-5.4", "variant": "high" },
-    "docs": "openai/gpt-5.4-mini-fast",
-    "coder_build": "openai/gpt-5.5",
-    "qa_review": "openai/gpt-5.5",
-    "security": "openai/gpt-5.5",
-    "ops": "openai/gpt-5.5"
-  },
-  "agents": {
-    "mighty-bro": {
-      "model": "openai/gpt-5.5",
-      "variant": "medium"
-    },
-    "bro-explore": {
-      "model": "openai/gpt-5.4-mini-fast"
-    },
-    "bro-design": {
-      "model": "openai/gpt-5.5",
-      "variant": "high"
-    },
-    "bro-ui": {
-      "model": "openai/gpt-5.4",
-      "variant": "high"
-    }
-  },
-  "permission_profiles": {
-    "enabled": ["review_safe"],
-    "scope": "repo",
-    "expires_at": "2099-01-01T00:00:00.000Z",
-    "reason": "approved local repo validation only",
-    "hard_review": false
-  }
+  "plugin": ["bros-harness@0.5.1"]
 }
 ```
 
-Agents can fetch the schema directly from `https://raw.githubusercontent.com/Thanhbinh1905/bros/main/examples/bros.config.schema.json` for validation context. The accepted top-level keys are `$schema`, `fallback_models`, `categories`, `agents`, and `permission_profiles`. Unknown keys fail closed with an actionable error. The removed top-level `fallback_model` and `model_routing` keys are rejected. The plugin never mutates OpenCode provider, credential, MCP, telemetry, or top-level permission settings.
+If editing manually, back up the existing config first, avoid provider/MCP/telemetry/permission/secret fields, and restart OpenCode before verification.
 
-Model entries can be either a string model identifier or a rich object:
-
-```json
-"openai/gpt-5.5"
-```
-
-```json
-{
-  "model": "openai/gpt-5.5",
-  "variant": "high",
-  "fallback_models": ["openai/gpt-5.4"]
-}
-```
-
-Routing precedence within the resolved config is:
-
-1. `agents`;
-2. `categories`;
-3. `fallback_models`;
-4. packaged/default model routing.
-
-Config source precedence is:
-
-1. packaged defaults;
-2. global BROS config at `~/.config/opencode/bros.config.json`;
-3. repo BROS config at `./bros.config.json` from the OpenCode working directory;
-4. OpenCode plugin input, when supplied by OpenCode.
-
-Supported routing categories include `planner`, `explorer_search`, `coder_build`, `security`, `qa_review`, `docs`, `architecture`, `ui`, and `ops`. `bro-design` maps to `architecture`; `bro-ui` maps to `ui`. Legacy `design` and `designer` category names are rejected. The restricted categories `coder_build`, `security`, `qa_review`, and `ops` reject per-entry `fallback_models` and ignore top-level `fallback_models`; set restricted routes explicitly if they must change. The removed top-level `fallback_model` key is rejected.
-
-Supported `permission_profiles` are `readonly`, `review_safe`, `build_limited`, and `trusted_ops`. Profiles are opt-in and must include `enabled`, `scope: "repo"`, a future `expires_at`, and a non-secret reason. `trusted_ops` requires `hard_review: true`. Profiles do not introduce top-level OpenCode permissions; publish, destructive, force-push, secret-read, provider-credential, and production/cloud command classes remain denied.
-
-Start from the template and schema in `examples/bros.config.example.json` and `examples/bros.config.schema.json`. For manual installation, generate the install prompt, show the resulting config to the user, ask for explicit approval, and then write only the chosen config path (`./bros.config.json` or `~/.config/opencode/bros.config.json`):
-
-```bash
-node bin/bros.mjs agent-install-prompt
-```
-
-Do not create config files through an initializer command. Keep the workflow as manual review and paste so the selected path and content are approved before writing.
-
-Validate local routing visibility with:
-
-```bash
-bros config-status
-```
-
-See `docs/configuration.md` when present for a deeper configuration guide.
-
-## Contributor Checks
+## Contributor checks
 
 For repository development only:
 
@@ -370,11 +251,9 @@ npm run validate
 node bin/bros.mjs doctor
 node bin/bros.mjs status
 node bin/bros.mjs config-status
+node bin/bros.mjs install --dry-run --json
+node bin/bros.mjs update --dry-run --json
 npm pack --dry-run
 ```
 
-Publishing, dependency installation, and asset import remain separate maintainer-gated actions. Package users should rely on OpenCode's plugin installer and the read-only CLI helpers above.
-
-## Release State Caveat
-
-This source checkout may contain unreleased remediation work beyond the currently published npm package. Local validation and package dry-runs can prove the checkout is internally consistent, but they do not publish a new package or mutate npm dist-tags. Committing, pushing, or publishing any remediation requires a future explicit Git Approval Packet and release approval.
+Publishing, dependency installation, release tagging, and npm dist-tag mutation remain separate maintainer-gated actions.

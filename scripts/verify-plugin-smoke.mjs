@@ -44,8 +44,10 @@ if (namespacedInputCfg.agent?.["bro-docs"]?.model !== "openai/gpt-5.4-mini-fast"
 const preexistingAgentServer = await brosHarnessServer({
   bros_harness: {
     agents: { "bro-build": "test-provider/preexisting-build-model" },
-    categories: { security: "test-provider/preexisting-security-model" },
-    model_routing: { qa_review: "test-provider/preexisting-qa-model" },
+    categories: {
+      security: "test-provider/preexisting-security-model",
+      qa_review: "test-provider/preexisting-qa-model",
+    },
   },
 }, { includeFiles: false });
 const preexistingPermission = { bash: { "*": "deny" } };
@@ -91,14 +93,14 @@ if (preexistingCfg.agent["bro-shield"].prompt !== "preexisting shield prompt"
 }
 if (preexistingCfg.agent["bro-test"].model !== "test-provider/preexisting-qa-model"
   || preexistingCfg.agent["bro-test"].prompt !== "preexisting qa prompt") {
-  throw new Error("Plugin smoke failed: preexisting bro-test model_routing patch failed or changed prompt");
+  throw new Error("Plugin smoke failed: preexisting bro-test category routing patch failed or changed prompt");
 }
 if (preexistingCfg.agent["not-a-bro"].model !== "test-provider/original-unknown-model") {
   throw new Error("Plugin smoke failed: unknown preexisting agent model was patched");
 }
 
 const fallbackPreexistingServer = await brosHarnessServer({
-  bros_harness: { fallback_model: "test-provider/fallback-model" },
+  bros_harness: { fallback_models: ["test-provider/fallback-model"] },
 }, { includeFiles: false });
 const fallbackPreexistingCfg = {
   agent: {
@@ -113,7 +115,7 @@ if (fallbackPreexistingCfg.agent["bro-build"].model !== "test-provider/original-
   || fallbackPreexistingCfg.agent["bro-shield"].model !== "test-provider/original-shield-model"
   || fallbackPreexistingCfg.agent["bro-test"].model !== "test-provider/original-test-model"
   || fallbackPreexistingCfg.agent["bro-ops"].model !== "test-provider/original-ops-model") {
-  throw new Error("Plugin smoke failed: fallback_model changed a restricted preexisting BROS agent");
+  throw new Error("Plugin smoke failed: fallback_models changed a restricted preexisting BROS agent");
 }
 
 const forbiddenBefore = snapshotForbiddenConfig({});

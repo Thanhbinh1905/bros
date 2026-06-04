@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.5.2 - 2026-06-04
+
+- Made package update behavior cache-aware while defaulting installed plugin references to a pinned package version.
+- Added an explicit `--refresh-cache` update path and realpath containment checks for safer package-cache reuse.
+
+## 0.5.1 - 2026-06-04
+
+- Fixed OpenCode install/update behavior to preserve existing JSONC formatting and comments while avoiding duplicate `opencode.json` creation.
+
+## 0.5.0 - 2026-06-04
+
+- Added package-native install and update support so packaged BROS assets can be installed and refreshed through the npm-delivered helper flow.
+- Hardened release and runtime safety checks around package contents, install/update behavior, and validation coverage.
+- Migrated and simplified OpenCode installation documentation for package-first usage, compatibility notes, and repair guidance.
+
 ## 0.4.2 - 2026-06-04
 
 - Fixed runtime BROS model routing so explicit `agents`, `categories`, or `model_routing` entries can update the `model` field for preexisting known BROS agents while preserving their prompt, permission, mode, and tool fields.

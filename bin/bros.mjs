@@ -3,6 +3,7 @@ import { access, readFile, readdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { applyModelRoutingToAgents, brosConfigDefaults, loadResolvedBrosConfig } from "../src/config.mjs";
+import { parseInstallUpdateArgs, runInstallUpdate } from "../src/install.mjs";
 
 const packageRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const assetRoot = join(packageRoot, "assets", "opencode");
@@ -10,6 +11,8 @@ const manifestPath = join(packageRoot, "assets", "manifest.json");
 
 const commands = [
   ["help", "Show available BROS Harness commands."],
+  ["install", "Register BROS Harness in OpenCode config and initialize minimal BROS config."],
+  ["update", "Refresh BROS Harness OpenCode plugin registration to the current package version."],
   ["snippet", "Print OpenCode installer commands and resulting plugin entry."],
   ["doctor", "Validate package asset directories and manifest shape without mutation."],
   ["status", "Print local package status without reading configs, env, or credentials."],
@@ -114,13 +117,16 @@ function printHelp() {
   console.log("BROS Harness CLI");
   console.log("");
   console.log("Usage: bros <command>");
+  console.log("       bros install|update [--scope project|global] [--channel version|latest] [--refresh-cache] [--dry-run] [--json]");
   console.log("");
   console.log("Commands:");
   for (const [name, description] of commands) {
     console.log(`  ${name.padEnd(22)} ${description}`);
   }
   console.log("");
-  console.log("All commands are read-only. This CLI does not edit live OpenCode config.");
+  console.log("install/update are scoped config writers with backups and dry-run support; other commands are read-only.");
+  console.log("install/update pin the plugin entry to the current package version by default. Use --channel latest only when intentionally keeping @latest.");
+  console.log("install/update do not execute package managers, collect provider credentials, or delete caches unless --refresh-cache is explicitly passed.");
 }
 
 async function getPackageVersion() {
@@ -130,27 +136,49 @@ async function getPackageVersion() {
 
 async function printSnippet() {
   const version = await getPackageVersion();
-  console.log(`Recommended OpenCode installer command:
-opencode plugin bros-harness@latest
+  console.log(`Recommended package-native install command:
+bunx bros-harness@latest install
+
+Fallback package-native install commands:
+bunx --package bros-harness@latest bros install
+npx --package bros-harness@latest bros install
+
+Recommended package-native update command:
+bunx bros-harness@latest update
+
+Fallback package-native update commands:
+bunx --package bros-harness@latest bros update
+npx --package bros-harness@latest bros update
+
+Secondary global package path:
+npm install -g bros-harness@latest
+bros install
+bros update
+
+Direct OpenCode installer command:
+opencode plugin bros-harness@${version}
 
 Global OpenCode config:
-opencode plugin bros-harness@latest --global
+opencode plugin bros-harness@${version} --global
 
-Pinned current package when cache or latest resolution is suspect:
+Pinned current package:
 opencode plugin bros-harness@${version} --force
 
-Repair an existing install:
-opencode plugin bros-harness@latest --force
+Optional @latest convenience channel:
+bunx bros-harness@latest update --channel latest
 
-If OpenCode still serves a stale @latest cache, remove:
-~/.cache/opencode/packages/bros-harness@latest
-then rerun the repair command.
+Repair an existing install:
+opencode plugin bros-harness@${version} --force
+
+If OpenCode Desktop still serves a stale package cache after update and restart, preview scoped cache refresh first:
+bunx bros-harness@latest update --refresh-cache --dry-run
+Then, after explicit approval, run the scoped refresh. It targets only ~/.cache/opencode/node_modules/bros-harness plus BROS lock entries and never deletes the full cache or node_modules directory.
 
 Full guide:
 docs/installation.md
 
 Resulting config entry:
-${JSON.stringify({ plugin: ["bros-harness@latest"] }, null, 2)}`);
+${JSON.stringify({ plugin: [`bros-harness@${version}`] }, null, 2)}`);
 }
 
 async function readJson(path) {
@@ -319,14 +347,19 @@ async function printAgentInstallPrompt() {
     },
   };
   console.log(`Install BROS Harness into OpenCode by following docs/installation.md as the source of truth.
-Do not only paste JSON into opencode.jsonc; use OpenCode's plugin installer unless the guide's fallback applies.
-Use opencode plugin bros-harness@latest for first install. For an existing install, use opencode plugin bros-harness@latest --force. If @latest remains stale, clear only ~/.cache/opencode/packages/bros-harness@latest and rerun the installer.
+Use the package-native command first: bunx bros-harness@latest install.
+For an existing install, use: bunx bros-harness@latest update.
+Fallbacks: bunx --package bros-harness@latest bros install|update, or npx --package bros-harness@latest bros install|update.
+Global package install is secondary: npm install -g bros-harness@latest, then bros install or bros update.
+The install/update command writes bros-harness@${version} by default so OpenCode resolves a concrete package. Use --channel latest only when the human explicitly wants the @latest convenience selector.
+Do not only paste JSON into opencode.jsonc unless the guide's fallback applies.
+If OpenCode Desktop remains stale after update and restart, use --refresh-cache --dry-run first, then ask for explicit approval before a non-dry-run scoped cache refresh. It must target only OpenCode's BROS package cache, never the full cache or node_modules directory.
 Current package version detected by this CLI: ${version}.
 
 Optional manual BROS config after plugin installation:
 1. Show the user this complete bros.config.json example and ask for explicit approval before writing any config file.
 2. After explicit approval, write only ./bros.config.json for repo config, or only the chosen global config path (${brosConfigDefaults.globalConfigPath}) if the user explicitly chooses global config.
-3. Do not add or invoke an init-config command. Do not edit providers, MCP, top-level OpenCode permissions, telemetry, secrets, npm publishing, or npm dist-tags.
+3. Do not edit providers, MCP, top-level OpenCode permissions, telemetry, secrets, npm publishing, or npm dist-tags. Do not collect API keys or write .env files.
 
 Ready-to-paste bros.config.json example:
 ${JSON.stringify(configExample, null, 2)}
@@ -343,6 +376,18 @@ try {
     case "-h":
       printHelp();
       break;
+    case "install":
+    case "update": {
+      const options = parseInstallUpdateArgs(process.argv.slice(3));
+      const result = await runInstallUpdate({ command, ...options });
+      if (result.status === 0) {
+        process.stdout.write(result.output);
+      } else {
+        process.stderr.write(result.output);
+      }
+      process.exitCode = result.status;
+      break;
+    }
     case "snippet":
       await printSnippet();
       break;
