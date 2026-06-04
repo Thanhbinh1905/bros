@@ -68,6 +68,9 @@ permission:
     "npm run *": deny
     "npm version *": deny
     "npm pack*": deny
+    "npm run verify:no-secrets": allow
+    "npm run verify:package": allow
+    "npm pack --dry-run": allow
     "npm publish*": deny
     "npm unpublish *": deny
     "npm login": deny

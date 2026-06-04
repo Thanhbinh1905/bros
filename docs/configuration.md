@@ -7,7 +7,7 @@
 Supported locations are loaded in this order:
 
 - Repository configuration: `./bros.config.json`, resolved from the OpenCode working directory.
-- Global configuration: `~/.config/bros-harness/bros.config.json`.
+- Global configuration: `~/.config/opencode/bros.config.json`.
 
 The configuration is read by the BROS Harness plugin at runtime. It does not install packages, write OpenCode configuration, or create provider credentials.
 
@@ -134,7 +134,7 @@ Agent routes are not alias-normalized. The key must match one of the supported a
 Configuration source precedence is:
 
 1. Packaged defaults.
-2. Global config at `~/.config/bros-harness/bros.config.json`.
+2. Global config at `~/.config/opencode/bros.config.json`.
 3. Repository config at `./bros.config.json`.
 4. OpenCode plugin input.
 
@@ -146,6 +146,16 @@ Model routing precedence after sources are merged is:
 4. Packaged/default model routing
 
 More specific routes override less specific routes. Agent routes override category routes for the same packaged agent.
+
+## Runtime Model Propagation
+
+When BROS Harness is loaded by OpenCode, explicit model routes from `agents`, `categories`, or `model_routing` can update the `model` field for preexisting known BROS agents. This lets a user keep installed or already-registered BROS agent definitions while changing their runtime model through BROS configuration.
+
+Runtime model propagation is limited to the `model` field. BROS Harness does not use model routing to replace an existing agent's prompt, permission, mode, tool configuration, or other non-model fields.
+
+The global `fallback_model` retains its restricted fallback behavior: it is not silently applied to restricted categories. To change a restricted category, set an explicit route through `model_routing`, `categories`, or `agents` without `fallback_models`.
+
+Restart OpenCode after changing BROS configuration or plugin installation state. Do not assume a new model route is active until OpenCode has restarted and routing status has been checked.
 
 ## Restricted Fallback Rules
 

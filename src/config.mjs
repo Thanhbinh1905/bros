@@ -3,7 +3,7 @@ import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 
 const configFileName = "bros.config.json";
-const globalConfigPath = join(homedir(), ".config", "bros-harness", configFileName);
+const globalConfigPath = join(homedir(), ".config", "opencode", configFileName);
 
 export const routingCategories = Object.freeze([
   "planner",
@@ -165,6 +165,8 @@ const permissionProfileRules = Object.freeze({
       bash: {
         "*": "ask",
         "npm run validate": "allow",
+        "npm run verify:no-secrets": "allow",
+        "npm run verify:package": "allow",
         "npm run test": "allow",
         "npm test": "allow",
         "npm run lint": "allow",
@@ -195,6 +197,8 @@ const permissionProfileRules = Object.freeze({
         "node scripts/verify-no-secrets.mjs": "allow",
         "node scripts/verify-package-contents.mjs": "allow",
         "npm run validate": "allow",
+        "npm run verify:no-secrets": "allow",
+        "npm run verify:package": "allow",
         "npm run test": "allow",
         "npm test": "allow",
         "npm run lint": "allow",
@@ -226,6 +230,8 @@ const permissionProfileRules = Object.freeze({
         "docker compose ps*": "allow",
         "docker compose logs*": "allow",
         "npm run validate": "allow",
+        "npm run verify:no-secrets": "allow",
+        "npm run verify:package": "allow",
         "npm pack --dry-run": "allow",
       },
     },
@@ -611,42 +617,63 @@ export async function loadResolvedBrosConfig(options = {}) {
   return resolveBrosConfig(await loadBrosConfigSources(options));
 }
 
-export function applyModelRoutingToAgents(agents, resolvedConfig) {
-  const routedAgents = {};
-  const events = [];
+export function resolveModelRouteForAgent(agentName, resolvedConfig, { allowFallback = true } = {}) {
+  const category = agentCategories[agentName];
+  if (!category) return undefined;
+
+  const routing = resolvedConfig?.modelRouting ?? {};
   const categoryRouting = resolvedConfig?.categories ?? {};
   const agentRouting = resolvedConfig?.agents ?? {};
   const globalFallbackModels = resolvedConfig?.fallbackModels ?? [];
   const primaryFallbackEntry = globalFallbackModels[0];
   const primaryFallbackModel = primaryFallbackEntry?.model;
 
+  let route;
+  let source;
+  if (agentRouting[agentName]) {
+    route = agentRouting[agentName];
+    source = "agents";
+  } else if (categoryRouting[category]) {
+    route = categoryRouting[category];
+    source = "categories";
+  } else if (routing[category]) {
+    route = routing[category];
+    source = "model_routing";
+  }
+
+  const explicitModel = typeof route === "string" ? route : route?.model;
+  if (explicitModel) {
+    return {
+      agent: agentName,
+      category,
+      model: explicitModel,
+      variant: typeof route === "object" ? route.variant : undefined,
+      source,
+      fallback_count: typeof route === "object" ? route.fallback_models?.length ?? 0 : 0,
+    };
+  }
+
+  const canUseFallback = allowFallback && !fallbackRestrictedCategories.has(category);
+  if (canUseFallback && fallbackModel) {
+    return { agent: agentName, category, model: fallbackModel, source: "fallback_model" };
+  }
+
+  return undefined;
+}
+
+export function applyModelRoutingToAgents(agents, resolvedConfig) {
+  const routedAgents = {};
+  const events = [];
+
   for (const [agentName, agent] of Object.entries(agents)) {
-    const category = agentCategories[agentName];
-    let route;
-    let source;
-    if (agentRouting[agentName]) {
-      route = agentRouting[agentName];
-      source = "agents";
-    } else if (category && categoryRouting[category]) {
-      route = categoryRouting[category];
-      source = "categories";
-    }
-    const explicitModel = typeof route === "string" ? route : route?.model;
-    const explicitVariant = typeof route === "object" ? route.variant : undefined;
-    const fallbackVariant = primaryFallbackEntry?.variant;
-    const variant = explicitVariant ?? (!explicitModel ? fallbackVariant : undefined);
-    const fallbackList = typeof route === "object" ? route.fallback_models ?? [] : [];
-    const canUseFallback = category && !fallbackRestrictedCategories.has(category);
-    const fallbackApplied = !explicitModel && canUseFallback && primaryFallbackModel;
-    const selectedModel = explicitModel ?? (fallbackApplied ? primaryFallbackModel : agent.model);
+    const route = resolveModelRouteForAgent(agentName, resolvedConfig);
+    const selectedModel = route?.model ?? agent.model;
     const finalAgent = selectedModel ? { ...agent, model: selectedModel } : { ...agent };
-    if (variant && !finalAgent.variant) finalAgent.variant = variant;
+    if (route?.variant && !finalAgent.variant) finalAgent.variant = route.variant;
     routedAgents[agentName] = finalAgent;
 
-    if (explicitModel && explicitModel !== agent.model) {
-      events.push({ agent: agentName, category, model: explicitModel, variant, source, fallback_count: fallbackList.length });
-    } else if (fallbackApplied && primaryFallbackModel !== agent.model) {
-      events.push({ agent: agentName, category, model: primaryFallbackModel, variant, source: "fallback_models", fallback_count: globalFallbackModels.length });
+    if (route && route.model !== agent.model) {
+      events.push(route);
     }
   }
 

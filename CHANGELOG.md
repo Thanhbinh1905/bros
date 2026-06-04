@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.2 - 2026-06-04
+
+- Fixed runtime BROS model routing so explicit `agents`, `categories`, or `model_routing` entries can update the `model` field for preexisting known BROS agents while preserving their prompt, permission, mode, and tool fields.
+
+## 0.4.1 - 2026-06-04
+
+- Updated the primary global BROS configuration path to `~/.config/opencode/bros.config.json` while preserving repository config loading from `./bros.config.json`.
+- Stopped primary-loading the old global config path `~/.config/bros-harness/bros.config.json`; users should migrate BROS-specific config to the OpenCode config directory.
+- Updated docs and config tests for the OpenCode global config path behavior.
+- Last known-good package before this pending release: `0.3.0`; repair by pinning `opencode plugin bros-harness@0.3.0 --force` if maintainers withdraw `0.4.1` after publication.
 ## 0.4.0 - 2026-06-04
 
 - Added BROS rendering guidance that prevents shell prompt markers in generated command examples and transcripts.

@@ -58,7 +58,7 @@ Check the published package metadata:
 npm view bros-harness dist-tags version --json
 ```
 
-The current fix version documented here is `bros-harness@0.2.1`. Before installing, confirm npm `latest` has advanced to `0.2.1`; if it still reports `0.1.7`, the registry is still serving the known-broken OpenCode startup build.
+The current fix version documented here is `bros-harness@0.4.2`. Before installing, confirm npm `latest` has advanced to `0.4.2`; if it still reports an older version, the registry is still serving a pre-release or stale BROS Harness build.
 
 ## Install
 
@@ -89,13 +89,13 @@ opencode plugin bros-harness@latest --force --global
 If OpenCode has a stale cached package, or if npm metadata shows a stale `latest` dist-tag, pin the validated package and replace the existing plugin entry:
 
 ```bash
-opencode plugin bros-harness@0.2.1 --force
+opencode plugin bros-harness@0.4.2 --force
 ```
 
 For global scope with the pinned package, add `--global`:
 
 ```bash
-opencode plugin bros-harness@0.2.1 --force --global
+opencode plugin bros-harness@0.4.2 --force --global
 ```
 
 The installer makes the package available to OpenCode and writes a config entry like this:
@@ -192,10 +192,10 @@ Rollback should be explicit and scoped. Do not use broad reset, deletion, or aut
 4. Save the file and fully restart OpenCode.
 5. Verify that the BROS agents are no longer listed with `opencode agent list`.
 
-If the plugin was pinned to a bad version, prefer rolling forward to a known-good pinned version with OpenCode's plugin installer rather than deleting unrelated config. Example:
+If the plugin was pinned to a bad version, prefer repairing to an explicit known-good pinned version with OpenCode's plugin installer rather than deleting unrelated config. For rollback from a withdrawn or bad `0.4.2` release, use the last known-good pre-`0.4.2` package documented in the changelog, currently `0.3.0`. Example:
 
 ```bash
-opencode plugin bros-harness@0.2.1 --force
+opencode plugin bros-harness@0.3.0 --force
 ```
 
 For global rollback, apply the same scoped edit or pinned repair to global scope only after confirming the user intended a global change. Do not edit providers, MCP servers, permissions, telemetry, secrets, or credentials as part of rollback.
@@ -234,7 +234,7 @@ Ask whether to use project scope or global scope.
 After approval, use opencode plugin bros-harness@latest for project scope or
 opencode plugin bros-harness@latest --global for global scope.
 If updating an existing install, use bros-harness@latest --force in the same approved scope.
-If latest resolution or cache state is suspect after 0.2.1 is published, pin bros-harness@0.2.1 --force.
+If latest resolution or cache state is suspect after 0.4.2 is published, pin bros-harness@0.4.2 --force.
 Do not run npm install, publish packages, mutate npm dist-tags, edit providers,
 MCP servers, permissions, telemetry, secrets, or credentials.
 If manual config editing is explicitly requested, merge only the plugin entry
@@ -262,7 +262,7 @@ The runtime plugin does not write user config files, install dependencies, publi
 BROS Harness supports optional package-specific JSON config for rich category/agent model routing and scoped permission profiles. The supported config file locations are:
 
 - repo config at `./bros.config.json` from the OpenCode working directory;
-- global config at `~/.config/bros-harness/bros.config.json`.
+- global config at `~/.config/opencode/bros.config.json`.
 
 For repo-local authoring, use the published raw schema URL so editors and agents can fetch the schema easily:
 
@@ -337,7 +337,7 @@ Routing precedence within the resolved config is:
 Config source precedence is:
 
 1. packaged defaults;
-2. global BROS config at `~/.config/bros-harness/bros.config.json`;
+2. global BROS config at `~/.config/opencode/bros.config.json`;
 3. repo BROS config at `./bros.config.json` from the OpenCode working directory;
 4. OpenCode plugin input, when supplied by OpenCode.
 
@@ -345,7 +345,7 @@ Supported routing categories include `planner`, `explorer_search`, `coder_build`
 
 Supported `permission_profiles` are `readonly`, `review_safe`, `build_limited`, and `trusted_ops`. Profiles are opt-in and must include `enabled`, `scope: "repo"`, a future `expires_at`, and a non-secret reason. `trusted_ops` requires `hard_review: true`. Profiles do not introduce top-level OpenCode permissions; publish, destructive, force-push, secret-read, provider-credential, and production/cloud command classes remain denied.
 
-Start from the template and schema in `examples/bros.config.example.json` and `examples/bros.config.schema.json`. For manual installation, generate the install prompt, show the resulting config to the user, ask for explicit approval, and then write only the chosen config path (`./bros.config.json` or `~/.config/bros-harness/bros.config.json`):
+Start from the template and schema in `examples/bros.config.example.json` and `examples/bros.config.schema.json`. For manual installation, generate the install prompt, show the resulting config to the user, ask for explicit approval, and then write only the chosen config path (`./bros.config.json` or `~/.config/opencode/bros.config.json`):
 
 ```bash
 node bin/bros.mjs agent-install-prompt

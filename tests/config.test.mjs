@@ -1,5 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { homedir } from "node:os";
+import { join } from "node:path";
 
 import {
   applyModelRoutingToAgents,
@@ -8,6 +10,7 @@ import {
   resolveBrosConfig,
   validateBrosConfig,
 } from "../src/config.mjs";
+import { brosHarnessServer } from "../src/plugin.mjs";
 
 const secretLikeValue = "sk-AAAAAAAAAAAAAAAAAAAAAA";
 const futurePermissionProfiles = {
@@ -460,6 +463,100 @@ describe("applyModelRoutingToAgents", () => {
   });
 });
 
+describe("brosHarnessServer runtime model propagation", () => {
+  it("patches only model on a preexisting known BROS agent with explicit agent routing", async () => {
+    const server = await brosHarnessServer({ bros_harness: { agents: { "bro-build": "test/explicit-build" } } }, { includeFiles: false });
+    const prompt = "existing prompt stays authoritative";
+    const permission = { bash: { "*": "ask" } };
+    const tools = { read: true };
+    const cfg = {
+      agent: {
+        "bro-build": {
+          model: "test/old-build",
+          prompt,
+          permission,
+          mode: "subagent",
+          tools,
+        },
+      },
+    };
+
+    server.config(cfg);
+
+    assert.equal(cfg.agent["bro-build"].model, "test/explicit-build");
+    assert.equal(cfg.agent["bro-build"].prompt, prompt);
+    assert.equal(cfg.agent["bro-build"].permission, permission);
+    assert.equal(cfg.agent["bro-build"].mode, "subagent");
+    assert.equal(cfg.agent["bro-build"].tools, tools);
+  });
+
+  it("patches preexisting known BROS agent model from explicit category routing without permission escalation", async () => {
+    const server = await brosHarnessServer({ bros_harness: { categories: { security: "test/security-model" } } }, { includeFiles: false });
+    const permission = { bash: { "*": "deny" } };
+    const cfg = {
+      agent: {
+        "bro-shield": {
+          prompt: "existing shield prompt",
+          permission,
+        },
+      },
+    };
+
+    server.config(cfg);
+
+    assert.equal(cfg.agent["bro-shield"].model, "test/security-model");
+    assert.equal(cfg.agent["bro-shield"].permission, permission);
+    assert.equal(cfg.agent["bro-shield"].prompt, "existing shield prompt");
+  });
+
+  it("patches preexisting known BROS agent model from explicit model_routing", async () => {
+    const server = await brosHarnessServer({ bros_harness: { model_routing: { qa_review: "test/qa-model" } } }, { includeFiles: false });
+    const cfg = {
+      agent: {
+        "bro-test": { model: "test/original-qa", prompt: "existing qa prompt" },
+      },
+    };
+
+    server.config(cfg);
+
+    assert.equal(cfg.agent["bro-test"].model, "test/qa-model");
+    assert.equal(cfg.agent["bro-test"].prompt, "existing qa prompt");
+  });
+
+  it("does not patch unknown preexisting agents", async () => {
+    const server = await brosHarnessServer({ bros_harness: { model_routing: { docs: "test/docs-model" } } }, { includeFiles: false });
+    const cfg = {
+      agent: {
+        "not-a-bro": { model: "test/original", prompt: "unknown prompt" },
+      },
+    };
+
+    server.config(cfg);
+
+    assert.equal(cfg.agent["not-a-bro"].model, "test/original");
+    assert.equal(cfg.agent["not-a-bro"].prompt, "unknown prompt");
+  });
+
+  it("does not apply fallback_model to restricted preexisting BROS agents", async () => {
+    const server = await brosHarnessServer({ bros_harness: { fallback_model: "test/fallback" } }, { includeFiles: false });
+    const cfg = {
+      agent: {
+        "bro-build": { model: "test/build-original" },
+        "bro-shield": { model: "test/shield-original" },
+        "bro-test": { model: "test/test-original" },
+        "bro-ops": { model: "test/ops-original" },
+      },
+    };
+
+    server.config(cfg);
+
+    assert.equal(cfg.agent["bro-build"].model, "test/build-original");
+    assert.equal(cfg.agent["bro-shield"].model, "test/shield-original");
+    assert.equal(cfg.agent["bro-test"].model, "test/test-original");
+    assert.equal(cfg.agent["bro-ops"].model, "test/ops-original");
+  });
+});
+
 describe("brosConfigDefaults", () => {
   it("has expected keys and canonical categories", () => {
     for (const key of [
@@ -475,5 +572,9 @@ describe("brosConfigDefaults", () => {
     assert.ok(brosConfigDefaults.categories.includes("ui"));
     assert.ok(!brosConfigDefaults.categories.includes("design"));
     assert.ok(!brosConfigDefaults.modelEntryAliases.includes("designer"));
+  });
+
+  it("uses the OpenCode config directory for the global config path", () => {
+    assert.equal(brosConfigDefaults.globalConfigPath, join(homedir(), ".config", "opencode", "bros.config.json"));
   });
 });

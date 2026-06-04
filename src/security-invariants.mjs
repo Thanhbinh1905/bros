@@ -90,6 +90,11 @@ const requiredBroadBashDenyPatterns = Object.freeze([
   "gh auth token*",
 ]);
 
+const safeSecretNamedPermissionRuleKeys = new Set([
+  "node scripts/verify-no-secrets.mjs",
+  "npm run verify:no-secrets",
+]);
+
 function stableStringify(value) {
   if (value === undefined) return "__BROS_UNDEFINED__";
   if (value === null || typeof value !== "object") return JSON.stringify(value);
@@ -97,12 +102,12 @@ function stableStringify(value) {
   return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(",")}}`;
 }
 
-function isPermissionRuleKey(path, value) {
+function isPermissionRuleKey(path, key, value) {
   const parent = path.at(-1);
   const grandparent = path.at(-2);
   return grandparent === "permission"
     && ["bash", "external_directory"].includes(parent)
-    && ["deny", "ask"].includes(value);
+    && (["deny", "ask"].includes(value) || (parent === "bash" && value === "allow" && safeSecretNamedPermissionRuleKeys.has(key)));
 }
 
 function hasSecretLikeValue(value, path = []) {
@@ -111,7 +116,7 @@ function hasSecretLikeValue(value, path = []) {
   if (value && typeof value === "object") {
     return Object.entries(value).some(([key, child]) => {
       const childPath = [...path, key];
-      const secretLikeKey = sensitiveKeyPattern.test(key) && !isPermissionRuleKey(path, child);
+      const secretLikeKey = sensitiveKeyPattern.test(key) && !isPermissionRuleKey(path, key, child);
       return secretLikeKey || hasSecretLikeValue(child, childPath);
     });
   }

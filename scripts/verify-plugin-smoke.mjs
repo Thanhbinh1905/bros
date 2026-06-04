@@ -41,6 +41,81 @@ if (namespacedInputCfg.agent?.["bro-docs"]?.model !== "openai/gpt-5.4-mini-fast"
   throw new Error("Plugin smoke failed: namespaced OpenCode plugin input was not applied");
 }
 
+const preexistingAgentServer = await brosHarnessServer({
+  bros_harness: {
+    agents: { "bro-build": "test-provider/preexisting-build-model" },
+    categories: { security: "test-provider/preexisting-security-model" },
+    model_routing: { qa_review: "test-provider/preexisting-qa-model" },
+  },
+}, { includeFiles: false });
+const preexistingPermission = { bash: { "*": "deny" } };
+const preexistingCfg = {
+  agent: {
+    "bro-build": {
+      model: "test-provider/original-build-model",
+      prompt: "preexisting build prompt",
+      permission: preexistingPermission,
+      mode: "subagent",
+      tools: { read: true },
+    },
+    "bro-shield": {
+      prompt: "preexisting shield prompt",
+      permission: preexistingPermission,
+    },
+    "bro-test": {
+      model: "test-provider/original-qa-model",
+      prompt: "preexisting qa prompt",
+    },
+    "not-a-bro": {
+      model: "test-provider/original-unknown-model",
+      prompt: "unknown prompt",
+    },
+  },
+};
+preexistingAgentServer.config(preexistingCfg);
+if (preexistingCfg.agent["bro-build"].model !== "test-provider/preexisting-build-model") {
+  throw new Error("Plugin smoke failed: preexisting bro-build model was not patched from explicit agent routing");
+}
+if (preexistingCfg.agent["bro-build"].prompt !== "preexisting build prompt"
+  || preexistingCfg.agent["bro-build"].permission !== preexistingPermission
+  || preexistingCfg.agent["bro-build"].mode !== "subagent"
+  || preexistingCfg.agent["bro-build"].tools.read !== true) {
+  throw new Error("Plugin smoke failed: preexisting bro-build non-model fields were overwritten");
+}
+if (preexistingCfg.agent["bro-shield"].model !== "test-provider/preexisting-security-model") {
+  throw new Error("Plugin smoke failed: preexisting bro-shield model was not patched from explicit category routing");
+}
+if (preexistingCfg.agent["bro-shield"].prompt !== "preexisting shield prompt"
+  || preexistingCfg.agent["bro-shield"].permission !== preexistingPermission) {
+  throw new Error("Plugin smoke failed: preexisting bro-shield prompt or permission was overwritten");
+}
+if (preexistingCfg.agent["bro-test"].model !== "test-provider/preexisting-qa-model"
+  || preexistingCfg.agent["bro-test"].prompt !== "preexisting qa prompt") {
+  throw new Error("Plugin smoke failed: preexisting bro-test model_routing patch failed or changed prompt");
+}
+if (preexistingCfg.agent["not-a-bro"].model !== "test-provider/original-unknown-model") {
+  throw new Error("Plugin smoke failed: unknown preexisting agent model was patched");
+}
+
+const fallbackPreexistingServer = await brosHarnessServer({
+  bros_harness: { fallback_model: "test-provider/fallback-model" },
+}, { includeFiles: false });
+const fallbackPreexistingCfg = {
+  agent: {
+    "bro-build": { model: "test-provider/original-build-model" },
+    "bro-shield": { model: "test-provider/original-shield-model" },
+    "bro-test": { model: "test-provider/original-test-model" },
+    "bro-ops": { model: "test-provider/original-ops-model" },
+  },
+};
+fallbackPreexistingServer.config(fallbackPreexistingCfg);
+if (fallbackPreexistingCfg.agent["bro-build"].model !== "test-provider/original-build-model"
+  || fallbackPreexistingCfg.agent["bro-shield"].model !== "test-provider/original-shield-model"
+  || fallbackPreexistingCfg.agent["bro-test"].model !== "test-provider/original-test-model"
+  || fallbackPreexistingCfg.agent["bro-ops"].model !== "test-provider/original-ops-model") {
+  throw new Error("Plugin smoke failed: fallback_model changed a restricted preexisting BROS agent");
+}
+
 const forbiddenBefore = snapshotForbiddenConfig({});
 assertNoForbiddenConfigMutation(forbiddenBefore, {
   agent: {
@@ -122,6 +197,10 @@ const profiled = applyPermissionProfilesToAgents({
 if (profiled.agents["bro-build"].permission.bash["npm run validate"] !== "allow") {
   throw new Error("Plugin smoke failed: build_limited did not allow scoped local validation");
 }
+if (profiled.agents["bro-build"].permission.bash["npm run verify:no-secrets"] !== "allow"
+  || profiled.agents["bro-build"].permission.bash["npm run verify:package"] !== "allow") {
+  throw new Error("Plugin smoke failed: build_limited did not allow exact release validation aliases");
+}
 if (profiled.agents["bro-build"].permission.bash["npm publish*"] !== "deny") {
   throw new Error("Plugin smoke failed: dangerous npm publish was not denied after profile merge");
 }
@@ -181,6 +260,9 @@ const testBash = cfg.agent?.["bro-test"]?.permission?.bash;
 if (!testBash || testBash["gh pr diff *"] !== "allow" || testBash["npx playwright test*"] !== "allow" || testBash["docker compose logs*"] !== "allow") {
   throw new Error("Plugin smoke failed: bro-test did not allow expected QA inspection commands");
 }
+if (testBash["npm run verify:no-secrets"] !== "allow" || testBash["npm run verify:package"] !== "allow") {
+  throw new Error("Plugin smoke failed: bro-test did not allow exact release validation aliases");
+}
 if (testBash["git add*"] !== "deny" || testBash["docker compose up*"] !== "ask" || testBash["npm install*"] !== "ask") {
   throw new Error("Plugin smoke failed: bro-test reopened mutation commands");
 }
@@ -189,8 +271,19 @@ const opsBash = cfg.agent?.["bro-ops"]?.permission?.bash;
 if (!opsBash || opsBash["gh run view *"] !== "allow" || opsBash["docker compose logs*"] !== "allow" || opsBash["git grep*"] !== "allow") {
   throw new Error("Plugin smoke failed: bro-ops did not allow expected ops inspection commands");
 }
+if (opsBash["npm run verify:no-secrets"] !== "allow" || opsBash["npm run verify:package"] !== "allow") {
+  throw new Error("Plugin smoke failed: bro-ops did not allow exact release validation aliases");
+}
 if (opsBash["docker compose up*"] !== "ask" || opsBash["kubectl apply*"] !== "ask" || opsBash["docker system prune*"] !== "deny") {
   throw new Error("Plugin smoke failed: bro-ops reopened operational mutation commands");
+}
+
+const shieldBash = cfg.agent?.["bro-shield"]?.permission?.bash;
+if (!shieldBash || shieldBash["npm run verify:no-secrets"] !== "allow" || shieldBash["npm run verify:package"] !== "allow" || shieldBash["npm pack --dry-run"] !== "allow") {
+  throw new Error("Plugin smoke failed: bro-shield did not allow exact release/security review validation aliases");
+}
+if (shieldBash["npm run *"] !== "deny" || shieldBash["npm pack*"] !== "deny" || shieldBash["npm publish*"] !== "deny") {
+  throw new Error("Plugin smoke failed: bro-shield reopened broad npm or publish commands");
 }
 
 function assertResolvedConfigAccepted(config, description) {
