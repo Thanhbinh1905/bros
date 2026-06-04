@@ -2,7 +2,6 @@
 name: bro-test
 description: "Subagent for test strategy, acceptance validation, regression testing, coverage review, quality scorecards, and defect reports. Display alias: Bro Test."
 mode: subagent
-model: openai/gpt-5.5
 permission:
   read: allow
   grep: allow

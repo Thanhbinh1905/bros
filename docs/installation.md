@@ -4,6 +4,29 @@ This is the source of truth for installing BROS Harness into OpenCode.
 
 BROS Harness is a package-first OpenCode plugin. The primary installation path is OpenCode's own plugin installer. Do not rely on only pasting `{"plugin":["bros-harness"]}` into `opencode.jsonc`: that config entry does not guarantee OpenCode has installed or cached the npm package it must load.
 
+## For LLM Agents
+
+Fetch this guide from the raw GitHub URL and follow it step by step:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Thanhbinh1905/bros/main/docs/installation.md
+```
+
+Do not edit providers, MCP servers, permissions, telemetry, secrets, npm publishing, or npm dist-tags while installing BROS Harness. Use OpenCode's plugin installer below, restart OpenCode, and verify the BROS agents after installation.
+
+## For Manual
+
+Paste this prompt into Claude Code, AmpCode, Cursor, or another coding agent:
+
+```text
+Install BROS Harness into OpenCode by fetching and following the full guide step by step:
+https://raw.githubusercontent.com/Thanhbinh1905/bros/main/docs/installation.md
+
+Use OpenCode's plugin installer from the guide. Do not only paste JSON into opencode.jsonc unless the guide's fallback applies.
+Do not edit providers, MCP servers, permissions, telemetry, secrets, npm publishing, or npm dist-tags.
+Restart OpenCode and verify BROS agents after installation.
+```
+
 ## 30-second orientation
 
 **BE THE BRO** is the memory hook: use AI help with discipline. BROS gives OpenCode a gated delivery crew for planning, building, reviewing, and documenting work, but the display tone never overrides technical rules. Start with the lightest safe mode, require approved packets for implementation, verify before handoff, and treat publish, merge, deploy, credential, dependency-install, destructive, and production actions as separate gates.

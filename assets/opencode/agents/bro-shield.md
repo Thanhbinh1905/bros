@@ -2,7 +2,6 @@
 name: bro-shield
 description: "Subagent for BROS security governance: threat modeling, OWASP review, secrets checks, dependency risk, auth/input validation review, and security gate reports. Display alias: Bro Shield."
 mode: subagent
-model: openai/gpt-5.5
 permission:
   read: allow
   grep: allow

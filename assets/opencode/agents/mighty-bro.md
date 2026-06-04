@@ -2,7 +2,6 @@
 name: mighty-bro
 description: "Primary Orchestrator, display alias Mighty Bro (Orchestrator), and single user-facing front door for OpenCode-native BROS delivery. Use for canonical /bros-plan, /bros-build, intake, clarification, planning, dispatch, coordination, audit gates, and final reports."
 mode: primary
-model: openai/gpt-5.5
 permission:
   read: allow
   grep: allow

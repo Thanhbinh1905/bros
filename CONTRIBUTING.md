@@ -2,6 +2,8 @@
 
 Thanks for helping improve BROS Harness.
 
+Contributions are welcome.
+
 ## Development principles
 
 - Keep OpenCode support working before adding other adapters.

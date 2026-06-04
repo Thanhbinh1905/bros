@@ -2,7 +2,6 @@
 name: bro-build
 description: "Subagent for approved implementation across frontend, backend, tests, and config from complete task packets; rejects missing, stale, or incomplete packets. Display alias: Bro Build."
 mode: subagent
-model: openai/gpt-5.5
 permission:
   read: allow
   grep: allow

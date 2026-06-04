@@ -9,8 +9,10 @@ Use the complete installation guide as the source of truth:
 Agent prompt reference:
 
 ```text
-Install BROS Harness into OpenCode by following docs/installation.md as the source of truth.
-Do not only paste JSON into opencode.jsonc; use OpenCode's plugin installer unless the guide's fallback applies.
+Install BROS Harness into OpenCode by fetching and following the full guide step by step:
+https://raw.githubusercontent.com/Thanhbinh1905/bros/main/docs/installation.md
+
+Use OpenCode's plugin installer from the guide. Do not only paste JSON into opencode.jsonc unless the guide's fallback applies.
 Do not edit providers, MCP, permissions, telemetry, secrets, npm publishing, or npm dist-tags.
 Restart OpenCode and verify BROS agents after installation.
 ```

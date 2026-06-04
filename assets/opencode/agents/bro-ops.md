@@ -2,7 +2,6 @@
 name: bro-ops
 description: "Subagent for CI/CD, Docker, deployment readiness, observability, runbooks, SLOs, rollback, and operational review. Display alias: Bro Ops."
 mode: subagent
-model: openai/gpt-5.5
 permission:
   read: allow
   grep: allow

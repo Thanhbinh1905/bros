@@ -2,7 +2,6 @@
 name: bro-ui
 description: "Subagent for UI/UX direction, design specifications, visual polish, accessibility expectations, and design review; no backend or security ownership. Display alias: Bro UI."
 mode: subagent
-model: openai/gpt-5.5
 permission:
   read: allow
   grep: allow
