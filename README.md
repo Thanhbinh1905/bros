@@ -187,7 +187,7 @@ On load, it verifies packaged asset directories and uses OpenCode’s in-memory 
 - packaged BROS agent entries to `agent`, without overwriting existing agent keys; and
 - packaged command prompt entries to `command`, without overwriting existing command keys.
 
-Optional BROS-specific model routing and permission profiles can be supplied in `bros.config.json` files. Config precedence is packaged defaults, global BROS config, repo BROS config, then OpenCode plugin input. `fallback_model` is never silently applied to restricted code, security, QA/review, or ops/release categories. Permission profiles are opt-in, repo-scoped, expiry-bound, reason-logged, and keep hard denies for secret reads, publish, destructive actions, force push, and production/cloud mutation.
+Optional BROS-specific model routing and permission profiles can be supplied in `bros.config.json` files. See `docs/configuration.md` for the dedicated configuration guide, including the rich config shape for `fallback_model`, `model_routing`, `categories`, `agents`, and `permission_profiles`. Config precedence is packaged defaults, global BROS config, repo BROS config, then OpenCode plugin input; routing precedence is `agents` > `categories` > `model_routing` > `fallback_model`. `fallback_model` is never silently applied to restricted code, security, QA/review, or ops/release categories. Permission profiles are opt-in, repo-scoped, expiry-bound, reason-logged, and keep hard denies for secret reads, publish, destructive actions, force push, and production/cloud mutation.
 
 `bro-build` defaults to flexible local Bash for routine development and inspection, closer to OpenCode build mode. Git mutation, dependency installs, Docker mutation, deploy/publish, secret-reading, destructive, force-push, and production/cloud command classes remain ask-gated or denied.
 
@@ -213,7 +213,8 @@ Three skipped raw skills remain excluded pending separate sanitized review. They
 - `assets/skills.lifecycle.json` — skill lifecycle metadata for active, deprecated, skipped, redacted, and blocked states; `npm run validate` checks it against the manifest and skipped import report.
 - `src/plugin.mjs` — the OpenCode plugin entrypoint exposed by `main` and `exports`.
 - `bin/bros.mjs` — a read-only helper CLI for snippets, package checks, asset summaries, and safe setup prompts.
-- `examples/bros.config.example.json` and `examples/bros.config.schema.json` — optional BROS config template and schema for model routing and scoped permission profiles.
+- `docs/configuration.md` — dedicated guide for rich `bros.config.json` routing and permission profile configuration.
+- `examples/bros.config.example.json` and `examples/bros.config.schema.json` — optional BROS config template and schema for model routing, category/agent overrides, fallback behavior, and scoped permission profiles. Agents can fetch the schema at `https://raw.githubusercontent.com/Thanhbinh1905/bros/main/examples/bros.config.schema.json`.
 - `scripts/validate-assets.mjs` and `scripts/verify-no-secrets.mjs` — dependency-free validation scripts retained in the package surface.
 
 Maintainer-only asset import tooling remains repository-local, environment-gated, and excluded from the published package surface. It is not a user installation command.

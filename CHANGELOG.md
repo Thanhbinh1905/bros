@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0 - 2026-06-04
+
+- Added rich `bros.config.json` support for `model_routing`, `categories`, `agents`, and rich model entries with `variant` and `fallback_models`.
+- Rejected restricted fallback routing for `coder_build`, `security`, `qa_review`, and `ops` to preserve role-specific safety boundaries.
+- Added a dedicated `docs/configuration.md` guide with raw GitHub schema URL examples.
+- Added and extended configuration validation tests for the richer config format.
+- Updated CLI `config-status` and `agent-install-prompt` output for the expanded configuration model.
+
 ## 0.2.1 - 2026-06-04
 
 - Simplified OpenCode installation guidance for agents and manual setup while preserving safety boundaries around providers, permissions, secrets, publishing, and dist-tags.

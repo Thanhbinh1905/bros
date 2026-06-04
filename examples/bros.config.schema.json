@@ -2,29 +2,112 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.invalid/bros-harness/bros.config.schema.json",
   "title": "BROS Harness config",
+  "description": "BROS model routing config. Restricted categories reject fallback_models at runtime: coder_build, security, qa_review, and ops/release.",
   "type": "object",
   "additionalProperties": false,
+  "$defs": {
+    "modelEntry": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["model"],
+          "properties": {
+            "model": {
+              "type": "string",
+              "minLength": 1
+            },
+            "variant": {
+              "type": "string",
+              "minLength": 1
+            },
+            "fallback_models": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
   "properties": {
     "$schema": {
       "type": "string"
     },
     "fallback_model": {
-      "type": "string",
-      "minLength": 1,
-      "description": "Fallback model for non-restricted categories only. It is never silently applied to coder_build, security, qa_review, or ops/release."
+      "$ref": "#/$defs/modelEntry",
+      "description": "Fallback model for non-restricted categories only. It is never silently applied to coder_build, security, qa_review, or ops/release. Rich form is accepted for consistency, though global fallback is typically a string."
     },
     "model_routing": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "planner": { "type": "string", "minLength": 1 },
-        "explorer_search": { "type": "string", "minLength": 1 },
-        "coder_build": { "type": "string", "minLength": 1 },
-        "security": { "type": "string", "minLength": 1 },
-        "qa_review": { "type": "string", "minLength": 1 },
-        "docs": { "type": "string", "minLength": 1 },
-        "design": { "type": "string", "minLength": 1 },
-        "ops": { "type": "string", "minLength": 1 }
+        "explorer": { "$ref": "#/$defs/modelEntry" },
+        "coder_build": { "$ref": "#/$defs/modelEntry" },
+        "designer": { "$ref": "#/$defs/modelEntry" },
+        "reviewer": { "$ref": "#/$defs/modelEntry" },
+        "qa_review": { "$ref": "#/$defs/modelEntry" },
+        "security": { "$ref": "#/$defs/modelEntry" },
+        "docs": { "$ref": "#/$defs/modelEntry" },
+        "ops": { "$ref": "#/$defs/modelEntry" },
+        "explorer/search": { "$ref": "#/$defs/modelEntry" },
+        "search": { "$ref": "#/$defs/modelEntry" },
+        "coder": { "$ref": "#/$defs/modelEntry" },
+        "build": { "$ref": "#/$defs/modelEntry" },
+        "coder/build": { "$ref": "#/$defs/modelEntry" },
+        "qa": { "$ref": "#/$defs/modelEntry" },
+        "review": { "$ref": "#/$defs/modelEntry" },
+        "qa/review": { "$ref": "#/$defs/modelEntry" },
+        "release": { "$ref": "#/$defs/modelEntry" }
+      }
+    },
+    "categories": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "planner": { "$ref": "#/$defs/modelEntry" },
+        "explorer_search": { "$ref": "#/$defs/modelEntry" },
+        "explorer": { "$ref": "#/$defs/modelEntry" },
+        "coder_build": { "$ref": "#/$defs/modelEntry" },
+        "design": { "$ref": "#/$defs/modelEntry" },
+        "designer": { "$ref": "#/$defs/modelEntry" },
+        "reviewer": { "$ref": "#/$defs/modelEntry" },
+        "qa_review": { "$ref": "#/$defs/modelEntry" },
+        "security": { "$ref": "#/$defs/modelEntry" },
+        "docs": { "$ref": "#/$defs/modelEntry" },
+        "ops": { "$ref": "#/$defs/modelEntry" },
+        "explorer/search": { "$ref": "#/$defs/modelEntry" },
+        "search": { "$ref": "#/$defs/modelEntry" },
+        "coder": { "$ref": "#/$defs/modelEntry" },
+        "build": { "$ref": "#/$defs/modelEntry" },
+        "coder/build": { "$ref": "#/$defs/modelEntry" },
+        "qa": { "$ref": "#/$defs/modelEntry" },
+        "review": { "$ref": "#/$defs/modelEntry" },
+        "qa/review": { "$ref": "#/$defs/modelEntry" },
+        "release": { "$ref": "#/$defs/modelEntry" }
+      }
+    },
+    "agents": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mighty-bro": { "$ref": "#/$defs/modelEntry" },
+        "bro-explore": { "$ref": "#/$defs/modelEntry" },
+        "bro-build": { "$ref": "#/$defs/modelEntry" },
+        "bro-design": { "$ref": "#/$defs/modelEntry" },
+        "bro-ui": { "$ref": "#/$defs/modelEntry" },
+        "bro-test": { "$ref": "#/$defs/modelEntry" },
+        "bro-shield": { "$ref": "#/$defs/modelEntry" },
+        "bro-ops": { "$ref": "#/$defs/modelEntry" },
+        "bro-docs": { "$ref": "#/$defs/modelEntry" }
       }
     },
     "permission_profiles": {

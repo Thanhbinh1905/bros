@@ -8,7 +8,7 @@ This repository intentionally avoids raw provider configuration and secret valid
 - No dependency install, publish, deploy, or production access in the initial build.
 - No examples with live credentials.
 - Runtime plugin config changes are limited to OpenCode's in-memory `config(cfg)` hook for package-relative `skills.paths`, non-overwriting BROS agent entries, and non-overwriting command prompt entries.
-- Optional BROS model routing config is fail-closed: unknown keys and invalid model route values reject plugin startup, `fallback_model` is surfaced as config behavior, and restricted code, security, QA/review, and ops/release categories do not silently fall back.
+- Optional BROS model routing config is fail-closed: unknown keys and invalid model route values reject plugin startup, `fallback_model` is surfaced as config behavior, and restricted categories (`coder_build`, `security`, `qa_review`, `ops`) reject per-entry `fallback_models` at runtime instead of silently falling back.
 - Optional BROS permission profiles are fail-closed and scoped: only `readonly`, `review_safe`, `build_limited`, and `trusted_ops` are accepted; each opt-in requires repo scope, expiry, and reason logging, while `trusted_ops` also requires `hard_review: true`.
 - `bro-build` allows routine local Bash by default for implementation efficiency, but keeps explicit ask/deny gates for git mutation, dependency installs, Docker mutation, secret reads, provider credential mutation, npm publish/dist-tags, destructive delete/reset/clean operations, force push, and production/cloud mutation.
 - Permission profiles only tune packaged BROS agent permissions at config time. They do not introduce top-level OpenCode `permission` and append hard denies for secret reads, provider credential mutation, npm publish/dist-tags, destructive delete/reset/clean operations, force push, and production/cloud mutation.
@@ -19,7 +19,7 @@ This repository intentionally avoids raw provider configuration and secret valid
 
 ## Validation
 
-`scripts/verify-no-secrets.mjs` provides dependency-free checks for common secret-like patterns. It is not a replacement for human security review.
+`scripts/verify-no-secrets.mjs` provides dependency-free checks for common secret-like patterns. BROS config values are also validated for secret-like patterns and must not include provider credentials, API keys, tokens, or other secret material. This validation is not a replacement for human security review.
 
 `scripts/verify-package-contents.mjs` performs an npm package dry-run check and fails if publishable contents include local session traces, raw OpenCode config, maintainer import tooling, logs, package workspace sources, or secret-like file paths.
 

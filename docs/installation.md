@@ -259,24 +259,92 @@ The runtime plugin does not write user config files, install dependencies, publi
 
 ## BROS Harness Config
 
-BROS Harness supports optional package-specific JSON config for model routing and scoped permission profiles. Precedence is:
+BROS Harness supports optional package-specific JSON config for rich model routing and scoped permission profiles. The supported config file locations are:
+
+- repo config at `./bros.config.json` from the OpenCode working directory;
+- global config at `~/.config/bros-harness/bros.config.json`.
+
+For repo-local authoring, use the published raw schema URL so editors and agents can fetch the schema easily:
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/Thanhbinh1905/bros/main/examples/bros.config.schema.json",
+  "fallback_model": "anthropic/claude-sonnet-4-5",
+  "model_routing": {
+    "docs": "anthropic/claude-sonnet-4-5"
+  },
+  "categories": {
+    "explorer_search": {
+      "model": "anthropic/claude-sonnet-4-5",
+      "fallback_models": ["openai/gpt-5.5"]
+    }
+  },
+  "agents": {
+    "bro-docs": {
+      "model": "anthropic/claude-sonnet-4-5",
+      "variant": "high"
+    }
+  },
+  "permission_profiles": {
+    "enabled": ["review_safe"],
+    "scope": "repo",
+    "expires_at": "2099-01-01T00:00:00.000Z",
+    "reason": "approved local repo validation only",
+    "hard_review": false
+  }
+}
+```
+
+Agents can fetch the schema directly from `https://raw.githubusercontent.com/Thanhbinh1905/bros/main/examples/bros.config.schema.json` for validation context. The accepted top-level keys are `$schema`, `fallback_model`, `model_routing`, `categories`, `agents`, and `permission_profiles`. Unknown keys fail closed with an actionable error. The plugin never mutates OpenCode provider, credential, MCP, telemetry, or top-level permission settings.
+
+Model entries can be either a string model identifier or a rich object:
+
+```json
+"anthropic/claude-sonnet-4-5"
+```
+
+```json
+{
+  "model": "anthropic/claude-sonnet-4-5",
+  "variant": "high",
+  "fallback_models": ["openai/gpt-5.5"]
+}
+```
+
+Routing precedence within the resolved config is:
+
+1. `agents`;
+2. `categories`;
+3. `model_routing`;
+4. `fallback_model`;
+5. packaged/default model routing.
+
+Config source precedence is:
 
 1. packaged defaults;
 2. global BROS config at `~/.config/bros-harness/bros.config.json`;
 3. repo BROS config at `./bros.config.json` from the OpenCode working directory;
 4. OpenCode plugin input, when supplied by OpenCode.
 
-Only BROS-specific keys are accepted: `fallback_model`, `model_routing`, and `permission_profiles`. Unknown keys fail closed with an actionable error. The plugin never mutates OpenCode provider, credential, MCP, telemetry, or top-level permission settings.
-
-Supported `model_routing` categories are `planner`, `explorer_search`, `coder_build`, `security`, `qa_review`, `docs`, `design`, and `ops`. `fallback_model` applies only to non-restricted categories. It is not silently applied to `coder_build`, `security`, `qa_review`, or `ops`/release-sensitive work; set those routes explicitly if they must change.
+Supported routing categories include `planner`, `explorer_search`, `coder_build`, `security`, `qa_review`, `docs`, `design`, and `ops`. The restricted categories `coder_build`, `security`, `qa_review`, and `ops` reject `fallback_models` at runtime. `fallback_model` applies only where runtime restrictions allow it; set restricted routes explicitly if they must change.
 
 Supported `permission_profiles` are `readonly`, `review_safe`, `build_limited`, and `trusted_ops`. Profiles are opt-in and must include `enabled`, `scope: "repo"`, a future `expires_at`, and a non-secret reason. `trusted_ops` requires `hard_review: true`. Profiles do not introduce top-level OpenCode permissions; publish, destructive, force-push, secret-read, provider-credential, and production/cloud command classes remain denied.
 
-Start from the template and schema in `examples/bros.config.example.json` and `examples/bros.config.schema.json`. Validate local routing visibility with:
+Start from the template and schema in `examples/bros.config.example.json` and `examples/bros.config.schema.json`. For manual installation, generate the install prompt, show the resulting config to the user, ask for explicit approval, and then write only the chosen config path (`./bros.config.json` or `~/.config/bros-harness/bros.config.json`):
+
+```bash
+node bin/bros.mjs agent-install-prompt
+```
+
+Do not create config files through an initializer command. Keep the workflow as manual review and paste so the selected path and content are approved before writing.
+
+Validate local routing visibility with:
 
 ```bash
 bros config-status
 ```
+
+See `docs/configuration.md` when present for a deeper configuration guide.
 
 ## Contributor Checks
 
