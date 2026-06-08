@@ -12,7 +12,9 @@ Agent prompt reference:
 Install BROS Harness into OpenCode by fetching and following the full guide step by step:
 https://raw.githubusercontent.com/Thanhbinh1905/bros/main/docs/installation.md
 
-Use OpenCode's plugin installer from the guide. Do not only paste JSON into opencode.jsonc unless the guide's fallback applies.
+Use the package-runner commands from the guide first: bunx bros-harness@latest install or bunx bros-harness@latest update. They pin the OpenCode plugin entry to the current package version by default; `--channel latest` is opt-in.
+Use bunx --package bros-harness@latest bros install|update or npx --package bros-harness@latest bros install|update when the direct bunx form is unavailable.
+Use OpenCode's older plugin installer, including --force, only as the guide's fallback/troubleshooting path. Do not only paste JSON into opencode.jsonc unless the guide's fallback applies.
 Do not edit providers, MCP, permissions, telemetry, secrets, npm publishing, or npm dist-tags.
 Restart OpenCode and verify BROS agents after installation.
 ```

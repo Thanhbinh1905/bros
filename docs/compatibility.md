@@ -5,10 +5,10 @@
 | Surface | Status | Notes |
 | --- | --- | --- |
 | OpenCode plugin runtime | Supported first target | Package exposes an OpenCode plugin entrypoint through `src/plugin.mjs`; assets are organized under `assets/opencode/`. |
-| OpenCode install path | Supported through OpenCode plugin installer | Use `opencode plugin bros-harness@latest` for first install, or `opencode plugin bros-harness@latest --force` when updating or repairing an existing install. Manual JSON edits are fallback only. |
+| OpenCode install/update path | Supported through package-runner CLI | Use `bunx bros-harness@latest install` for first install and `bunx bros-harness@latest update` for updates. The config entry is pinned to the current package version by default; `--channel latest` is opt-in. If direct `bunx` is unavailable, use `bunx --package bros-harness@latest bros install|update` or `npx --package bros-harness@latest bros install|update`. The older `opencode plugin bros-harness@<version> --force` path is fallback/troubleshooting only. Manual JSON edits are fallback only. |
 | OpenCode config mutation | Not supported by package runtime | Runtime uses an in-memory `config(cfg)` hook only; it does not write `opencode.json`, `.opencode/`, global config, providers, MCP, top-level permissions, telemetry, or secrets. Optional BROS permission profiles only adjust packaged BROS agent permissions after fail-closed validation. |
 | Node.js | Supported on Node `>=20` | The package `engines.node` field requires Node 20 or newer. CLI helpers use only built-in Node modules. |
-| Package managers | npm-compatible package publication | Release checks use `npm pack --dry-run`; package consumers should install through OpenCode's plugin installer rather than running repository dependency installs. |
+| Package managers | npm-compatible package publication | Release checks use `npm pack --dry-run`; package consumers should run the published package through `bunx` or `npx` rather than running repository dependency installs. |
 | Operating systems | Linux and macOS expected; Windows unverified | The runtime uses package-relative paths and Node APIs. Windows is not claimed as validated until a maintainer runs the same validation and OpenCode smoke checks there. |
 | Git workspaces | Git repository not required for package use | Package users can install from npm without a git checkout. Contributor validation assumes a source checkout rooted at this repository. |
 | Non-git workspaces | Supported for package use with caveats | OpenCode must be launched from the workspace whose project config receives the plugin entry, or the plugin should be installed globally. |
@@ -24,4 +24,4 @@ The `bros doctor`, `bros status`, `bros snippet`, `bros list-assets`, and `bros 
 
 ## Version Guidance
 
-Use `@latest --force` for normal updates, or the pinned version documented in `docs/installation.md` when cache, `latest` resolution, or an existing installed plugin version is suspect. Restart OpenCode after installation, upgrade, or plugin config changes because OpenCode loads plugin configuration at startup.
+Use `bunx bros-harness@latest update` for normal updates; it writes the current concrete package version into OpenCode config by default. Use `--channel latest` only when intentionally keeping the convenience selector. If stale OpenCode package cache persists after restart, preview `--refresh-cache --dry-run` and then use explicit scoped refresh only when approved. Use `opencode plugin bros-harness@<version> --force` only as a fallback/troubleshooting path after the package-runner path is unavailable or insufficient. Restart OpenCode after installation, upgrade, or plugin config changes because OpenCode loads plugin configuration at startup.

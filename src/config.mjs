@@ -304,13 +304,13 @@ function validateModelEntry(value, path, errors, options = {}) {
   if (value.fallback_models.length === 0) {
     errors.push(`${path}.fallback_models must not be empty`);
   }
-  const seenFallbacks = new Set();
+  const seenFallbacks = new Map();
   for (const [index, fallbackModel] of value.fallback_models.entries()) {
     const fallbackPath = `${path}.fallback_models[${index}]`;
     validateModelValue(fallbackModel, fallbackPath, errors);
     if (typeof fallbackModel !== "string") continue;
-    if (seenFallbacks.has(fallbackModel)) errors.push(`${path}.fallback_models contains duplicate model ${fallbackModel}`);
-    seenFallbacks.add(fallbackModel);
+    if (seenFallbacks.has(fallbackModel)) errors.push(`${fallbackPath} duplicates an earlier model entry`);
+    seenFallbacks.set(fallbackModel, index);
   }
 }
 
@@ -322,19 +322,21 @@ function validateFallbackModelList(value, path, errors) {
   if (value.length === 0) {
     errors.push(`${path} must not be empty`);
   }
-  const seenFallbacks = new Set();
+  const seenFallbacks = new Map();
   for (const [index, fallbackEntry] of value.entries()) {
     const entryPath = `${path}[${index}]`;
     validateModelEntry(fallbackEntry, entryPath, errors, { fallbackModelsAllowed: false, restrictedFallbackError: `${entryPath}.fallback_models is not supported in top-level fallback_models entries` });
+    let model;
     if (typeof fallbackEntry === "string") {
-      const model = fallbackEntry.trim();
-      if (seenFallbacks.has(model)) errors.push(`${path} contains duplicate model ${model}`);
-      seenFallbacks.add(model);
+      model = fallbackEntry.trim();
     } else if (isObject(fallbackEntry) && typeof fallbackEntry.model === "string") {
-      const model = fallbackEntry.model.trim();
-      if (seenFallbacks.has(model)) errors.push(`${path} contains duplicate model ${model}`);
-      seenFallbacks.add(model);
+      model = fallbackEntry.model.trim();
     }
+    if (model === undefined) continue;
+    if (seenFallbacks.has(model)) {
+      errors.push(`${entryPath} duplicates an earlier model entry`);
+    }
+    seenFallbacks.set(model, index);
   }
 }
 
@@ -399,12 +401,12 @@ function validatePermissionProfiles(value, path, errors) {
     errors.push(`${path}.enabled must be an array of profile names`);
   } else {
     const seen = new Set();
-    for (const profile of value.enabled) {
+    for (const [index, profile] of value.enabled.entries()) {
       if (!permissionProfileNames.includes(profile)) {
-        errors.push(`${path}.enabled contains unsupported profile ${JSON.stringify(profile)}; use one of ${permissionProfileNames.join(", ")}`);
+        errors.push(`${path}.enabled[${index}] is not a supported profile; use one of ${permissionProfileNames.join(", ")}`);
         continue;
       }
-      if (seen.has(profile)) errors.push(`${path}.enabled contains duplicate profile ${profile}`);
+      if (seen.has(profile)) errors.push(`${path}.enabled[${index}] duplicates an earlier profile`);
       seen.add(profile);
     }
     if (seen.has("trusted_ops") && value.hard_review !== true) {
@@ -654,8 +656,15 @@ export function resolveModelRouteForAgent(agentName, resolvedConfig, { allowFall
   }
 
   const canUseFallback = allowFallback && !fallbackRestrictedCategories.has(category);
-  if (canUseFallback && fallbackModel) {
-    return { agent: agentName, category, model: fallbackModel, source: "fallback_model" };
+  if (canUseFallback && primaryFallbackModel) {
+    return {
+      agent: agentName,
+      category,
+      model: primaryFallbackModel,
+      variant: primaryFallbackEntry?.variant,
+      source: "fallback_models",
+      fallback_count: globalFallbackModels.length,
+    };
   }
 
   return undefined;
