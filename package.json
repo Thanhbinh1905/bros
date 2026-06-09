@@ -1,6 +1,6 @@
 {
   "name": "bros-harness",
-  "version": "0.5.2",
+  "version": "0.6.7",
   "description": "Package-first OpenCode plugin for disciplined BROS agent harness assets.",
   "license": "MIT",
   "type": "module",
@@ -27,7 +27,9 @@
     "examples/",
     "scripts/validate-assets.mjs",
     "scripts/validate-workflow-regressions.mjs",
+    "scripts/validate-routing-scenarios.mjs",
     "scripts/fixtures/workflow-regression-scenarios.json",
+    "scripts/fixtures/routing-scenarios.json",
     "scripts/verify-install-update.mjs",
     "scripts/verify-plugin-smoke.mjs",
     "scripts/verify-package-contents.mjs",
@@ -39,9 +41,10 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "validate": "node scripts/validate-assets.mjs && node scripts/validate-workflow-regressions.mjs && node scripts/verify-install-update.mjs && node scripts/verify-plugin-smoke.mjs && node scripts/verify-no-secrets.mjs && node scripts/verify-package-contents.mjs",
+    "validate": "node scripts/validate-assets.mjs && node scripts/validate-workflow-regressions.mjs && node scripts/validate-routing-scenarios.mjs && node --test tests/config.test.mjs && node scripts/verify-install-update.mjs && node scripts/verify-plugin-smoke.mjs && node scripts/verify-no-secrets.mjs && node scripts/verify-package-contents.mjs",
+    "test": "node --test tests/config.test.mjs",
     "validate:assets": "node scripts/validate-assets.mjs",
-    "validate:workflows": "node scripts/validate-workflow-regressions.mjs",
+    "validate:workflows": "node scripts/validate-workflow-regressions.mjs && node scripts/validate-routing-scenarios.mjs",
     "verify:plugin-smoke": "node scripts/verify-plugin-smoke.mjs",
     "verify:install-update": "node scripts/verify-install-update.mjs",
     "verify:no-secrets": "node scripts/verify-no-secrets.mjs",
