@@ -1,5 +1,7 @@
 ## UI Implementation Packet: [UI-PACKET-ID] - [Title]
 
+packet_id: [UI-PACKET-ID]
+trace_id: [BROS-*]
 Status: complete | incomplete | blocked
 Produced by: UI Reviewer (`bro-ui`)
 Freshness: [date/session/task reference]

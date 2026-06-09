@@ -1,5 +1,8 @@
 # Test Strategy
 
+packet_id: [QA-PACKET-ID]
+trace_id: [BROS-*]
+
 ## Scope
 
 [Feature, release, or plan under test.]

@@ -1,5 +1,8 @@
 # Security Review
 
+packet_id: [SEC-PACKET-ID]
+trace_id: [BROS-*]
+
 ## Scope
 
 [System, feature, config, or release under review.]

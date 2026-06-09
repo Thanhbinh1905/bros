@@ -1,5 +1,9 @@
 ## Task: [TASK-ID] - [Title]
 
+packet_id: [TASK-ID or PACKET-ID]
+trace_id: [BROS-*]
+mode: INFO_ONLY | DOC_ONLY | READ_ONLY_REVIEW | SMALL_PATCH | FULL_BROS
+depth: quick | standard | deep | critical
 Assigned to: [formal owner label] ([technical role-agent-name, e.g., `bro-build`])
 Phase: [phase number]
 Priority: P0 | P1 | P2
@@ -45,6 +49,19 @@ Paths and constraints:
 
 - [Explicit scoped rationale for each required packet that is missing, or `none`]
 - [Trusted source replacing waived packet, if any]
+
+### Minimum Viable Packet Eligibility
+
+- Eligible modes: `DOC_ONLY`, `SMALL_PATCH`, or other low-risk scoped work.
+- Required fields: `packet_id`, `trace_id`, `owner`, `mode`, `depth`, `scope`, `files_or_areas`, `acceptance_criteria`, `allowed_command_classes`, `approval_packages`, and `stop_conditions`.
+- Not eligible for: `FULL_BROS`, security-sensitive work, UI implementation, production/release/ops, architecture-affecting changes, or reviewer conflict.
+
+### Conflict and Waiver Trace
+
+- Waiver ID: [WAIVER-* or none]
+- Waiver owner: [human or responsible role]
+- Risk accepted: [specific risk, or none]
+- Not valid for: CRITICAL security findings, secret exposure, production mutation without production approval, protected branch mutation, publish, or credential validation.
 
 ### Trusted / Untrusted Separation Check
 

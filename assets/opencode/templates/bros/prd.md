@@ -1,5 +1,8 @@
 # Product Requirements Document
 
+packet_id: [PRD-PACKET-ID]
+trace_id: [BROS-*]
+
 ## Overview
 
 [Short description of the product capability and user value.]
