@@ -4,6 +4,7 @@
 assets/opencode/        Curated OpenCode assets
 bin/                    Executable CLI shim
 docs/                   User and maintainer documentation
+docs/instruction-system/ Instruction routing, canonical-source, packet-schema, safety, retrieval, and migration references
 examples/opencode/      Placeholder-only OpenCode examples
 packages/adapter-sdk/   Future adapter interfaces
 packages/cli/           CLI TypeScript source skeleton

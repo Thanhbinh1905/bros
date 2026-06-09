@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.7 - 2026-06-09
+
+- Added tiered governance, named fast path modes, depth-aware routing profiles, expanded capability categories, expiry-bound approval packages, and normalized packet/trace guidance.
+- Added deterministic routing scenario validation and extended plugin smoke coverage for routing profile precedence and approval package hard-deny preservation.
+- Updated configuration schema, examples, public docs, templates, and topology inventory for the enhanced BROS control-plane topology.
+- Removed the release-blocking `bro-build` broad Bash wildcard allow by switching unmatched Bash to ask-gated fallback and explicit local validation/build/test allowlists.
+- Fixed approval-package startup logging so approval-package events report package expiry metadata instead of undefined permission-profile fields.
+- Updated package metadata for local `0.6.7` release preparation without running release commands, tagging, publishing, committing, or pushing.
+
 ## 0.5.2 - 2026-06-04
 
 - Made package update behavior cache-aware while defaulting installed plugin references to a pinned package version.

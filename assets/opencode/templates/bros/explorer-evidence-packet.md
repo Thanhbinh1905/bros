@@ -1,5 +1,7 @@
 ## Explorer Evidence Packet: [EXP-PACKET-ID] - [Title]
 
+packet_id: [EXP-PACKET-ID]
+trace_id: [BROS-*]
 Status: complete | incomplete | blocked
 Produced by: Research Reviewer (`bro-explore`)
 Produced at: [ISO date/time or date]

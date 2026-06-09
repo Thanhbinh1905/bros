@@ -5,19 +5,175 @@ import { join, resolve } from "node:path";
 const configFileName = "bros.config.json";
 const globalConfigPath = join(homedir(), ".config", "opencode", configFileName);
 
-export const routingCategories = Object.freeze([
-  "planner",
-  "explorer_search",
-  "coder_build",
-  "security",
-  "qa_review",
-  "docs",
-  "architecture",
-  "ui",
-  "ops",
-]);
+function freezeCategoryRegistry(registry) {
+  return Object.freeze(Object.fromEntries(
+    Object.entries(registry).map(([name, definition]) => [name, Object.freeze({
+      ...definition,
+      capabilities: Object.freeze([...(definition.capabilities ?? [])]),
+      defaultAgents: Object.freeze([...(definition.defaultAgents ?? [])]),
+    })]),
+  ));
+}
 
-const categoryAliases = Object.freeze({
+export const routingCategoryRegistry = freezeCategoryRegistry({
+  planner: {
+    title: "Planning and orchestration",
+    description: "Classifies work, preserves governance gates, and coordinates BROS task packets before implementation or review.",
+    workflowResponsibility: "Owns intake, routing records, packet completeness, phase gates, and final stop-condition handoff.",
+    capabilities: ["intake", "classification", "packet-governance", "gate-coordination"],
+    defaultAgents: ["mighty-bro"],
+    restrictedFallback: false,
+    permissionAuthority: false,
+  },
+  explorer_search: {
+    title: "Evidence discovery",
+    description: "Collects repository, documentation, and external evidence before planning or implementation decisions.",
+    workflowResponsibility: "Produces cited Explorer Evidence Packets and records limitations, freshness, provenance, and redaction posture.",
+    capabilities: ["repo-evidence", "documentation-lookup", "source-citation", "freshness-checking"],
+    defaultAgents: ["bro-explore"],
+    restrictedFallback: false,
+    permissionAuthority: false,
+  },
+  coder_build: {
+    title: "Scoped implementation",
+    description: "Applies approved code, config, tests, and documentation-adjacent changes within an implementation packet.",
+    workflowResponsibility: "Implements the smallest approved change, preserves existing abstractions, and reports verification without approving QA or security.",
+    capabilities: ["implementation", "refactor", "local-validation", "change-trace"],
+    defaultAgents: ["bro-build"],
+    restrictedFallback: true,
+    permissionAuthority: false,
+  },
+  security: {
+    title: "Security review",
+    description: "Reviews sensitive changes, permission boundaries, secret handling, and authorization-risk surfaces.",
+    workflowResponsibility: "Blocks or approves security-sensitive work through review findings; category metadata itself never grants authority.",
+    capabilities: ["security-review", "secret-hygiene", "permission-boundary-review", "risk-blockers"],
+    defaultAgents: ["bro-shield"],
+    restrictedFallback: true,
+    permissionAuthority: false,
+  },
+  qa_review: {
+    title: "Quality assurance",
+    description: "Validates tests, acceptance criteria, regressions, and implementation completeness.",
+    workflowResponsibility: "Runs or reviews verification evidence and decides QA readiness separately from implementation.",
+    capabilities: ["test-review", "acceptance-validation", "regression-checking", "qa-gate"],
+    defaultAgents: ["bro-test"],
+    restrictedFallback: true,
+    permissionAuthority: false,
+  },
+  docs: {
+    title: "Documentation",
+    description: "Produces or updates public, operator, migration, and handoff documentation.",
+    workflowResponsibility: "Maintains neutral project documentation and records restart, migration, and operational caveats.",
+    capabilities: ["public-docs", "operator-docs", "migration-notes", "handoff-writing"],
+    defaultAgents: ["bro-docs"],
+    restrictedFallback: false,
+    permissionAuthority: false,
+  },
+  architecture: {
+    title: "Architecture and design constraints",
+    description: "Defines architectural boundaries, invariants, data/control flow, and system-level tradeoffs.",
+    workflowResponsibility: "Supplies or reviews design constraints before implementation changes that affect structure or cross-cutting behavior.",
+    capabilities: ["architecture-review", "boundary-definition", "invariant-design", "tradeoff-analysis"],
+    defaultAgents: ["bro-design"],
+    restrictedFallback: false,
+    permissionAuthority: false,
+  },
+  ui: {
+    title: "User interface implementation",
+    description: "Handles UI implementation packets, frontend behavior, accessibility, and visual interaction constraints.",
+    workflowResponsibility: "Requires fresh UI implementation context or an explicit waiver before UI-affecting implementation proceeds.",
+    capabilities: ["ui-implementation", "frontend-behavior", "accessibility", "visual-state"],
+    defaultAgents: ["bro-ui"],
+    restrictedFallback: false,
+    permissionAuthority: false,
+  },
+  ops: {
+    title: "Operations and release readiness",
+    description: "Coordinates deployment, release, packaging, runtime, and operational safety gates.",
+    workflowResponsibility: "Keeps release/deploy/production actions ask-gated and separates readiness review from implementation.",
+    capabilities: ["ops-readiness", "release-gating", "deployment-review", "runtime-safety"],
+    defaultAgents: ["bro-ops"],
+    restrictedFallback: true,
+    permissionAuthority: false,
+  },
+  vision_engineering: {
+    title: "Vision and media engineering",
+    description: "Routes image, video, visual inspection, and media-generation engineering work.",
+    workflowResponsibility: "Marks vision/media work for specialized evidence and implementation context when present.",
+    capabilities: ["vision", "media", "visual-inspection", "asset-generation"],
+    defaultAgents: ["bro-explore", "bro-build"],
+    restrictedFallback: false,
+    permissionAuthority: false,
+  },
+  agent_harness: {
+    title: "Agent harness engineering",
+    description: "Routes agent, tool, prompt, command, skill, plugin, and harness-control-plane changes.",
+    workflowResponsibility: "Requires evidence-backed harness changes that preserve role boundaries, native OpenCode semantics, and gates.",
+    capabilities: ["agent-design", "tool-contracts", "plugin-config", "harness-governance"],
+    defaultAgents: ["bro-explore", "bro-design", "bro-build", "bro-test"],
+    restrictedFallback: false,
+    permissionAuthority: false,
+  },
+  git_ops: {
+    title: "Git operations",
+    description: "Routes branch, staging, commit, push, PR, and repository history operations.",
+    workflowResponsibility: "Requires explicit Git Approval Packets and protected-branch/force-push safeguards before mutation.",
+    capabilities: ["git-inspection", "branch-work", "commit-gates", "pr-gates"],
+    defaultAgents: ["bro-ops", "bro-build"],
+    restrictedFallback: true,
+    permissionAuthority: false,
+  },
+  package_ops: {
+    title: "Package operations",
+    description: "Routes package validation, dependency, dry-run, and publish-adjacent workflows.",
+    workflowResponsibility: "Allows package dry-run validation while keeping dependency install and publish/release actions separately approved.",
+    capabilities: ["package-validation", "dependency-change-review", "publish-gating", "dry-run"],
+    defaultAgents: ["bro-ops", "bro-shield", "bro-test"],
+    restrictedFallback: true,
+    permissionAuthority: false,
+  },
+  local_runtime: {
+    title: "Local runtime verification",
+    description: "Routes local server, smoke, CLI, and developer-machine runtime checks.",
+    workflowResponsibility: "Keeps runtime checks local, non-production, and bounded to approved commands and surfaces.",
+    capabilities: ["local-smoke", "cli-validation", "runtime-diagnostics", "non-production-checks"],
+    defaultAgents: ["bro-build", "bro-test"],
+    restrictedFallback: false,
+    permissionAuthority: false,
+  },
+  release_ops: {
+    title: "Release operations",
+    description: "Routes release, changelog, version, artifact, and deployment-readiness work.",
+    workflowResponsibility: "Requires release approval and keeps publish/deploy actions blocked until explicit gates pass.",
+    capabilities: ["release-review", "artifact-checks", "changelog-review", "publish-gating"],
+    defaultAgents: ["bro-ops", "bro-shield", "bro-test"],
+    restrictedFallback: true,
+    permissionAuthority: false,
+  },
+  deep_review: {
+    title: "Deep adversarial review",
+    description: "Routes high-risk, multi-agent, conflict, production, or critical-depth review workflows.",
+    workflowResponsibility: "Escalates to full governance, independent review, and conflict-resolution gates when shallow checks are insufficient.",
+    capabilities: ["adversarial-review", "critical-depth", "conflict-resolution", "multi-agent-audit"],
+    defaultAgents: ["mighty-bro", "bro-test", "bro-shield"],
+    restrictedFallback: true,
+    permissionAuthority: false,
+  },
+  quick_patch: {
+    title: "Small safe patch",
+    description: "Routes narrow local changes that fit bounded implementation and verification without full orchestration.",
+    workflowResponsibility: "Limits small-patch work to safe local scope and escalates when packet, security, UI, or ops triggers appear.",
+    capabilities: ["small-patch", "bounded-validation", "local-fix", "escalation-triggering"],
+    defaultAgents: ["bro-build", "bro-test"],
+    restrictedFallback: false,
+    permissionAuthority: false,
+  },
+});
+
+export const routingCategories = Object.freeze(Object.keys(routingCategoryRegistry));
+
+export const categoryAliases = Object.freeze({
   explorer: "explorer_search",
   "explorer/search": "explorer_search",
   search: "explorer_search",
@@ -31,7 +187,7 @@ const categoryAliases = Object.freeze({
   reviewer: "qa_review",
 });
 
-const agentCategories = Object.freeze({
+export const agentCategories = Object.freeze({
   "mighty-bro": "planner",
   "bro-explore": "explorer_search",
   "bro-build": "coder_build",
@@ -43,10 +199,25 @@ const agentCategories = Object.freeze({
   "bro-ops": "ops",
 });
 
-const fallbackRestrictedCategories = new Set(["coder_build", "security", "qa_review", "ops"]);
+const fallbackRestrictedCategories = new Set(
+  Object.entries(routingCategoryRegistry)
+    .filter(([, definition]) => definition.restrictedFallback === true)
+    .map(([category]) => category),
+);
 export const permissionProfileNames = Object.freeze(["readonly", "review_safe", "build_limited", "trusted_ops"]);
+export const routingProfileNames = Object.freeze(["quick", "standard", "deep", "critical"]);
+export const approvalPackageNames = Object.freeze([
+  "git_read",
+  "git_branch_work",
+  "git_pr_work",
+  "npm_local_dev",
+  "npm_dependency_change",
+  "ssh_readonly_known_host",
+  "docker_local",
+  "release_dry_run",
+]);
 
-const allowedTopLevelKeys = new Set(["$schema", "fallback_models", "categories", "agents", "permission_profiles"]);
+const allowedTopLevelKeys = new Set(["$schema", "fallback_models", "categories", "agents", "routing_profiles", "permission_profiles", "approval_packages"]);
 const removedTopLevelKeys = new Set(["model_routing", "fallback_model"]);
 const ignoredOpenCodePluginInputKeys = new Set(["client", "project", "directory", "$"]);
 const sensitiveValuePattern = /(?:api[_-]?key|authorization|bearer|token|secret|password|credential|private[_-]?key|_auth|sk-[A-Za-z0-9]{20,})/i;
@@ -238,6 +409,79 @@ const permissionProfileRules = Object.freeze({
   },
 });
 
+const approvalPackagePresets = Object.freeze({
+  git_read: {
+    agents: ["bro-build", "bro-ops", "bro-test"],
+    bash: {
+      "git status*": "allow",
+      "git diff*": "allow",
+      "git log*": "allow",
+      "git show*": "allow",
+      "git branch --show-current": "allow",
+      "git remote -v": "allow",
+    },
+  },
+  git_branch_work: {
+    agents: ["bro-build", "bro-ops"],
+    bash: {
+      "git switch -c *": "ask",
+      "git checkout -b *": "ask",
+      "git add *": "ask",
+      "git commit -m *": "ask",
+    },
+  },
+  git_pr_work: {
+    agents: ["bro-build", "bro-ops"],
+    bash: {
+      "git push -u origin *": "ask",
+      "gh pr create*": "ask",
+      "gh pr view *": "allow",
+      "gh pr status*": "allow",
+    },
+  },
+  npm_local_dev: {
+    agents: ["bro-build", "bro-test", "bro-ops"],
+    bash: {
+      "npm run *": "allow",
+      "npm test": "allow",
+      "npm pack --dry-run": "allow",
+    },
+  },
+  npm_dependency_change: {
+    agents: ["bro-build"],
+    bash: {
+      "npm install*": "ask",
+      "npm update*": "ask",
+      "npm dedupe*": "ask",
+    },
+  },
+  ssh_readonly_known_host: {
+    agents: ["bro-ops"],
+    bash: {
+      "ssh *": "ask",
+    },
+  },
+  docker_local: {
+    agents: ["bro-build", "bro-test", "bro-ops"],
+    bash: {
+      "docker compose config*": "allow",
+      "docker compose ps*": "allow",
+      "docker compose logs*": "allow",
+      "docker compose up*": "ask",
+      "docker compose down*": "ask",
+      "docker compose build*": "ask",
+    },
+  },
+  release_dry_run: {
+    agents: ["bro-build", "bro-test", "bro-shield", "bro-ops"],
+    bash: {
+      "npm pack --dry-run": "allow",
+      "npm run verify:package": "allow",
+      "npm run verify:no-secrets": "allow",
+    },
+  },
+});
+
 function isObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
@@ -379,6 +623,23 @@ function validateCategoriesMap(map, path, errors) {
   });
 }
 
+function validateRoutingProfilesMap(map, path, errors) {
+  if (!isObject(map)) {
+    errors.push(`${path} must be an object`);
+    return;
+  }
+
+  for (const [depth, profile] of Object.entries(map)) {
+    if (!routingProfileNames.includes(depth)) {
+      errors.push(`${path}.${depth} is not supported; use one of ${routingProfileNames.join(", ")}`);
+      continue;
+    }
+    validateModelMap(profile, `${path}.${depth}`, [...routingCategories, ...Object.keys(categoryAliases)], errors, {
+      categoryForKey: (_rawCategory, normalizedCategory) => normalizedCategory,
+    });
+  }
+}
+
 function validateAgentsMap(map, path, errors) {
   validateModelMap(map, path, Object.keys(agentCategories), errors, {
     normalizeKeys: false,
@@ -437,6 +698,63 @@ function validatePermissionProfiles(value, path, errors) {
   }
 }
 
+function validateApprovalPackages(value, path, errors) {
+  if (!Array.isArray(value)) {
+    errors.push(`${path} must be an array of approval package entries`);
+    return;
+  }
+
+  const seen = new Set();
+  for (const [index, entry] of value.entries()) {
+    const entryPath = `${path}[${index}]`;
+    if (!isObject(entry)) {
+      errors.push(`${entryPath} must be an object`);
+      continue;
+    }
+    const allowedKeys = new Set(["package_id", "trace_id", "scope", "expires", "agents", "files", "reason"]);
+    for (const key of Object.keys(entry)) {
+      if (!allowedKeys.has(key)) errors.push(`${entryPath}.${key} is not supported`);
+    }
+    if (!approvalPackageNames.includes(entry.package_id)) {
+      errors.push(`${entryPath}.package_id is not supported; use one of ${approvalPackageNames.join(", ")}`);
+    } else if (seen.has(entry.package_id)) {
+      errors.push(`${entryPath}.package_id duplicates an earlier package`);
+    } else {
+      seen.add(entry.package_id);
+    }
+    if (typeof entry.trace_id !== "string" || !/^BROS-[A-Za-z0-9._-]+$/.test(entry.trace_id)) {
+      errors.push(`${entryPath}.trace_id must be a BROS-* trace id`);
+    }
+    if (entry.scope !== "repo") errors.push(`${entryPath}.scope must be "repo"`);
+    if (entry.expires !== "session" && (typeof entry.expires !== "string" || Number.isNaN(Date.parse(entry.expires)))) {
+      errors.push(`${entryPath}.expires must be "session" or an ISO timestamp string`);
+    } else if (entry.expires !== "session" && Date.parse(entry.expires) <= Date.now()) {
+      errors.push(`${entryPath}.expires must be in the future when an ISO timestamp is used`);
+    }
+    if (!Array.isArray(entry.agents) || entry.agents.length === 0) {
+      errors.push(`${entryPath}.agents must be a non-empty array of owner agent names`);
+    } else {
+      for (const [agentIndex, agentName] of entry.agents.entries()) {
+        if (!Object.hasOwn(agentCategories, agentName)) errors.push(`${entryPath}.agents[${agentIndex}] is not a supported BROS agent`);
+      }
+    }
+    if (!Array.isArray(entry.files) || entry.files.length === 0) {
+      errors.push(`${entryPath}.files must be a non-empty array of audit-only file globs`);
+    } else {
+      for (const [fileIndex, filePattern] of entry.files.entries()) {
+        if (typeof filePattern !== "string" || filePattern.trim() === "" || sensitiveValuePattern.test(filePattern)) {
+          errors.push(`${entryPath}.files[${fileIndex}] must be a non-empty non-sensitive file glob`);
+        }
+      }
+    }
+    if (typeof entry.reason !== "string" || entry.reason.trim().length < 8) {
+      errors.push(`${entryPath}.reason must be a single-line approval reason of at least 8 characters`);
+    } else if (sensitiveValuePattern.test(entry.reason) || /\r|\n/.test(entry.reason)) {
+      errors.push(`${entryPath}.reason must not contain secret-like material or newlines`);
+    }
+  }
+}
+
 export function validateBrosConfig(config, source = "BROS config") {
   const errors = [];
   if (config === undefined) return errors;
@@ -444,7 +762,7 @@ export function validateBrosConfig(config, source = "BROS config") {
 
   for (const key of Object.keys(config)) {
     if (!allowedTopLevelKeys.has(key)) {
-      errors.push(`${source}.${key} is not supported; allowed keys are $schema, fallback_models, categories, agents, permission_profiles`);
+      errors.push(`${source}.${key} is not supported; allowed keys are $schema, fallback_models, categories, agents, routing_profiles, permission_profiles, approval_packages`);
     }
   }
 
@@ -464,8 +782,16 @@ export function validateBrosConfig(config, source = "BROS config") {
     validateCategoriesMap(config.categories, `${source}.categories`, errors);
   }
 
+  if ("routing_profiles" in config) {
+    validateRoutingProfilesMap(config.routing_profiles, `${source}.routing_profiles`, errors);
+  }
+
   if ("agents" in config) {
     validateAgentsMap(config.agents, `${source}.agents`, errors);
+  }
+
+  if ("approval_packages" in config) {
+    validateApprovalPackages(config.approval_packages, `${source}.approval_packages`, errors);
   }
 
   return errors;
@@ -494,6 +820,29 @@ function normalizeModelMap(modelMap = {}, { normalizeKeys = true } = {}) {
   return { normalized, warnings };
 }
 
+function normalizeRoutingProfiles(profiles = {}) {
+  const normalized = {};
+  const warnings = [];
+  for (const [depth, profile] of Object.entries(profiles)) {
+    const result = normalizeModelMap(profile ?? {});
+    normalized[depth] = result.normalized;
+    warnings.push(...result.warnings.map((warning) => `routing_profiles.${depth}: ${warning}`));
+  }
+  return { normalized, warnings };
+}
+
+function normalizeApprovalPackages(packages = []) {
+  return packages.map((entry) => ({
+    package_id: entry.package_id,
+    trace_id: entry.trace_id.trim(),
+    scope: entry.scope,
+    expires: entry.expires,
+    agents: [...entry.agents],
+    files: entry.files.map((filePattern) => filePattern.trim()),
+    reason: entry.reason.trim(),
+  }));
+}
+
 function mergeConfig(base, override) {
   const next = {
     ...base,
@@ -506,11 +855,18 @@ function mergeConfig(base, override) {
       ...(base.agents ?? {}),
       ...(override.agents ?? {}),
     },
+    routing_profiles: {
+      ...(base.routing_profiles ?? {}),
+      ...(override.routing_profiles ?? {}),
+    },
     permission_profiles: override.permission_profiles ?? base.permission_profiles,
+    approval_packages: override.approval_packages ?? base.approval_packages,
   };
   if (!base.categories && !override.categories) delete next.categories;
   if (!base.agents && !override.agents) delete next.agents;
+  if (!base.routing_profiles && !override.routing_profiles) delete next.routing_profiles;
   if (!base.permission_profiles && !override.permission_profiles) delete next.permission_profiles;
+  if (!base.approval_packages && !override.approval_packages) delete next.approval_packages;
   return next;
 }
 
@@ -576,6 +932,7 @@ export function resolveBrosConfig(sources = []) {
 
   const fallbackModels = normalizeFallbackModelList(resolved.fallback_models ?? []);
   const { normalized: categories, warnings: categoryWarnings } = normalizeModelMap(resolved.categories ?? {});
+  const { normalized: routingProfiles, warnings: routingProfileWarnings } = normalizeRoutingProfiles(resolved.routing_profiles ?? {});
   for (const rawKey of Object.keys(resolved.categories ?? {})) {
     const normalizedKey = normalizeCategory(rawKey);
     if (rawKey !== normalizedKey && categories[normalizedKey] && !Object.hasOwn(categories, rawKey)) {
@@ -586,7 +943,10 @@ export function resolveBrosConfig(sources = []) {
     }
   }
   const { normalized: agentRouting } = normalizeModelMap(resolved.agents ?? {}, { normalizeKeys: false });
-  warnings.push(...categoryWarnings);
+  warnings.push(...categoryWarnings, ...routingProfileWarnings);
+  if (Object.keys(routingProfiles).length > 0) {
+    warnings.push("routing_profiles are validated resolver inputs; default OpenCode plugin startup does not infer per-message workflow depth, so use agents or base categories for startup model propagation unless a caller passes an explicit depth");
+  }
   const permissionProfiles = resolved.permission_profiles
     ? {
         enabled: [...resolved.permission_profiles.enabled],
@@ -596,6 +956,7 @@ export function resolveBrosConfig(sources = []) {
         hard_review: resolved.permission_profiles.hard_review === true,
       }
     : undefined;
+  const approvalPackages = normalizeApprovalPackages(resolved.approval_packages ?? []);
   if (fallbackModels.length > 0) {
     for (const category of fallbackRestrictedCategories) {
       if (!categories[category]) {
@@ -610,8 +971,10 @@ export function resolveBrosConfig(sources = []) {
     warnings,
     fallbackModels,
     categories,
+    routingProfiles,
     agents: agentRouting,
     permissionProfiles,
+    approvalPackages,
   };
 }
 
@@ -619,12 +982,12 @@ export async function loadResolvedBrosConfig(options = {}) {
   return resolveBrosConfig(await loadBrosConfigSources(options));
 }
 
-export function resolveModelRouteForAgent(agentName, resolvedConfig, { allowFallback = true } = {}) {
+export function resolveModelRouteForAgent(agentName, resolvedConfig, { allowFallback = true, depth } = {}) {
   const category = agentCategories[agentName];
   if (!category) return undefined;
 
-  const routing = resolvedConfig?.modelRouting ?? {};
   const categoryRouting = resolvedConfig?.categories ?? {};
+  const depthRouting = depth ? resolvedConfig?.routingProfiles?.[depth] ?? {} : {};
   const agentRouting = resolvedConfig?.agents ?? {};
   const globalFallbackModels = resolvedConfig?.fallbackModels ?? [];
   const primaryFallbackEntry = globalFallbackModels[0];
@@ -635,12 +998,12 @@ export function resolveModelRouteForAgent(agentName, resolvedConfig, { allowFall
   if (agentRouting[agentName]) {
     route = agentRouting[agentName];
     source = "agents";
+  } else if (depthRouting[category]) {
+    route = depthRouting[category];
+    source = `routing_profiles.${depth}`;
   } else if (categoryRouting[category]) {
     route = categoryRouting[category];
     source = "categories";
-  } else if (routing[category]) {
-    route = routing[category];
-    source = "model_routing";
   }
 
   const explicitModel = typeof route === "string" ? route : route?.model;
@@ -670,12 +1033,12 @@ export function resolveModelRouteForAgent(agentName, resolvedConfig, { allowFall
   return undefined;
 }
 
-export function applyModelRoutingToAgents(agents, resolvedConfig) {
+export function applyModelRoutingToAgents(agents, resolvedConfig, options = {}) {
   const routedAgents = {};
   const events = [];
 
   for (const [agentName, agent] of Object.entries(agents)) {
-    const route = resolveModelRouteForAgent(agentName, resolvedConfig);
+    const route = resolveModelRouteForAgent(agentName, resolvedConfig, options);
     const selectedModel = route?.model ?? agent.model;
     const finalAgent = selectedModel ? { ...agent, model: selectedModel } : { ...agent };
     if (route?.variant && !finalAgent.variant) finalAgent.variant = route.variant;
@@ -687,6 +1050,12 @@ export function applyModelRoutingToAgents(agents, resolvedConfig) {
   }
 
   return { agents: routedAgents, events };
+}
+
+function packagePermissionForAgent(agentName, packageEntry) {
+  const preset = approvalPackagePresets[packageEntry.package_id];
+  if (!preset || !preset.agents.includes(agentName) || !packageEntry.agents.includes(agentName)) return undefined;
+  return { bash: preset.bash };
 }
 
 function mergePermission(basePermission = {}, profilePermission = {}) {
@@ -713,7 +1082,8 @@ function mergePermission(basePermission = {}, profilePermission = {}) {
 
 export function applyPermissionProfilesToAgents(agents, resolvedConfig) {
   const activeProfiles = resolvedConfig?.permissionProfiles?.enabled ?? [];
-  if (activeProfiles.length === 0) return { agents, events: [] };
+  const activePackages = resolvedConfig?.approvalPackages ?? [];
+  if (activeProfiles.length === 0 && activePackages.length === 0) return { agents, events: [] };
 
   const profiledAgents = Object.fromEntries(
     Object.entries(agents).map(([name, agent]) => [name, { ...agent, permission: { ...(agent.permission ?? {}) } }]),
@@ -739,6 +1109,26 @@ export function applyPermissionProfilesToAgents(agents, resolvedConfig) {
     }
   }
 
+  for (const packageEntry of activePackages) {
+    for (const agentName of packageEntry.agents) {
+      const packagePermission = packagePermissionForAgent(agentName, packageEntry);
+      if (!profiledAgents[agentName] || !packagePermission) continue;
+      profiledAgents[agentName] = {
+        ...profiledAgents[agentName],
+        permission: mergePermission(profiledAgents[agentName].permission, packagePermission),
+      };
+      events.push({
+        agent: agentName,
+        approval_package: packageEntry.package_id,
+        trace_id: packageEntry.trace_id,
+        scope: packageEntry.scope,
+        expires: packageEntry.expires,
+        files: packageEntry.files,
+        reason: packageEntry.reason,
+      });
+    }
+  }
+
   return { agents: profiledAgents, events };
 }
 
@@ -747,9 +1137,14 @@ export const brosConfigDefaults = Object.freeze({
   globalConfigPath,
   repoConfigPath: `./${configFileName}`,
   categories: routingCategories,
+  categoryRegistry: routingCategoryRegistry,
+  categoryAliases,
+  agentCategories,
   modelEntryShape: "string or object with model, optional variant, and optional fallback_models array",
   modelEntryAliases: Object.keys(categoryAliases),
   agentNames: Object.keys(agentCategories),
+  routingProfiles: routingProfileNames,
+  approvalPackages: approvalPackageNames,
   restrictedCategoryMessage: `fallback_models is not allowed for restricted category <category>; restricted categories are ${restrictedCategoryList}`,
   fallbackRestrictedCategories: [...fallbackRestrictedCategories],
   permissionProfiles: permissionProfileNames,

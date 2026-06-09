@@ -29,6 +29,26 @@ export const brosHarness = Object.freeze({
   templatesDir: join(assetRoot, "templates")
 });
 
+export async function loadBrosHarnessPackageInfo() {
+  const packageJson = JSON.parse(await readFile(join(packageRoot, "package.json"), "utf8"));
+  return {
+    name: packageJson.name ?? brosHarness.name,
+    version: packageJson.version ?? "unknown",
+  };
+}
+
+export function formatBrosHarnessPackageSpec(packageInfo) {
+  return `${packageInfo.name}@${packageInfo.version}`;
+}
+
+export function formatBrosHarnessLoadedVersion(packageInfo) {
+  return `loaded ${formatBrosHarnessPackageSpec(packageInfo)}`;
+}
+
+export function formatBrosHarnessOfflineUpdateNotice(packageInfo) {
+  return `Update check: offline/local only for ${formatBrosHarnessPackageSpec(packageInfo)}; no registry query was performed. Run bunx ${packageInfo.name}@latest update when you want OpenCode config refreshed to the newest package available to your package runner.`;
+}
+
 const requiredAssetDirs = [
   brosHarness.agentsDir,
   brosHarness.commandsDir,
@@ -227,8 +247,72 @@ function mergeAgents(cfg, agents, resolvedConfig) {
   }
 }
 
+function formatPermissionEvent(event) {
+  if (event.profile) {
+    const reasonPresent = typeof event.reason === "string" && event.reason.trim().length > 0;
+    return `permission profile applied: ${event.agent} uses ${event.profile} within ${event.scope} scope until ${event.expires_at}; reason_present: ${reasonPresent}`;
+  }
+
+  if (event.approval_package) {
+    const fileCount = Array.isArray(event.files) ? event.files.length : 0;
+    const filesPresent = fileCount > 0;
+    const reasonPresent = typeof event.reason === "string" && event.reason.trim().length > 0;
+    return `approval package applied: ${event.agent} uses ${event.approval_package} within ${event.scope} scope until ${event.expires}; trace: ${event.trace_id}; files: ${fileCount} audit entries; files_present: ${filesPresent}; reason_present: ${reasonPresent}`;
+  }
+
+  return `permission change applied: ${event.agent ?? "unknown agent"}`;
+}
+
+const fallbackRestrictionWarningPattern = /^fallback_models will not be applied to ([^;]+); set categories\.\1 explicitly to change that category$/;
+
+export function formatBrosHarnessConfigWarningMessages(warnings) {
+  const fallbackRestrictedCategories = [];
+  const otherWarnings = [];
+  const seenWarnings = new Set();
+
+  for (const warning of warnings) {
+    if (seenWarnings.has(warning)) continue;
+    seenWarnings.add(warning);
+
+    const fallbackMatch = warning.match(fallbackRestrictionWarningPattern);
+    if (fallbackMatch) {
+      fallbackRestrictedCategories.push(fallbackMatch[1]);
+      continue;
+    }
+
+    otherWarnings.push(warning);
+  }
+
+  if (fallbackRestrictedCategories.length > 0) {
+    otherWarnings.push(`fallback_models not applied to restricted categories: ${fallbackRestrictedCategories.join(", ")}; set explicit categories.<category> or agents routes to change restricted startup routing`);
+  }
+
+  return otherWarnings;
+}
+
+function formatRoutingEventMessages(events) {
+  const eventsBySource = new Map();
+  for (const event of events) {
+    const sourceEvents = eventsBySource.get(event.source) ?? [];
+    sourceEvents.push(event);
+    eventsBySource.set(event.source, sourceEvents);
+  }
+
+  return [...eventsBySource.entries()].map(([source, sourceEvents]) => {
+    const routes = sourceEvents
+      .map((event) => `${event.agent} (${event.category})`)
+      .join(", ");
+    return `routing applied: ${sourceEvents.length} agent(s) via ${source}: ${routes}`;
+  });
+}
+
+function shouldLogConfigMessages(options) {
+  return options.configLogging !== false && options.configLogLevel !== "silent";
+}
+
 export async function brosHarnessServer(input = {}, options = {}) {
   await verifyBrosHarnessAssets();
+  const packageInfo = await loadBrosHarnessPackageInfo();
   const baseAgents = await loadPackagedAgents();
   const commands = await loadPackagedCommands();
   const resolvedConfig = await loadResolvedBrosConfig({
@@ -243,16 +327,19 @@ export async function brosHarnessServer(input = {}, options = {}) {
   const profiled = applyPermissionProfilesToAgents(routed.agents, resolvedConfig);
   const agents = profiled.agents;
   const routingMessages = [
-    ...resolvedConfig.warnings,
-    ...routed.events.map((event) => `routing applied: ${event.agent} (${event.category}) uses ${event.source}`),
-    ...profiled.events.map((event) => `permission profile applied: ${event.agent} uses ${event.profile} within ${event.scope} scope until ${event.expires_at}; reason: ${event.reason}`),
+    formatBrosHarnessLoadedVersion(packageInfo),
+    ...formatBrosHarnessConfigWarningMessages(resolvedConfig.warnings),
+    ...formatRoutingEventMessages(routed.events),
+    ...profiled.events.map((event) => formatPermissionEvent(event)),
   ];
 
   return {
     config(cfg) {
       const forbiddenConfigBefore = snapshotForbiddenConfig(cfg);
-      for (const message of routingMessages) {
-        console.warn(`BROS Harness config: ${message}`);
+      if (shouldLogConfigMessages(options)) {
+        for (const message of routingMessages) {
+          console.warn(`BROS Harness config: ${message}`);
+        }
       }
       mergeSkillsPath(cfg);
       mergeAgents(cfg, agents, resolvedConfig);

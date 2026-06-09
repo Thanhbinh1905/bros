@@ -1,5 +1,8 @@
 # BROS Status Board
 
+packet_id: [STATUS-PACKET-ID]
+trace_id: [BROS-*]
+
 | Phase | Status | Owner | Deliverable | Gate |
 |---|---|---|---|---|
 | 0 | queued | Orchestrator (`mighty-bro`) | Intake brief, assumptions, classification | pending |

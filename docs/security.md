@@ -8,13 +8,15 @@ This repository intentionally avoids raw provider configuration and secret valid
 - No dependency install, publish, deploy, or production access in the initial build.
 - No examples with live credentials.
 - Runtime plugin config changes are limited to OpenCode's in-memory `config(cfg)` hook for package-relative `skills.paths`, non-overwriting BROS agent entries, and non-overwriting command prompt entries.
-- Optional BROS model routing config is fail-closed: unknown keys and invalid model route values reject plugin startup, removed `fallback_model` and `model_routing` keys are not accepted, top-level `fallback_models` is the only global fallback surface, and restricted categories (`coder_build`, `security`, `qa_review`, `ops`) reject per-entry `fallback_models` and ignore global fallback routing instead of silently falling back.
+- Optional BROS model routing config is fail-closed: unknown keys and invalid model route values reject plugin startup, removed `fallback_model` and `model_routing` keys are not accepted, top-level `fallback_models` is the only global fallback surface, and restricted categories (`coder_build`, `security`, `qa_review`, `ops`, `git_ops`, `package_ops`, `release_ops`, `deep_review`) reject per-entry `fallback_models` and ignore global fallback routing instead of silently falling back.
+- Category descriptions, capabilities, and workflow responsibilities are non-authoritative routing metadata. They do not grant OpenCode permissions, change effective permissions, approve reviewer gates, or bypass Security/QA/Ops/release controls.
 - Optional BROS permission profiles are fail-closed and scoped: only `readonly`, `review_safe`, `build_limited`, and `trusted_ops` are accepted; each opt-in requires repo scope, expiry, and reason logging, while `trusted_ops` also requires `hard_review: true`.
-- `bro-build` allows routine local Bash by default for implementation efficiency, but keeps explicit ask/deny gates for git mutation, dependency installs, Docker mutation, secret reads, provider credential mutation, npm publish/dist-tags, destructive delete/reset/clean operations, force push, and production/cloud mutation.
+- `bro-build` uses explicit routine local Bash allowlists for implementation efficiency and ask-gates unmatched Bash by default; git mutation, dependency installs, Docker mutation, secret reads, provider credential mutation, npm publish/dist-tags, release versioning, destructive delete/reset/clean operations, force push, and production/cloud mutation remain ask- or deny-gated.
 - Permission profiles only tune packaged BROS agent permissions at config time. They do not introduce top-level OpenCode `permission` and append hard denies for secret reads, provider credential mutation, npm publish/dist-tags, destructive delete/reset/clean operations, force push, and production/cloud mutation.
 - No live user config file mutation: the package plugin does not write `opencode.json`, `.opencode/`, global config files, or other filesystem config.
 - No provider, MCP, top-level permission, telemetry, or secret registration by the package plugin.
 - Mutating contributor import tooling is maintainer-only and excluded from the published package surface.
+- Release readiness validation must confirm `bro-build` retains no broad Bash wildcard allow and that approval-package metadata does not override hard-denied command classes.
 - Final publishing requires a fresh security review.
 
 ## Validation

@@ -2,7 +2,27 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.invalid/bros-harness/bros.config.schema.json",
   "title": "BROS Harness config",
-  "description": "BROS category and agent model routing config. Restricted categories reject fallback_models at runtime: coder_build, security, qa_review, and ops/release.",
+  "description": "BROS category, explicit-depth routing profile, agent model routing, and scoped approval package config. Default OpenCode plugin startup does not infer per-message workflow depth; routing_profiles apply only when a caller supplies an explicit depth to the routing resolver. Restricted categories reject fallback_models at runtime: coder_build, security, qa_review, ops/release, git_ops, package_ops, release_ops, and deep_review.",
+  "x-category-registry": {
+    "note": "Category metadata is descriptive routing guidance only. It is not permission authority and cannot approve or bypass Security/QA/Ops/release gates.",
+    "planner": { "description": "Planning and orchestration lane.", "workflowResponsibility": "Intake, routing records, packet completeness, phase gates, and stop-condition handoff.", "capabilities": ["intake", "classification", "packet-governance"], "defaultAgents": ["mighty-bro"], "permissionAuthority": false },
+    "explorer_search": { "description": "Evidence discovery lane.", "workflowResponsibility": "Repository, documentation, and external evidence packets with freshness, provenance, citations, limitations, and redaction posture.", "capabilities": ["repo-evidence", "documentation-lookup", "source-citation"], "defaultAgents": ["bro-explore"], "permissionAuthority": false },
+    "coder_build": { "description": "Scoped implementation lane.", "workflowResponsibility": "Approved code/config/test changes and sanitized change traces without QA or security approval authority.", "capabilities": ["implementation", "refactor", "local-validation"], "defaultAgents": ["bro-build"], "restrictedFallback": true, "permissionAuthority": false },
+    "security": { "description": "Security review lane.", "workflowResponsibility": "Secret hygiene, permission boundaries, authorization-risk surfaces, and security blocker review.", "capabilities": ["security-review", "secret-hygiene", "permission-boundary-review"], "defaultAgents": ["bro-shield"], "restrictedFallback": true, "permissionAuthority": false },
+    "qa_review": { "description": "Quality assurance lane.", "workflowResponsibility": "Tests, acceptance criteria, regressions, and implementation-completeness review.", "capabilities": ["test-review", "acceptance-validation", "regression-checking"], "defaultAgents": ["bro-test"], "restrictedFallback": true, "permissionAuthority": false },
+    "docs": { "description": "Documentation lane.", "workflowResponsibility": "Public, operator, migration, and handoff documentation.", "capabilities": ["public-docs", "operator-docs", "migration-notes"], "defaultAgents": ["bro-docs"], "permissionAuthority": false },
+    "architecture": { "description": "Architecture and design-constraints lane.", "workflowResponsibility": "Architecture boundaries, invariants, data/control flow, and cross-cutting tradeoffs.", "capabilities": ["architecture-review", "boundary-definition", "invariant-design"], "defaultAgents": ["bro-design"], "permissionAuthority": false },
+    "ui": { "description": "User interface lane.", "workflowResponsibility": "UI implementation context, frontend behavior, accessibility, and visual state.", "capabilities": ["ui-implementation", "frontend-behavior", "accessibility"], "defaultAgents": ["bro-ui"], "permissionAuthority": false },
+    "ops": { "description": "Operations and release-readiness lane.", "workflowResponsibility": "Operational readiness, release/deploy gating, package/runtime safety, and production-adjacent handoff.", "capabilities": ["ops-readiness", "release-gating", "runtime-safety"], "defaultAgents": ["bro-ops"], "restrictedFallback": true, "permissionAuthority": false },
+    "vision_engineering": { "description": "Vision and media engineering lane.", "workflowResponsibility": "Image, video, visual inspection, and media-generation engineering work.", "capabilities": ["vision", "media", "visual-inspection"], "defaultAgents": ["bro-explore", "bro-build"], "permissionAuthority": false },
+    "agent_harness": { "description": "Agent harness engineering lane.", "workflowResponsibility": "Agent, tool, prompt, command, skill, plugin, and harness-control-plane changes.", "capabilities": ["agent-design", "tool-contracts", "plugin-config"], "defaultAgents": ["bro-explore", "bro-design", "bro-build", "bro-test"], "permissionAuthority": false },
+    "git_ops": { "description": "Git operations lane.", "workflowResponsibility": "Branch, staging, commit, push, PR, and repository-history operations with explicit Git Approval Packets.", "capabilities": ["git-inspection", "branch-work", "commit-gates"], "defaultAgents": ["bro-ops", "bro-build"], "restrictedFallback": true, "permissionAuthority": false },
+    "package_ops": { "description": "Package operations lane.", "workflowResponsibility": "Package validation, dependency, dry-run, and publish-adjacent workflows.", "capabilities": ["package-validation", "dependency-review", "publish-gating"], "defaultAgents": ["bro-ops", "bro-shield", "bro-test"], "restrictedFallback": true, "permissionAuthority": false },
+    "local_runtime": { "description": "Local runtime verification lane.", "workflowResponsibility": "Local server, smoke, CLI, and developer-machine runtime checks.", "capabilities": ["local-smoke", "cli-validation", "runtime-diagnostics"], "defaultAgents": ["bro-build", "bro-test"], "permissionAuthority": false },
+    "release_ops": { "description": "Release operations lane.", "workflowResponsibility": "Release, changelog, version, artifact, and deployment-readiness work.", "capabilities": ["release-review", "artifact-checks", "publish-gating"], "defaultAgents": ["bro-ops", "bro-shield", "bro-test"], "restrictedFallback": true, "permissionAuthority": false },
+    "deep_review": { "description": "Deep adversarial review lane.", "workflowResponsibility": "High-risk, conflict, production, or critical-depth adversarial review.", "capabilities": ["adversarial-review", "critical-depth", "conflict-resolution"], "defaultAgents": ["mighty-bro", "bro-test", "bro-shield"], "restrictedFallback": true, "permissionAuthority": false },
+    "quick_patch": { "description": "Small safe patch lane.", "workflowResponsibility": "Narrow local changes that fit bounded implementation and verification.", "capabilities": ["small-patch", "bounded-validation", "escalation-triggering"], "defaultAgents": ["bro-build", "bro-test"], "permissionAuthority": false }
+  },
   "type": "object",
   "additionalProperties": false,
   "$defs": {
@@ -59,6 +79,84 @@
           }
         }
       ]
+    },
+    "routingProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "planner": { "$ref": "#/$defs/modelEntry" },
+        "explorer_search": { "$ref": "#/$defs/modelEntry" },
+        "explorer": { "$ref": "#/$defs/modelEntry" },
+        "coder_build": { "$ref": "#/$defs/modelEntry" },
+        "architecture": { "$ref": "#/$defs/modelEntry" },
+        "ui": { "$ref": "#/$defs/modelEntry" },
+        "reviewer": { "$ref": "#/$defs/modelEntry" },
+        "qa_review": { "$ref": "#/$defs/modelEntry" },
+        "security": { "$ref": "#/$defs/modelEntry" },
+        "docs": { "$ref": "#/$defs/modelEntry" },
+        "ops": { "$ref": "#/$defs/modelEntry" },
+        "vision_engineering": { "$ref": "#/$defs/modelEntry" },
+        "agent_harness": { "$ref": "#/$defs/modelEntry" },
+        "git_ops": { "$ref": "#/$defs/modelEntry" },
+        "package_ops": { "$ref": "#/$defs/modelEntry" },
+        "local_runtime": { "$ref": "#/$defs/modelEntry" },
+        "release_ops": { "$ref": "#/$defs/modelEntry" },
+        "deep_review": { "$ref": "#/$defs/modelEntry" },
+        "quick_patch": { "$ref": "#/$defs/modelEntry" },
+        "explorer/search": { "$ref": "#/$defs/modelEntry" },
+        "search": { "$ref": "#/$defs/modelEntry" },
+        "coder": { "$ref": "#/$defs/modelEntry" },
+        "build": { "$ref": "#/$defs/modelEntry" },
+        "coder/build": { "$ref": "#/$defs/modelEntry" },
+        "qa": { "$ref": "#/$defs/modelEntry" },
+        "review": { "$ref": "#/$defs/modelEntry" },
+        "qa/review": { "$ref": "#/$defs/modelEntry" },
+        "release": { "$ref": "#/$defs/modelEntry" }
+      }
+    },
+    "approvalPackage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["package_id", "trace_id", "scope", "expires", "agents", "files", "reason"],
+      "properties": {
+        "package_id": {
+          "type": "string",
+          "enum": ["git_read", "git_branch_work", "git_pr_work", "npm_local_dev", "npm_dependency_change", "ssh_readonly_known_host", "docker_local", "release_dry_run"]
+        },
+        "trace_id": {
+          "type": "string",
+          "pattern": "^BROS-[A-Za-z0-9._-]+$"
+        },
+        "scope": {
+          "const": "repo"
+        },
+        "expires": {
+          "description": "Use \"session\" or a future ISO date-time. Expired timestamps are rejected by runtime validation.",
+          "oneOf": [
+            { "const": "session" },
+            { "type": "string", "format": "date-time" }
+          ]
+        },
+        "agents": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": ["mighty-bro", "bro-explore", "bro-build", "bro-design", "bro-ui", "bro-test", "bro-shield", "bro-ops", "bro-docs"]
+          }
+        },
+        "files": {
+          "type": "array",
+          "description": "Audit/reporting file globs for the approval trace. These globs are validated and reported but are not enforced as runtime command file-scope restrictions.",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 8
+        }
+      }
     }
   },
   "properties": {
@@ -76,6 +174,7 @@
     "categories": {
       "type": "object",
       "additionalProperties": false,
+      "description": "Category-level routing map. Direct startup model propagation is bound to base packaged-agent categories; expanded workflow categories are validated classification metadata unless an explicit workflow-aware resolver call selects them. Category semantics are defined by x-category-registry and are guidance only, not permission authority.",
       "properties": {
         "planner": { "$ref": "#/$defs/modelEntry" },
         "explorer_search": { "$ref": "#/$defs/modelEntry" },
@@ -88,6 +187,14 @@
         "security": { "$ref": "#/$defs/modelEntry" },
         "docs": { "$ref": "#/$defs/modelEntry" },
         "ops": { "$ref": "#/$defs/modelEntry" },
+        "vision_engineering": { "$ref": "#/$defs/modelEntry" },
+        "agent_harness": { "$ref": "#/$defs/modelEntry" },
+        "git_ops": { "$ref": "#/$defs/modelEntry" },
+        "package_ops": { "$ref": "#/$defs/modelEntry" },
+        "local_runtime": { "$ref": "#/$defs/modelEntry" },
+        "release_ops": { "$ref": "#/$defs/modelEntry" },
+        "deep_review": { "$ref": "#/$defs/modelEntry" },
+        "quick_patch": { "$ref": "#/$defs/modelEntry" },
         "explorer/search": { "$ref": "#/$defs/modelEntry" },
         "search": { "$ref": "#/$defs/modelEntry" },
         "coder": { "$ref": "#/$defs/modelEntry" },
@@ -97,6 +204,17 @@
         "review": { "$ref": "#/$defs/modelEntry" },
         "qa/review": { "$ref": "#/$defs/modelEntry" },
         "release": { "$ref": "#/$defs/modelEntry" }
+      }
+    },
+    "routing_profiles": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Depth-specific category overrides for explicit-depth routing resolver calls. Profiles reuse category semantics from x-category-registry; exact agents still take precedence over selected depth profile routes. Default OpenCode plugin startup does not infer per-message workflow depth.",
+      "properties": {
+        "quick": { "$ref": "#/$defs/routingProfile" },
+        "standard": { "$ref": "#/$defs/routingProfile" },
+        "deep": { "$ref": "#/$defs/routingProfile" },
+        "critical": { "$ref": "#/$defs/routingProfile" }
       }
     },
     "agents": {
@@ -144,6 +262,11 @@
           "description": "Required by runtime validation when trusted_ops is enabled."
         }
       }
+    },
+    "approval_packages": {
+      "type": "array",
+      "description": "Optional session- or future-timestamp-bound package approvals for named command classes. Presets never override hard denies for secrets, publish, destructive commands, production/cloud mutation, protected branch push, or force push. The files field is audit/reporting metadata only and is not runtime file-glob enforcement.",
+      "items": { "$ref": "#/$defs/approvalPackage" }
     }
   }
 }

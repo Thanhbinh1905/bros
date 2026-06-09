@@ -1,5 +1,8 @@
 # ADR-[Number]: [Decision Title]
 
+packet_id: [ADR-PACKET-ID]
+trace_id: [BROS-*]
+
 ## Status
 
 Proposed | Accepted | Superseded

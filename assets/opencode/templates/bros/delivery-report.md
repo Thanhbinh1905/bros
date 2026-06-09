@@ -1,5 +1,8 @@
 # Delivery Report
 
+packet_id: [DELIVERY-PACKET-ID]
+trace_id: [BROS-*]
+
 ## Summary
 
 [What was delivered and why it matters.]

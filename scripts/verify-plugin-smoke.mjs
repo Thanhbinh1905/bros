@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 import { assertNoForbiddenConfigMutation, snapshotForbiddenConfig } from "../src/security-invariants.mjs";
-import { brosHarnessServer } from "../src/plugin.mjs";
-import { applyModelRoutingToAgents, applyPermissionProfilesToAgents, resolveBrosConfig } from "../src/config.mjs";
+import { brosHarnessServer, formatBrosHarnessPackageSpec, loadBrosHarnessPackageInfo } from "../src/plugin.mjs";
+import { applyModelRoutingToAgents, applyPermissionProfilesToAgents, resolveBrosConfig, resolveModelRouteForAgent, routingCategoryRegistry } from "../src/config.mjs";
 
-const server = await brosHarnessServer({}, { includeFiles: false });
+const packageInfo = await loadBrosHarnessPackageInfo();
+const smokeOptions = { includeFiles: false, configLogging: false };
+const server = await brosHarnessServer({}, smokeOptions);
 const cfg = {
   permission: {
     bash: {
@@ -24,7 +26,7 @@ const openCodeRuntimeServer = await brosHarnessServer({
   experimental_workspace: false,
   serverUrl: "http://127.0.0.1:0",
   $: {},
-}, { includeFiles: false });
+}, smokeOptions);
 const openCodeRuntimeCfg = {};
 openCodeRuntimeServer.config(openCodeRuntimeCfg);
 if (!openCodeRuntimeCfg.agent?.["mighty-bro"]) {
@@ -34,7 +36,7 @@ if (!openCodeRuntimeCfg.agent?.["mighty-bro"]) {
 const namespacedInputServer = await brosHarnessServer({
   client: {},
   bros_harness: { fallback_models: ["openai/gpt-5.4-mini-fast"] },
-}, { includeFiles: false });
+}, smokeOptions);
 const namespacedInputCfg = {};
 namespacedInputServer.config(namespacedInputCfg);
 if (namespacedInputCfg.agent?.["bro-docs"]?.model !== "openai/gpt-5.4-mini-fast") {
@@ -49,7 +51,7 @@ const preexistingAgentServer = await brosHarnessServer({
       qa_review: "test-provider/preexisting-qa-model",
     },
   },
-}, { includeFiles: false });
+}, smokeOptions);
 const preexistingPermission = { bash: { "*": "deny" } };
 const preexistingCfg = {
   agent: {
@@ -101,7 +103,7 @@ if (preexistingCfg.agent["not-a-bro"].model !== "test-provider/original-unknown-
 
 const fallbackPreexistingServer = await brosHarnessServer({
   bros_harness: { fallback_models: ["test-provider/fallback-model"] },
-}, { includeFiles: false });
+}, smokeOptions);
 const fallbackPreexistingCfg = {
   agent: {
     "bro-build": { model: "test-provider/original-build-model" },
@@ -173,6 +175,25 @@ if (routedExplicit.agents["bro-build"].model !== "test-provider/coder-build-mode
   throw new Error("Plugin smoke failed: explicit coder/build model route was not applied");
 }
 
+const legacyRoute = resolveModelRouteForAgent("bro-shield", {
+  modelRouting: { security: { model: "test-provider/legacy-security-model" } },
+  categories: {},
+  agents: {},
+  fallbackModels: [],
+});
+if (legacyRoute !== undefined) {
+  throw new Error("Plugin smoke failed: removed modelRouting branch still affects routing");
+}
+
+for (const [category, definition] of Object.entries(routingCategoryRegistry)) {
+  if (!definition.description || !definition.workflowResponsibility || definition.capabilities.length === 0) {
+    throw new Error(`Plugin smoke failed: category ${category} lacks semantic registry metadata`);
+  }
+  if (definition.permissionAuthority !== false || Object.hasOwn(definition, "permission")) {
+    throw new Error(`Plugin smoke failed: category ${category} metadata became permission authority`);
+  }
+}
+
 const inheritConfig = resolveBrosConfig([{ source: "test", path: "test", config: {} }]);
 const routedInherit = applyModelRoutingToAgents({ "bro-docs": {}, "bro-build": {} }, inheritConfig);
 if ("model" in routedInherit.agents["bro-docs"] || "model" in routedInherit.agents["bro-build"]) {
@@ -181,19 +202,35 @@ if ("model" in routedInherit.agents["bro-docs"] || "model" in routedInherit.agen
 
 const futureExpiry = new Date(Date.now() + 60 * 60 * 1000).toISOString();
 const profileConfig = resolveBrosConfig([{ source: "test", path: "test", config: {
-  permission_profiles: {
-    enabled: ["build_limited", "trusted_ops"],
-    scope: "repo",
-    expires_at: futureExpiry,
-    reason: "approved local validation smoke test",
-    hard_review: true,
-  },
+    routing_profiles: {
+      quick: { docs: "test/quick-docs" },
+      critical: { security: "test/critical-security" },
+    },
+    permission_profiles: {
+      enabled: ["build_limited", "trusted_ops"],
+      scope: "repo",
+      expires_at: futureExpiry,
+      reason: "approved local validation smoke test",
+      hard_review: true,
+    },
+    approval_packages: [
+      {
+        package_id: "release_dry_run",
+        trace_id: "BROS-SMOKE-001",
+        scope: "repo",
+        expires: "session",
+        agents: ["bro-build", "bro-shield"],
+        files: ["src/**", "assets/**", "docs/**"],
+        reason: "approved package dry run smoke",
+      },
+    ],
 } }]);
 if (profileConfig.errors.length > 0) {
   throw new Error(`Plugin smoke failed: valid permission profile config was rejected: ${profileConfig.errors.join("; ")}`);
 }
 const profiled = applyPermissionProfilesToAgents({
   "bro-build": { permission: { bash: { "*": "ask" } } },
+  "bro-shield": { permission: { bash: { "*": "deny" } } },
   "bro-ops": { permission: { bash: { "*": "ask" } } },
 }, profileConfig);
 if (profiled.agents["bro-build"].permission.bash["npm run validate"] !== "allow") {
@@ -208,6 +245,16 @@ if (profiled.agents["bro-build"].permission.bash["npm publish*"] !== "deny") {
 }
 if (profiled.agents["bro-ops"].permission.bash["git push --force*"] !== "deny") {
   throw new Error("Plugin smoke failed: force push was not denied after trusted_ops merge");
+}
+if (profiled.agents["bro-shield"].permission.bash["npm pack --dry-run"] !== "allow") {
+  throw new Error("Plugin smoke failed: release_dry_run approval package did not allow scoped dry-run for bro-shield");
+}
+if (Object.hasOwn(profiled.agents["bro-shield"].permission, "external_directory")
+  || Object.keys(profiled.agents["bro-shield"].permission.bash).some((pattern) => pattern.includes("src/**") || pattern.includes("assets/**"))) {
+  throw new Error("Plugin smoke failed: approval package files were treated as runtime file-scope enforcement instead of audit metadata");
+}
+if (profiled.agents["bro-build"].permission.bash["npm publish*"] !== "deny") {
+  throw new Error("Plugin smoke failed: approval package reopened publish");
 }
 
 const unsafeProfileConfig = resolveBrosConfig([{ source: "test", path: "test", config: {
@@ -224,14 +271,17 @@ if (!unsafeProfileConfig.errors.some((error) => error.includes("hard_review"))
 }
 
 const buildBash = cfg.agent?.["bro-build"]?.permission?.bash;
-if (!buildBash || buildBash["*"] !== "allow") {
-  throw new Error("Plugin smoke failed: bro-build default did not allow routine local bash");
+if (!buildBash || buildBash["*"] !== "ask") {
+  throw new Error("Plugin smoke failed: bro-build default did not ask-gate unmatched local bash");
 }
 if (buildBash["git status*"] !== "allow" || buildBash["git grep*"] !== "allow" || buildBash["git worktree list*"] !== "allow") {
   throw new Error("Plugin smoke failed: bro-build default did not allow harmless git inspection");
 }
-if (buildBash["npm run *"] !== "allow" || buildBash["docker compose logs*"] !== "allow" || buildBash["gh pr diff *"] !== "allow") {
-  throw new Error("Plugin smoke failed: bro-build default did not allow flexible local npm/docker/GitHub inspection");
+if (buildBash["npm run *"] !== "ask" || buildBash["docker compose logs*"] !== "allow" || buildBash["gh pr diff *"] !== "allow") {
+  throw new Error("Plugin smoke failed: bro-build default did not keep broad npm scripts ask-gated while allowing Docker/GitHub inspection");
+}
+if (buildBash["npm run validate"] !== "allow" || buildBash["npm run validate:*"] !== "allow" || buildBash["npm run verify:*"] !== "allow" || buildBash["node bin/bros.mjs doctor"] !== "allow") {
+  throw new Error("Plugin smoke failed: bro-build default did not allow explicit local validation and helper commands");
 }
 if (buildBash["git remote *"] !== "ask" || buildBash["git checkout*"] !== "ask" || buildBash["git switch*"] !== "ask"
   || buildBash["git add *"] !== "ask" || buildBash["git commit -m *"] !== "ask" || buildBash["git push -u origin *"] !== "ask"
@@ -243,8 +293,8 @@ if (buildBash["npm install*"] !== "ask" || buildBash["pnpm add*"] !== "ask" || b
   || buildBash["rm *"] !== "ask") {
   throw new Error("Plugin smoke failed: bro-build default did not preserve ask gates for local mutation");
 }
-if (buildBash["git reset --hard*"] !== "deny" || buildBash["git push --force*"] !== "deny" || buildBash["npm publish*"] !== "deny") {
-  throw new Error("Plugin smoke failed: bro-build default reopened destructive, force-push, or publish commands");
+if (buildBash["git reset --hard*"] !== "deny" || buildBash["git push --force*"] !== "deny" || buildBash["npm publish*"] !== "deny" || buildBash["npm version *"] !== "deny") {
+  throw new Error("Plugin smoke failed: bro-build default reopened destructive, force-push, publish, or release-version commands");
 }
 if (buildBash["cat **/.env*"] !== "deny" || buildBash["gh auth token*"] !== "deny" || buildBash["printenv*"] !== "deny" || buildBash["env*"] !== "deny") {
   throw new Error("Plugin smoke failed: bro-build default reopened secret or environment inspection commands");
@@ -255,7 +305,7 @@ const wildcardIndex = buildOrder.indexOf("*");
 const gitAddIndex = buildOrder.indexOf("git add *");
 const hardDenyIndex = buildOrder.indexOf("git reset --hard*");
 if (!(wildcardIndex >= 0 && wildcardIndex < gitAddIndex && gitAddIndex < hardDenyIndex)) {
-  throw new Error("Plugin smoke failed: bro-build default permission order does not keep ask/deny rules after wildcard allow");
+  throw new Error("Plugin smoke failed: bro-build default permission order does not keep ask/deny rules after wildcard ask fallback");
 }
 
 const testBash = cfg.agent?.["bro-test"]?.permission?.bash;
@@ -315,6 +365,19 @@ assertResolvedConfigAccepted({
 }, "rich model entry in categories");
 
 assertResolvedConfigAccepted({
+  categories: {
+    vision_engineering: "test/vision",
+    agent_harness: "test/agent-harness",
+    git_ops: "test/git",
+    package_ops: "test/package",
+    local_runtime: "test/runtime",
+    release_ops: "test/release",
+    deep_review: "test/deep-review",
+    quick_patch: "test/quick-patch",
+  },
+}, "expanded topology categories");
+
+assertResolvedConfigAccepted({
   categories: { docs: { model: "test/docs", fallback_models: ["test/fallback1"] } },
 }, "rich entry with fallback_models on unrestricted category");
 
@@ -342,6 +405,38 @@ assertResolvedConfigRejected({
   agents: { "bro-build": { model: "test/bb", fallback_models: ["test/fb"] } },
 }, "restricted category fallback_models in agents", ["restricted category"]);
 
+assertResolvedConfigRejected({
+  routing_profiles: { quick: { unknown_category: "test/nope" } },
+}, "unknown category in routing profile", ["unknown_category", "not supported"]);
+
+assertResolvedConfigRejected({
+  routing_profiles: { turbo: { docs: "test/nope" } },
+}, "unknown routing profile depth", ["turbo", "not supported"]);
+
+assertResolvedConfigRejected({
+  approval_packages: [{
+    package_id: "git_read",
+    trace_id: "BROS-SMOKE-EXPIRED",
+    scope: "repo",
+    expires: "2000-01-01T00:00:00.000Z",
+    agents: ["bro-build"],
+    files: ["src/**"],
+    reason: "expired package smoke",
+  }],
+}, "expired approval package", ["approval_packages[0].expires", "future"]);
+
+assertResolvedConfigRejected({
+  approval_packages: [{
+    package_id: "npm_publish_everything",
+    trace_id: "BAD-TRACE",
+    scope: "global",
+    expires: "never",
+    agents: ["bro-build"],
+    files: ["src/**"],
+    reason: "bad package smoke",
+  }],
+}, "invalid approval package shape", ["package_id", "trace_id", "scope", "expires"]);
+
 assertResolvedConfigAccepted({
   agents: { "bro-docs": { model: "test/bd", fallback_models: ["test/fb"] } },
 }, "unrestricted agent fallback_models");
@@ -351,7 +446,7 @@ assertResolvedConfigRejected({
 }, "empty variant", ["variant"]);
 
 assertResolvedConfigRejected({
-  categories: { explorer: { model: "test/m", variant: "sk-AAAAAAAAAAAAAAAAAAAAAA" } },
+  categories: { explorer: { model: "test/m", variant: "fixture-secret-sentinel" } },
 }, "secret-like variant", ["variant", "secret"]);
 
 assertResolvedConfigRejected(JSON.parse('{"categories":{"explorer":{"model":"test/m","__proto__":"bad"}}}'),
@@ -359,11 +454,21 @@ assertResolvedConfigRejected(JSON.parse('{"categories":{"explorer":{"model":"tes
 
 const precedenceConfig = assertResolvedConfigAccepted({
   categories: { explorer: "test/category-explorer" },
+  routing_profiles: { quick: { explorer_search: "test/quick-explorer" } },
   agents: { "bro-explore": "test/agent-explorer" },
 }, "routing precedence config");
-const routedPrecedence = applyModelRoutingToAgents({ "bro-explore": {} }, precedenceConfig);
+const routedPrecedence = applyModelRoutingToAgents({ "bro-explore": {} }, precedenceConfig, { depth: "quick" });
 if (routedPrecedence.agents["bro-explore"].model !== "test/agent-explorer") {
   throw new Error("Plugin smoke failed: routing precedence did not prefer agents over categories");
+}
+
+const depthPrecedenceConfig = assertResolvedConfigAccepted({
+  categories: { docs: "test/category-docs" },
+  routing_profiles: { quick: { docs: "test/quick-docs" } },
+}, "depth routing precedence config");
+const routedDepth = applyModelRoutingToAgents({ "bro-docs": {} }, depthPrecedenceConfig, { depth: "quick" });
+if (routedDepth.agents["bro-docs"].model !== "test/quick-docs") {
+  throw new Error("Plugin smoke failed: routing_profiles quick did not override base categories");
 }
 
 const mergedCategoriesConfig = resolveBrosConfig([
@@ -381,6 +486,7 @@ assertResolvedConfigAccepted({
   $schema: "./test",
   fallback_models: [{ model: "test/fallback-a", variant: "backup" }, "test/fallback-b"],
   categories: {},
+  routing_profiles: { standard: { docs: "test/docs-standard" } },
   agents: {},
   permission_profiles: {
     enabled: ["readonly"],
@@ -388,6 +494,15 @@ assertResolvedConfigAccepted({
     expires_at: "2099-01-01T00:00:00.000Z",
     reason: "smoke test for all keys",
   },
+  approval_packages: [{
+    package_id: "git_read",
+    trace_id: "BROS-SMOKE-ALL-KEYS",
+    scope: "repo",
+    expires: "session",
+    agents: ["bro-test"],
+    files: ["docs/**"],
+    reason: "smoke test read package",
+  }],
 }, "all rich config top-level keys");
 
 assertResolvedConfigRejected({ bad_key: true }, "unknown top-level key", [
@@ -396,7 +511,10 @@ assertResolvedConfigRejected({ bad_key: true }, "unknown top-level key", [
   "fallback_models",
   "categories",
   "agents",
+  "routing_profiles",
   "permission_profiles",
+  "approval_packages",
 ]);
 
+console.log(`Plugin smoke loaded: ${formatBrosHarnessPackageSpec(packageInfo)}`);
 console.log("Plugin smoke passed: permission deny keys accepted, secret-like agent config rejected, category routing guards verified, routing precedence covered, and permission profiles fail closed.");

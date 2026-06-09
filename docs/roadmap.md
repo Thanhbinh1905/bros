@@ -2,15 +2,15 @@
 
 ## Now
 
-- Sanitized OpenCode asset scaffold.
-- Package metadata and safe CLI placeholder.
-- Validation scripts and guarded CI.
+- Package-first OpenCode plugin with curated BROS agents, commands, skills, templates, docs, and helper CLI.
+- Tiered governance, named fast path routing modes, depth-aware routing profiles, expiry-bound approval packages, and packet/trace normalization.
+- Validation scripts for assets, workflow regressions, routing scenarios, plugin smoke, secret patterns, and package contents.
 
 ## Next
 
-- Review imported assets for public readability and policy clarity.
-- Implement manifest-driven OpenCode install flow with explicit user confirmation.
-- Add adapter implementations after design and security review.
+- Expand routing simulation closer to OpenCode runtime permission behavior.
+- Add stronger host/command simulation before relying on `ssh_readonly_known_host` broadly.
+- Evaluate whether `vision_engineering` needs a dedicated future `bro-vision` agent.
 
 ## Later
 

@@ -4,6 +4,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { applyModelRoutingToAgents, brosConfigDefaults, loadResolvedBrosConfig } from "../src/config.mjs";
 import { parseInstallUpdateArgs, runInstallUpdate } from "../src/install.mjs";
+import { formatBrosHarnessConfigWarningMessages, formatBrosHarnessOfflineUpdateNotice, formatBrosHarnessPackageSpec } from "../src/plugin.mjs";
 
 const packageRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const assetRoot = join(packageRoot, "assets", "opencode");
@@ -207,6 +208,8 @@ async function doctor() {
   }
 
   console.log("BROS Harness doctor: ok");
+  console.log(`Loaded version: ${formatBrosHarnessPackageSpec(packageJson)}`);
+  console.log(formatBrosHarnessOfflineUpdateNotice(packageJson));
   console.log(`Manifest entries: ${manifest.entries.length}`);
   console.log("Scope: local package files only; no OpenCode config, environment, provider, MCP, telemetry, or credential values were read.");
   console.log("No filesystem changes were made.");
@@ -220,6 +223,8 @@ async function status() {
   const counts = manifest.counts ?? {};
   console.log("BROS Harness status");
   console.log(`Package: ${packageJson.name ?? "unknown"}@${packageJson.version ?? "unknown"}`);
+  console.log(`Loaded version: ${formatBrosHarnessPackageSpec(packageJson)}`);
+  console.log(formatBrosHarnessOfflineUpdateNotice(packageJson));
   console.log(`Node requirement: ${packageJson.engines?.node ?? "unspecified"}`);
   console.log(`Manifest generated: ${manifest.generatedAt ?? "unknown"}`);
   console.log(`Manifest entries: ${Array.isArray(manifest.entries) ? manifest.entries.length : "unknown"}`);
@@ -246,6 +251,7 @@ async function readPackagedAgentModels() {
 }
 
 async function configStatus() {
+  const packageJson = await readJson(join(packageRoot, "package.json"));
   const resolved = await loadResolvedBrosConfig({ input: {} });
   if (resolved.errors.length > 0) {
     throw new Error(`Invalid BROS config:\n- ${resolved.errors.join("\n- ")}`);
@@ -253,20 +259,45 @@ async function configStatus() {
   const baseAgents = await readPackagedAgentModels();
   const routed = applyModelRoutingToAgents(baseAgents, resolved);
   const categoryKeys = Object.keys(resolved.categories).sort();
+  const routingProfileKeys = Object.keys(resolved.routingProfiles ?? {}).sort();
   const agentKeys = Object.keys(resolved.agents).sort();
   const activePermissionProfiles = resolved.permissionProfiles?.enabled ?? [];
+  const activeApprovalPackages = resolved.approvalPackages ?? [];
   console.log("BROS Harness config status");
+  console.log(`Loaded version: ${formatBrosHarnessPackageSpec(packageJson)}`);
+  console.log(formatBrosHarnessOfflineUpdateNotice(packageJson));
   console.log(`Global config path: ${brosConfigDefaults.globalConfigPath}`);
   console.log(`Repo config path: ${brosConfigDefaults.repoConfigPath}`);
   console.log("Precedence: packaged defaults < global BROS config < repo BROS config < OpenCode plugin input.");
   console.log(`Fallback models configured: ${resolved.fallbackModels?.length ?? 0}`);
   console.log("Config surface:");
   console.log(`- categories entries: ${categoryKeys.length}${categoryKeys.length ? ` (${categoryKeys.join(", ")})` : ""}`);
+  console.log(`- category registry entries: ${Object.keys(brosConfigDefaults.categoryRegistry).length}`);
+  console.log(`- routing_profiles entries: ${routingProfileKeys.length}${routingProfileKeys.length ? ` (${routingProfileKeys.join(", ")})` : ""}`);
+  if (routingProfileKeys.length > 0) {
+    console.log("- routing_profiles runtime note: validated for explicit-depth resolvers; default plugin startup does not infer per-message workflow depth.");
+  }
   console.log(`- agents entries: ${agentKeys.length}${agentKeys.length ? ` (${agentKeys.join(", ")})` : ""}`);
   console.log(`- permission_profiles configured: ${resolved.permissionProfiles ? "yes" : "no"}`);
+  console.log(`- approval_packages configured: ${activeApprovalPackages.length}`);
   console.log(`Explicit category routes: ${categoryKeys.length}`);
+  console.log(`Supported routing profiles: ${brosConfigDefaults.routingProfiles.join(", ")}`);
+  console.log(`Restricted fallback categories: ${brosConfigDefaults.fallbackRestrictedCategories.join(", ")}`);
+  console.log("Category metadata: descriptions/capabilities/workflow responsibilities only; permissions and approvals remain separate trusted config surfaces.");
+  if (categoryKeys.length > 0) {
+    console.log("Configured category responsibilities:");
+    for (const category of categoryKeys) {
+      const definition = brosConfigDefaults.categoryRegistry[category];
+      if (definition) console.log(`- ${category}: ${definition.workflowResponsibility}`);
+    }
+  }
   console.log(`Supported permission profiles: ${brosConfigDefaults.permissionProfiles.join(", ")}`);
+  console.log(`Supported approval packages: ${brosConfigDefaults.approvalPackages.join(", ")}`);
   console.log(`Active permission profiles: ${activePermissionProfiles.length ? activePermissionProfiles.join(", ") : "none"}`);
+  console.log(`Active approval packages: ${activeApprovalPackages.length ? activeApprovalPackages.map((entry) => entry.package_id).join(", ") : "none"}`);
+  if (activeApprovalPackages.length > 0) {
+    console.log("Approval package files: audit/reporting metadata only; runtime command permissions are package preset based and are not file-glob enforced.");
+  }
   if (resolved.permissionProfiles) {
     console.log(`Permission profile scope: ${resolved.permissionProfiles.scope}`);
     console.log(`Permission profile expiry: ${resolved.permissionProfiles.expires_at}`);
@@ -275,7 +306,7 @@ async function configStatus() {
   }
   if (resolved.warnings.length > 0) {
     console.log("Warnings:");
-    for (const warning of resolved.warnings) console.log(`- ${warning}`);
+    for (const warning of formatBrosHarnessConfigWarningMessages(resolved.warnings)) console.log(`- ${warning}`);
   }
   if (routed.events.length > 0) {
     console.log("Routing changes:");
