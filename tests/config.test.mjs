@@ -1,23 +1,42 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { promisify } from "node:util";
+import { fileURLToPath } from "node:url";
 
 import {
   applyModelRoutingToAgents,
+  applyPermissionProfilesToAgents,
   brosConfigDefaults,
   loadResolvedBrosConfig,
   resolveBrosConfig,
+  resolveModelRouteForAgent,
+  routingCategoryRegistry,
   validateBrosConfig,
 } from "../src/config.mjs";
 import { brosHarnessServer } from "../src/plugin.mjs";
+import { classifyRoutingScenario } from "../src/routing-policy.mjs";
 
-const secretLikeValue = "sk-AAAAAAAAAAAAAAAAAAAAAA";
+const execFileAsync = promisify(execFile);
+const packageRoot = dirname(dirname(fileURLToPath(import.meta.url)));
+const secretLikeValue = "fixture-secret-sentinel";
 const futurePermissionProfiles = {
   enabled: ["readonly"],
   scope: "repo",
   expires_at: "2999-01-01T00:00:00.000Z",
   reason: "approved unit test reason",
+};
+
+const futureApprovalPackage = {
+  package_id: "git_read",
+  trace_id: "BROS-TEST-APPROVAL",
+  scope: "repo",
+  expires: "2999-01-01T00:00:00.000Z",
+  agents: ["bro-build"],
+  files: ["src/**"],
+  reason: "approved package test reason",
 };
 
 function assertNoValidationErrors(config) {
@@ -36,12 +55,12 @@ describe("validateBrosConfig", () => {
     assert.deepStrictEqual(validateBrosConfig({}), []);
   });
 
-  it("unknown top-level key produces error listing 5 allowed keys", () => {
+  it("unknown top-level key produces error listing supported allowed keys", () => {
     const errors = validateBrosConfig({ unexpected: true });
 
     assert.equal(errors.length, 1);
-    assertHasError(errors, "allowed keys are $schema, fallback_models, categories, agents, permission_profiles");
-    assert.equal(errors[0].split("allowed keys are ")[1].split(", ").length, 5);
+    assertHasError(errors, "allowed keys are $schema, fallback_models, categories, agents, routing_profiles, permission_profiles, approval_packages");
+    assert.equal(errors[0].split("allowed keys are ")[1].split(", ").length, 7);
   });
 
   it("model_routing top-level key is rejected", () => {
@@ -159,6 +178,17 @@ describe("validateBrosConfig", () => {
     assertNoValidationErrors({ categories: { architecture: "arch-model", ui: "ui-model" } });
   });
 
+  it("category registry entries are descriptive and non-authoritative", () => {
+    for (const [category, definition] of Object.entries(routingCategoryRegistry)) {
+      assert.ok(definition.description.length > 20, `${category} should have a clear description`);
+      assert.ok(definition.workflowResponsibility.length > 20, `${category} should have workflow responsibility text`);
+      assert.ok(definition.capabilities.length > 0, `${category} should declare capabilities`);
+      assert.ok(definition.defaultAgents.length > 0, `${category} should declare default routing agents`);
+      assert.equal(definition.permissionAuthority, false, `${category} metadata must not grant permission authority`);
+      assert.equal(Object.hasOwn(definition, "permission"), false, `${category} must not carry raw OpenCode permissions`);
+    }
+  });
+
   it("legacy design and designer category names are rejected", () => {
     assertHasError(validateBrosConfig({ categories: { design: "design-model" } }), "categories.design is not supported");
     assertHasError(validateBrosConfig({ categories: { designer: "designer-model" } }), "categories.designer is not supported");
@@ -193,6 +223,19 @@ describe("validateBrosConfig", () => {
       agents: { "bro-explore": "explore-agent-model" },
       permission_profiles: futurePermissionProfiles,
     });
+  });
+
+  it("approval_packages rejects expired ISO timestamps", () => {
+    const errors = validateBrosConfig({
+      approval_packages: [{ ...futureApprovalPackage, expires: "2000-01-01T00:00:00.000Z" }],
+    });
+
+    assertHasError(errors, "approval_packages[0].expires must be in the future");
+  });
+
+  it("approval_packages accepts session expiry and future ISO timestamps", () => {
+    assertNoValidationErrors({ approval_packages: [{ ...futureApprovalPackage, expires: "session" }] });
+    assertNoValidationErrors({ approval_packages: [futureApprovalPackage] });
   });
 
   it("singular category and agent top-level keys remain unsupported", () => {
@@ -288,6 +331,15 @@ describe("resolveBrosConfig", () => {
     assert.deepStrictEqual(resolved.permissionProfiles, { ...laterPermissionProfiles, hard_review: false });
   });
 
+  it("routing_profiles warn when no explicit runtime depth is selected", () => {
+    const resolved = resolveBrosConfig([
+      { config: { routing_profiles: { quick: { docs: "quick-docs-model" } } }, source: "test" },
+    ]);
+
+    assert.deepStrictEqual(resolved.errors, []);
+    assert.ok(resolved.warnings.some((warning) => warning.includes("default OpenCode plugin startup does not infer per-message workflow depth")));
+  });
+
   it("source with errors is not merged", () => {
     const resolved = resolveBrosConfig([
       { config: { categories: { planner: "planner-one" } }, source: "valid" },
@@ -380,6 +432,17 @@ describe("applyModelRoutingToAgents", () => {
     assert.equal(agents["bro-docs"].model, "agent-docs");
     assert.equal(agents["bro-design"].model, "category-architecture");
     assert.equal(agents["bro-ui"].model, "agent-ui");
+  });
+
+  it("removed modelRouting compatibility branch is not used as a route source", () => {
+    const route = resolveModelRouteForAgent("bro-shield", {
+      modelRouting: { security: { model: "legacy/security" } },
+      categories: {},
+      agents: {},
+      fallbackModels: [],
+    });
+
+    assert.equal(route, undefined);
   });
 
   it("restricted category does not get fallback_models", () => {
@@ -482,9 +545,97 @@ describe("applyModelRoutingToAgents", () => {
   });
 });
 
+describe("applyPermissionProfilesToAgents", () => {
+  it("treats approval package files as audit metadata, not runtime command scope", () => {
+    const resolved = resolveBrosConfig([{ config: { approval_packages: [futureApprovalPackage] }, source: "test" }]);
+    const { agents, events } = applyPermissionProfilesToAgents({ "bro-build": { permission: { bash: { "*": "ask" } } } }, resolved);
+
+    assert.deepStrictEqual(resolved.errors, []);
+    assert.equal(agents["bro-build"].permission.bash["git status*"], "allow");
+    assert.equal(agents["bro-build"].permission.bash["git reset --hard*"], "deny");
+    assert.equal(Object.hasOwn(agents["bro-build"].permission, "external_directory"), false);
+    assert.equal(Object.keys(agents["bro-build"].permission.bash).some((pattern) => pattern.includes("src/**")), false);
+    assert.deepStrictEqual(events[0].files, ["src/**"]);
+  });
+});
+
 describe("brosHarnessServer runtime model propagation", () => {
+  it("summarizes fallback routing warnings instead of logging repeated category blocks", async () => {
+    const server = await brosHarnessServer({ bros_harness: { fallback_models: ["test/fallback"] } }, { includeFiles: false });
+    const messages = [];
+    const originalWarn = console.warn;
+    console.warn = (message) => messages.push(String(message));
+    try {
+      server.config({});
+    } finally {
+      console.warn = originalWarn;
+    }
+
+    assert.ok(messages.some((message) => message.includes("loaded bros-harness@0.6.7")));
+    assert.equal(messages.filter((message) => message.includes("fallback_models not applied to restricted categories")).length, 1);
+    assert.equal(messages.some((message) => message.includes("fallback_models will not be applied to coder_build")), false);
+    assert.ok(messages.some((message) => message.includes("routing applied: 5 agent(s) via fallback_models")));
+  });
+
+  it("can suppress config log messages for smoke harness scenarios without changing applied config", async () => {
+    const server = await brosHarnessServer(
+      { bros_harness: { fallback_models: ["test/fallback"] } },
+      { includeFiles: false, configLogging: false },
+    );
+    const messages = [];
+    const originalWarn = console.warn;
+    console.warn = (message) => messages.push(String(message));
+    const cfg = {};
+    try {
+      server.config(cfg);
+    } finally {
+      console.warn = originalWarn;
+    }
+
+    assert.deepStrictEqual(messages, []);
+    assert.equal(cfg.agent["bro-docs"].model, "test/fallback");
+  });
+
+  it("logs approval-package events without profile or expiry placeholders", async () => {
+    const server = await brosHarnessServer({ bros_harness: { approval_packages: [futureApprovalPackage] } }, { includeFiles: false });
+    const messages = [];
+    const originalWarn = console.warn;
+    console.warn = (message) => messages.push(String(message));
+    try {
+      server.config({});
+    } finally {
+      console.warn = originalWarn;
+    }
+
+    assert.ok(messages.some((message) => message.includes("approval package applied: bro-build uses git_read")));
+    assert.ok(messages.some((message) => message.includes("trace: BROS-TEST-APPROVAL")));
+    assert.ok(messages.some((message) => message.includes("files: 1 audit entries") && message.includes("files_present: true")));
+    assert.ok(messages.some((message) => message.includes("reason_present: true")));
+    assert.equal(messages.some((message) => message.includes(futureApprovalPackage.reason)), false);
+    assert.equal(messages.some((message) => message.includes("permission profile applied") && message.includes("undefined")), false);
+    assert.equal(messages.some((message) => message.includes("undefined")), false);
+  });
+
+  it("logs permission-profile events without free-form reasons", async () => {
+    const server = await brosHarnessServer({ bros_harness: { permission_profiles: futurePermissionProfiles } }, { includeFiles: false });
+    const messages = [];
+    const originalWarn = console.warn;
+    console.warn = (message) => messages.push(String(message));
+    try {
+      server.config({});
+    } finally {
+      console.warn = originalWarn;
+    }
+
+    assert.ok(messages.some((message) => message.includes("permission profile applied: bro-explore uses readonly")));
+    assert.ok(messages.some((message) => message.includes("within repo scope until 2999-01-01T00:00:00.000Z")));
+    assert.ok(messages.some((message) => message.includes("reason_present: true")));
+    assert.equal(messages.some((message) => message.includes(futurePermissionProfiles.reason)), false);
+    assert.equal(messages.some((message) => message.includes("undefined")), false);
+  });
+
   it("patches only model on a preexisting known BROS agent with explicit agent routing", async () => {
-    const server = await brosHarnessServer({ bros_harness: { agents: { "bro-build": "test/explicit-build" } } }, { includeFiles: false });
+    const server = await brosHarnessServer({ bros_harness: { agents: { "bro-build": "test/explicit-build" } } }, { includeFiles: false, configLogging: false });
     const prompt = "existing prompt stays authoritative";
     const permission = { bash: { "*": "ask" } };
     const tools = { read: true };
@@ -510,7 +661,7 @@ describe("brosHarnessServer runtime model propagation", () => {
   });
 
   it("patches preexisting known BROS agent model from explicit category routing without permission escalation", async () => {
-    const server = await brosHarnessServer({ bros_harness: { categories: { security: "test/security-model" } } }, { includeFiles: false });
+    const server = await brosHarnessServer({ bros_harness: { categories: { security: "test/security-model" } } }, { includeFiles: false, configLogging: false });
     const permission = { bash: { "*": "deny" } };
     const cfg = {
       agent: {
@@ -529,7 +680,7 @@ describe("brosHarnessServer runtime model propagation", () => {
   });
 
   it("patches preexisting known BROS agent model from explicit category routing", async () => {
-    const server = await brosHarnessServer({ bros_harness: { categories: { qa_review: "test/qa-model" } } }, { includeFiles: false });
+    const server = await brosHarnessServer({ bros_harness: { categories: { qa_review: "test/qa-model" } } }, { includeFiles: false, configLogging: false });
     const cfg = {
       agent: {
         "bro-test": { model: "test/original-qa", prompt: "existing qa prompt" },
@@ -543,7 +694,7 @@ describe("brosHarnessServer runtime model propagation", () => {
   });
 
   it("does not patch unknown preexisting agents", async () => {
-    const server = await brosHarnessServer({ bros_harness: { categories: { docs: "test/docs-model" } } }, { includeFiles: false });
+    const server = await brosHarnessServer({ bros_harness: { categories: { docs: "test/docs-model" } } }, { includeFiles: false, configLogging: false });
     const cfg = {
       agent: {
         "not-a-bro": { model: "test/original", prompt: "unknown prompt" },
@@ -557,7 +708,7 @@ describe("brosHarnessServer runtime model propagation", () => {
   });
 
   it("does not apply fallback_models to restricted preexisting BROS agents", async () => {
-    const server = await brosHarnessServer({ bros_harness: { fallback_models: ["test/fallback"] } }, { includeFiles: false });
+    const server = await brosHarnessServer({ bros_harness: { fallback_models: ["test/fallback"] } }, { includeFiles: false, configLogging: false });
     const cfg = {
       agent: {
         "bro-build": { model: "test/build-original" },
@@ -576,6 +727,16 @@ describe("brosHarnessServer runtime model propagation", () => {
   });
 });
 
+describe("BROS CLI local status messaging", () => {
+  it("prints the loaded package version and offline update-check notice", async () => {
+    const { stdout } = await execFileAsync(process.execPath, ["bin/bros.mjs", "status"], { cwd: packageRoot });
+
+    assert.match(stdout, /Loaded version: bros-harness@0\.6\.7/);
+    assert.match(stdout, /Update check: offline\/local only/);
+    assert.match(stdout, /no registry query was performed/i);
+  });
+});
+
 describe("brosConfigDefaults", () => {
   it("has expected keys and canonical categories", () => {
     for (const key of [
@@ -584,6 +745,9 @@ describe("brosConfigDefaults", () => {
       "agentNames",
       "restrictedCategoryMessage",
       "fallbackRestrictedCategories",
+      "categoryRegistry",
+      "categoryAliases",
+      "agentCategories",
     ]) {
       assert.ok(Object.hasOwn(brosConfigDefaults, key), `missing ${key}`);
     }
@@ -591,6 +755,17 @@ describe("brosConfigDefaults", () => {
     assert.ok(brosConfigDefaults.categories.includes("ui"));
     assert.ok(!brosConfigDefaults.categories.includes("design"));
     assert.ok(!brosConfigDefaults.modelEntryAliases.includes("designer"));
+    assert.equal(brosConfigDefaults.categoryRegistry.security.restrictedFallback, true);
+    assert.equal(brosConfigDefaults.categoryRegistry.security.permissionAuthority, false);
+  });
+
+  it("workflow classifier reports category-driven routing responsibility", () => {
+    const securityRoute = classifyRoutingScenario({ tags: ["security"] });
+
+    assert.equal(securityRoute.mode, "FULL_BROS");
+    assert.ok(securityRoute.categories.includes("security"));
+    assert.ok(securityRoute.agents.includes("bro-shield"));
+    assert.ok(securityRoute.agents.includes("bro-build"));
   });
 
   it("uses the OpenCode config directory for the global config path", () => {

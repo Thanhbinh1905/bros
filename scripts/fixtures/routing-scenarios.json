@@ -1,0 +1,14 @@
+[
+  { "id": "small-info", "tags": [], "expected": { "mode": "INFO_ONLY", "governance": "compact", "agents": ["mighty-bro"] } },
+  { "id": "docs-only", "tags": ["docs"], "fileEdit": true, "expected": { "mode": "DOC_ONLY", "governance": "standard", "agents": ["mighty-bro", "bro-docs"] } },
+  { "id": "read-only-review", "tags": ["review"], "expected": { "mode": "READ_ONLY_REVIEW", "agents": ["mighty-bro", "bro-test"] } },
+  { "id": "small-patch", "tags": ["small_patch"], "expected": { "mode": "SMALL_PATCH", "agents": ["mighty-bro", "bro-build", "bro-test"] } },
+  { "id": "security-sensitive", "tags": ["security"], "expected": { "mode": "FULL_BROS", "depth": "critical", "agents": ["bro-shield"] } },
+  { "id": "ui-change", "tags": ["ui"], "expected": { "mode": "FULL_BROS", "agents": ["bro-ui"] } },
+  { "id": "missing-required-packet", "tags": ["small_patch", "missing_packet"], "expected": { "blocked": ["missing_required_packet"] } },
+  { "id": "approved-safe-local-package", "tags": ["small_patch"], "expected": { "mode": "SMALL_PATCH" } },
+  { "id": "hard-denied-command-inside-package", "tags": ["small_patch", "hard_denied_command"], "expected": { "blocked": ["hard_denied_command"] } },
+  { "id": "persona-in-chat-only", "tags": ["docs", "persona_persisted"], "expected": { "blocked": ["persona_leakage"] } },
+  { "id": "reviewer-conflict", "tags": ["review", "conflict"], "expected": { "mode": "FULL_BROS", "blocked": ["reviewer_conflict_requires_redispatch_or_waiver"] } },
+  { "id": "assemble-tail-work", "tags": ["complex", "assemble_tail_work"], "expected": { "mode": "FULL_BROS", "blocked": ["tail_work_manual_gate"] } }
+]
